@@ -1,25 +1,83 @@
-
+# Unreal Engine 관련
 Binaries/
 Build/
 DerivedDataCache/
 Intermediate/
 Saved/
-
 *.sln
 *.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# Mac 빌드 관련 (iOS 등 대비)
 *.xcodeproj
 *.xcworkspace
-*.VC.db
-*.VC.VC.opendb
 
+# 에디터 임시 파일 및 로그
 *.log
 *.tmp
-
+*.dmp
 .DS_Store
 
+# 에디터 설정 폴더
 .vscode/
 .idea/
-
-# Visual Studio cache
 .vs/
-*.ipch
+
+# 컴파일 결과물
+*.o
+*.obj
+*.lo
+*.slo
+*.gch
+*.pch
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.exe
+*.out
+*.app
+
+# 예외 처리 (Build 폴더 내 아이콘은 커밋 대상)
+!Build/**/*.ico
+
+# LFS 관리 대상 (언리얼 에셋들)
+*.uasset filter=lfs diff=lfs merge=lfs -text
+*.umap   filter=lfs diff=lfs merge=lfs -text
+*.png    filter=lfs diff=lfs merge=lfs -text
+*.jpg    filter=lfs diff=lfs merge=lfs -text
+*.jpeg   filter=lfs diff=lfs merge=lfs -text
+*.tga    filter=lfs diff=lfs merge=lfs -text
+*.exr    filter=lfs diff=lfs merge=lfs -text
+
+# Rider 전용 캐시/환경 파일
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+.idea/**/contentModel.xml
+.idea/**/aws.xml
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
+.idea/**/sonarlint/
+.idea/httpRequests
+.idea/**/gradle.xml
+.idea/**/libraries
+
+# CMake
+cmake-build-*/
+
+# 기타
+*.sln.iml
+*.code-workspace
+.history/
