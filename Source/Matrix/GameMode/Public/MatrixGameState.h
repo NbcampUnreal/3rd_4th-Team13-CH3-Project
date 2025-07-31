@@ -13,5 +13,11 @@ UCLASS()
 class MATRIX_API AMatrixGameState : public AGameState
 {
 	GENERATED_BODY()
-	
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game State")
+	int32 CurrentWave;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game State")
+	int32 EnemiesRemaining;
 };
