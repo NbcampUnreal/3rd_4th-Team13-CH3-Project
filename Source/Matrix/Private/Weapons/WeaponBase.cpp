@@ -1,6 +1,6 @@
-#include "Weapons/WeaponSystem/WeaponBase.h"
+#include <Weapons/WeaponBase.h>
 
-#include "Weapons/WeaponSystem/BulletBase.h"
+#include <Weapons/BulletBase.h>
 
 AWeaponBase::AWeaponBase()
 	: IsShootAvailable(true)

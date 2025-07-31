@@ -1,4 +1,4 @@
-#include "Weapons/WeaponSystem/BulletBase.h"
+#include "Weapons/BulletBase.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
 
