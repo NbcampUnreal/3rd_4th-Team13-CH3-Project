@@ -4,6 +4,8 @@
 #include "GameFramework/Actor.h"
 #include "WeaponBase.generated.h"
 
+class UArrowComponent;
+class USphereComponent;
 class ABulletBase;
 class ABulletPoolManager;
 
@@ -25,7 +27,11 @@ public:
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+	USphereComponent* CollisionComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	UStaticMeshComponent* MeshComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+	UArrowComponent* MuzzlePoint;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet")
 	TSubclassOf<ABulletBase> BulletClass;
 	UPROPERTY()

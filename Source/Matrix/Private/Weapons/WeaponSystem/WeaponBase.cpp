@@ -3,12 +3,23 @@
 #include "Weapons/WeaponSystem/BulletPoolManager.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Components/ArrowComponent.h"
+#include "Components/SphereComponent.h"
 
 AWeaponBase::AWeaponBase()
 	: IsShootAvailable(true)
 {
+	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
+	SetRootComponent(CollisionComp);
+	
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
-	SetRootComponent(MeshComp);
+	MeshComp->SetupAttachment(CollisionComp);
+
+	MuzzlePoint = CreateDefaultSubobject<UArrowComponent>(TEXT("MuzzlePoint"));
+	MuzzlePoint->SetupAttachment(CollisionComp);
+	MuzzlePoint->ArrowColor = FColor::Red;
+	MuzzlePoint->bHiddenInGame = true;
+	MuzzlePoint->bIsScreenSizeScaled = true;
 	
 	TriggerTime = 1.0f;
 	MaxBulletCount = 10;
