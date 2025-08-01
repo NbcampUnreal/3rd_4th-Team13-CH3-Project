@@ -2,6 +2,8 @@
 #include "Weapons/BulletBase.h"
 #include "Weapons/BulletPoolManager.h"
 
+#include "Kismet/GameplayStatics.h"
+
 AWeaponBase::AWeaponBase()
 	: IsShootAvailable(true)
 {
@@ -20,9 +22,9 @@ void AWeaponBase::BeginPlay()
 
 void AWeaponBase::Shoot()
 {
-	if (!IsShootAvailable || !BulletPool) return;
+	if (!IsShootAvailable || !BulletPoolManager) return;
 	
-	if (ABulletBase* Bullet = BulletPool->GetBullet())
+	if (ABulletBase* Bullet = BulletPoolManager->GetBullet())
 	{
 		Bullet->ActivateBullet(GetActorLocation(), GetActorRotation());
 	}
@@ -38,8 +40,14 @@ void AWeaponBase::SetShootAvailable()
 
 void AWeaponBase::SetBulletPool()
 {
-	BulletPool = NewObject<UBulletPoolManager>(this);
-	BulletPool->BulletClass = BulletClass;
-	BulletPool->BulletPoolSize = 30;
-	BulletPool->Init();
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABulletPoolManager::StaticClass(), FoundActors);
+	if (FoundActors.Num() > 0)
+	{
+		BulletPoolManager = Cast<ABulletPoolManager>(FoundActors[0]);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("There is no BulletPoolManager in the world"));
+	}
 }

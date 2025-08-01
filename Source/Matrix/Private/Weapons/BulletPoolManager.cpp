@@ -1,16 +1,17 @@
 #include "Weapons/BulletPoolManager.h"
 #include "Weapons/BulletBase.h"
 
-UBulletPoolManager::UBulletPoolManager()
+ABulletPoolManager::ABulletPoolManager()
 {
 }
 
-void UBulletPoolManager::Init()
+void ABulletPoolManager::BeginPlay()
 {
+	Super::BeginPlay();
 	CreateBulletPool();
 }
 
-ABulletBase* UBulletPoolManager::GetBullet()
+ABulletBase* ABulletPoolManager::GetBullet()
 {
 	for (ABulletBase* Bullet : BulletPool)
 	{
@@ -22,7 +23,7 @@ ABulletBase* UBulletPoolManager::GetBullet()
 	return nullptr;
 }
 
-void UBulletPoolManager::CreateBulletPool()
+void ABulletPoolManager::CreateBulletPool()
 {
 	if (!BulletClass) return;
 
@@ -37,6 +38,5 @@ void UBulletPoolManager::CreateBulletPool()
 			}
 		}
 	}
-	
 }
 

@@ -1,25 +1,29 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 #include "BulletPoolManager.generated.h"
 
 class ABulletBase;
 
 UCLASS()
-class MATRIX_API UBulletPoolManager : public UObject
+class MATRIX_API ABulletPoolManager : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	UBulletPoolManager();
-	void Init();
+	ABulletPoolManager();
 
+protected:
+	virtual void BeginPlay() override;
+
+public:
 	UPROPERTY(EditAnywhere, Category = "Bullet")
 	TSubclassOf<ABulletBase> BulletClass;
 	UPROPERTY(EditAnywhere, Category = "Bullet")
-	int32 BulletPoolSize = 30;
+	int32 BulletPoolSize = 100;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Bullet")
 	ABulletBase* GetBullet();
 
 private:

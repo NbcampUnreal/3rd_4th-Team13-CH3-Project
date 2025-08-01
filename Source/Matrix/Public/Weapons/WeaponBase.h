@@ -5,7 +5,7 @@
 #include "WeaponBase.generated.h"
 
 class ABulletBase;
-class UBulletPoolManager;
+class ABulletPoolManager;
 
 UCLASS()
 class MATRIX_API AWeaponBase : public AActor
@@ -21,11 +21,11 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	UStaticMeshComponent* MeshComp;
-	UPROPERTY()
-	UBulletPoolManager* BulletPool;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet")
 	TSubclassOf<ABulletBase> BulletClass;
-
+	UPROPERTY()
+	ABulletPoolManager* BulletPoolManager;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shoot")
 	float TriggerTime;
 

@@ -14,9 +14,10 @@ class MATRIX_API ABulletBase : public AActor
 public:	
 	ABulletBase();
 
+	FORCEINLINE bool IsActive() const { return bIsActive; }
+
 	void ActivateBullet(FVector Location, FRotator Rotation);
 	void DeactivateBullet();
-	FORCEINLINE bool IsActive() const { return bIsActive; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
