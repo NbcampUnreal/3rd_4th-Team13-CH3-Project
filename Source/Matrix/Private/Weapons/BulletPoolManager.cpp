@@ -20,6 +20,9 @@ ABulletBase* ABulletPoolManager::GetBullet()
 			return Bullet;
 		}
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Bullet Pool is Empty"));
+	
 	return nullptr;
 }
 

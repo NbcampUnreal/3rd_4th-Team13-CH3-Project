@@ -17,6 +17,11 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void Shoot();
+	
+	UFUNCTION(BlueprintCallable, Category = "Bullet")
+	FORCEINLINE int32 GetMaxBulletCount() const { return MaxBulletCount; }
+	UFUNCTION(BlueprintCallable, Category = "Bullet")
+	FORCEINLINE int32 GetCurrentBulletCount() const { return CurrentBulletCount; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
@@ -34,6 +39,8 @@ protected:
 private:
 	bool IsShootAvailable;
 	FTimerHandle ShootTriggerTimerHandle;
+	int32 MaxBulletCount;
+	int32 CurrentBulletCount;
 
 	void SetShootAvailable();
 	void SetBulletPool();
