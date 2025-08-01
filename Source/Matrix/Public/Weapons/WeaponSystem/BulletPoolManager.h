@@ -19,16 +19,15 @@ protected:
 
 public:
 	UPROPERTY(EditAnywhere, Category = "Bullet")
-	TSubclassOf<ABulletBase> BulletClass;
+	TArray<TSubclassOf<ABulletBase>> BulletClasses;
 	UPROPERTY(EditAnywhere, Category = "Bullet")
 	int32 BulletPoolSize = 100;
 
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
-	ABulletBase* GetBullet();
+	ABulletBase* GetBullet(TSubclassOf<ABulletBase> BulletClass);
 
 private:
-	UPROPERTY()
-	TArray<ABulletBase*> BulletPool;
+	TMap<TSubclassOf<ABulletBase>, TArray<ABulletBase*>> BulletPool;
 
 	void CreateBulletPool();
 };

@@ -28,6 +28,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	UProjectileMovementComponent* ProjectileMovementComp;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
+	float BulletSpeed;
+	
 	virtual void BeginPlay() override;
 	
 	UFUNCTION()

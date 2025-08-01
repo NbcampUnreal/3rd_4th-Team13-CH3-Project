@@ -1,10 +1,11 @@
-#include "Weapons/RifleBullet.h"
+#include "Weapons/PistolBullet.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
 
-ARifleBullet::ARifleBullet()
+APistolBullet::APistolBullet()
 {
-	BulletSpeed = 3000.0f;
+	BulletSpeed = 2000.0f;
 	ProjectileMovementComp->InitialSpeed = BulletSpeed;
 	ProjectileMovementComp->MaxSpeed = BulletSpeed;
 }
+

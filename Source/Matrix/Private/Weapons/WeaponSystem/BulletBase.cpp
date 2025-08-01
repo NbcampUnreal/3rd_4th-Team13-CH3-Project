@@ -1,4 +1,4 @@
-#include "Weapons/BulletBase.h"
+#include "Weapons/WeaponSystem/BulletBase.h"
 
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
@@ -13,12 +13,14 @@ ABulletBase::ABulletBase()
 	MeshComp->SetupAttachment(CollisionComp);
 
 	ProjectileMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComp"));
-	ProjectileMovementComp->InitialSpeed = 3000.0f;
-	ProjectileMovementComp->MaxSpeed = 3000.0f;
 	ProjectileMovementComp->bRotationFollowsVelocity = true;
 	ProjectileMovementComp->bShouldBounce = true;
 	ProjectileMovementComp->Bounciness = 0.5f;
 	ProjectileMovementComp->ProjectileGravityScale = 0.0f;
+
+	BulletSpeed = 2000.0f;
+	ProjectileMovementComp->InitialSpeed = BulletSpeed;
+	ProjectileMovementComp->MaxSpeed = BulletSpeed;
 }
 
 void ABulletBase::BeginPlay()

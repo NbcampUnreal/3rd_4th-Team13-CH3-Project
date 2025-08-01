@@ -33,14 +33,15 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shoot")
 	float TriggerTime;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shoot")
+	int32 MaxBulletCount;
+	int32 CurrentBulletCount;
 
 	virtual void BeginPlay() override;
 
 private:
 	bool IsShootAvailable;
 	FTimerHandle ShootTriggerTimerHandle;
-	int32 MaxBulletCount;
-	int32 CurrentBulletCount;
 
 	void SetShootAvailable();
 	void SetBulletPool();

@@ -1,6 +1,6 @@
-#include "Weapons/WeaponBase.h"
-#include "Weapons/BulletBase.h"
-#include "Weapons/BulletPoolManager.h"
+#include "Weapons/WeaponSystem/WeaponBase.h"
+#include "Weapons/WeaponSystem/BulletBase.h"
+#include "Weapons/WeaponSystem/BulletPoolManager.h"
 
 #include "Kismet/GameplayStatics.h"
 
@@ -35,7 +35,7 @@ void AWeaponBase::Shoot()
 		return;
 	}
 	
-	if (ABulletBase* Bullet = BulletPoolManager->GetBullet())
+	if (ABulletBase* Bullet = BulletPoolManager->GetBullet(BulletClass))
 	{
 		Bullet->ActivateBullet(GetActorLocation(), GetActorRotation());
 		CurrentBulletCount--;
