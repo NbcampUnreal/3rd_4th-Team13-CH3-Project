@@ -48,7 +48,7 @@ void AWeaponBase::Shoot()
 	
 	if (ABulletBase* Bullet = BulletPoolManager->GetBullet(BulletClass))
 	{
-		Bullet->ActivateBullet(GetActorLocation(), GetActorRotation());
+		Bullet->ActivateBullet(MuzzlePoint->GetComponentLocation(), MuzzlePoint->GetComponentRotation());
 		CurrentBulletCount--;
 		UE_LOG(LogTemp, Warning, TEXT("Weapon's Bullet Count : %d / %d"), CurrentBulletCount, MaxBulletCount);
 	}

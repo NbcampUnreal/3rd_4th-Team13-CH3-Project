@@ -1,6 +1,6 @@
 #include "Characters/MainPlayerCharacter.h"
 #include "EnhancedInputComponent.h"
-#include "Weapons/WeaponBase.h"
+#include "Weapons/WeaponSystem/WeaponBase.h"
 #include "Characters/MainPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
