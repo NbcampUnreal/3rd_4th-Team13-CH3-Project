@@ -14,15 +14,17 @@ class MATRIX_API ABulletBase : public AActor
 public:	
 	ABulletBase();
 
+	void ActivateBullet(FVector Location, FRotator Rotation);
+	void DeactivateBullet();
+	FORCEINLINE bool IsActive() const { return bIsActive; }
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	UStaticMeshComponent* MeshComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	UProjectileMovementComponent* ProjectileMovementComp;
-	
-	virtual void BeginPlay() override;
-	virtual void OnDestroy();
 
 private:
-	FTimerHandle DestroyTimerHandle;
+	FTimerHandle DeactivateTimerHandle;
+	bool bIsActive;
 };

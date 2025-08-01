@@ -1,6 +1,6 @@
-#include <Weapons/WeaponBase.h>
-
-#include <Weapons/BulletBase.h>
+#include "Weapons/WeaponBase.h"
+#include "Weapons/BulletBase.h"
+#include "Weapons/BulletPoolManager.h"
 
 AWeaponBase::AWeaponBase()
 	: IsShootAvailable(true)
@@ -11,13 +11,20 @@ AWeaponBase::AWeaponBase()
 	TriggerTime = 1.0f;
 }
 
+void AWeaponBase::BeginPlay()
+{
+	Super::BeginPlay();
+
+	SetBulletPool();
+}
+
 void AWeaponBase::Shoot()
 {
-	if (!IsShootAvailable) return;
+	if (!IsShootAvailable || !BulletPool) return;
 	
-	if (Bullet && Bullet->IsChildOf(ABulletBase::StaticClass()))
+	if (ABulletBase* Bullet = BulletPool->GetBullet())
 	{
-		GetWorld()->SpawnActor<ABulletBase>(Bullet, GetActorLocation(), GetActorRotation());
+		Bullet->ActivateBullet(GetActorLocation(), GetActorRotation());
 	}
 
 	IsShootAvailable = false;
@@ -27,4 +34,12 @@ void AWeaponBase::Shoot()
 void AWeaponBase::SetShootAvailable()
 {
 	IsShootAvailable = true;
+}
+
+void AWeaponBase::SetBulletPool()
+{
+	BulletPool = NewObject<UBulletPoolManager>(this);
+	BulletPool->BulletClass = BulletClass;
+	BulletPool->BulletPoolSize = 30;
+	BulletPool->Init();
 }

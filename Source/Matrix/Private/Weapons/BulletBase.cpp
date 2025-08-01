@@ -16,22 +16,39 @@ ABulletBase::ABulletBase()
 	ProjectileMovementComp->ProjectileGravityScale = 0.0f;
 }
 
-void ABulletBase::BeginPlay()
+void ABulletBase::ActivateBullet(FVector Location, FRotator Rotation)
 {
-	Super::BeginPlay();
-
+	SetActorLocation(Location);
+	SetActorRotation(Rotation);
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(true);
+	SetActorTickEnabled(true);
+	
 	if (ProjectileMovementComp)
 	{
+		ProjectileMovementComp->SetUpdatedComponent(MeshComp);
 		FVector FireDirection = GetActorForwardVector();
 		ProjectileMovementComp->Velocity = FireDirection * ProjectileMovementComp->InitialSpeed;
 	}
+
+	bIsActive = true;
 	
-	GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &ABulletBase::OnDestroy, 3.0f, false);
+	GetWorldTimerManager().SetTimer(DeactivateTimerHandle, this, &ABulletBase::DeactivateBullet, 3.0f, false);
 }
 
-void ABulletBase::OnDestroy()
+void ABulletBase::DeactivateBullet()
 {
-	Destroy();
-}
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
+	SetActorTickEnabled(false);
 
+	if (ProjectileMovementComp)
+	{
+		ProjectileMovementComp->StopMovementImmediately();
+	}
+
+	bIsActive = false;
+	
+	GetWorldTimerManager().ClearTimer(DeactivateTimerHandle);
+}
 
