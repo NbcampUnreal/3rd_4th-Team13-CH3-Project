@@ -6,6 +6,8 @@
 #include "GameFramework/GameState.h"
 #include "MatrixGameState.generated.h"
 
+class AEnemyCharacter;
+
 /**
  * 
  */
@@ -14,10 +16,28 @@ class MATRIX_API AMatrixGameState : public AGameState
 {
 	GENERATED_BODY()
 
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category = "Spawning")
+	TSubclassOf<AEnemyCharacter> EnemyToSpawnClass;
+
+	virtual void BeginPlay() override;
+
 public:
+	AMatrixGameState();
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game State")
 	int32 CurrentWave;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game State")
 	int32 EnemiesRemaining;
+
+	void StartWave();
+	void EnemyKilled();
+	void EndWave();
+	
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Game Flow")
+	float TimeBetweenWaves = 5.0f;
+
+	FTimerHandle TimerHandle_NextWaveStart;
 };
