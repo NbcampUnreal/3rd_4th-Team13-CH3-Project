@@ -24,6 +24,7 @@ public:
 	UCameraComponent* CameraComp;
 	
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	AWeaponBase* CurrentWeapon;
 	
 	virtual void BeginPlay() override;
@@ -42,6 +43,7 @@ protected:
 	void Shoot(const FInputActionValue& Value);
 	UFUNCTION()
 	void Interact(const FInputActionValue& Value);
+
 	
 	//void OnDeath();
 	void PickUpWeapon(AWeaponBase* NewWeapon);

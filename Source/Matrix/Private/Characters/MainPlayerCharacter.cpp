@@ -1,10 +1,11 @@
 #include "Characters/MainPlayerCharacter.h"
 #include "EnhancedInputComponent.h"
-#include "EngineUtils.h"
+#include "Weapons/WeaponBase.h"
 #include "Characters/MainPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 AMainPlayerCharacter::AMainPlayerCharacter()
@@ -173,46 +174,95 @@ void AMainPlayerCharacter::Look(const FInputActionValue& Value)
 //시간 제어 함수
 void AMainPlayerCharacter::SlowWorld()
 {
-	float OtherActorsDilation = 0.001f; //캐릭터를 제외한 액터의 속도
+	float Dilation = 0.001f;
 
-	if (bIsInput) //입력을 받는중이면(최우선)
-	{
-		OtherActorsDilation = 1.f; 
-	}
-	else if (bIsLook) //카메라를 회전중이면
-	{
-		OtherActorsDilation = 0.3;
-	}
-	else //아무 입력도 받지 않으면
-	{
-		OtherActorsDilation = 0.001f; //0으로 하면 아예 게임이 멈춰버림.
-	}
+	if (bIsInput)
+		Dilation = 1.f; 
+	else if (bIsLook)
+		Dilation = 0.3f; 
+	else
+		Dilation = 0.001f; 
 
-	for (TActorIterator<AActor> It(GetWorld()); It; ++It) //월드에 있는 모든 액터 탐색
-	{
-		AActor* Actor = *It;
-		Actor->CustomTimeDilation = (Actor == this) ? 1.f : OtherActorsDilation; //액터가 자신(플레이어)인지에 따라서 속도 적용
-	}
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), Dilation);
 }
 
 void AMainPlayerCharacter::Shoot(const FInputActionValue& Value)
 {
 	if (CurrentWeapon)
 	{
-		//CurrentWeapon->Shoot(); //총 발사
+		CurrentWeapon->Shoot(); //총 발사
 	}
 }
 
+//총기 장착 함수
 void AMainPlayerCharacter::PickUpWeapon(AWeaponBase* NewWeapon)
 {
+	if (!NewWeapon) return;
+
 	if (CurrentWeapon)
 	{
-		//CurrentWeapon->Destroy(); //기존 무기 제거
+		CurrentWeapon->Destroy(); //기존 무기 Destroy
+		CurrentWeapon = nullptr;
 	}
-	CurrentWeapon = NewWeapon; //새 무기 장착 
+	
+	CurrentWeapon = NewWeapon; //새 무기 장착
+	// 무기를 캐릭터에 부착
+	FAttachmentTransformRules AttachRules(EAttachmentRule::SnapToTarget, true);
+	CurrentWeapon->AttachToComponent(GetMesh(), AttachRules, TEXT("gun_r"));
 }
 
 void AMainPlayerCharacter::Interact(const FInputActionValue& Value)
 {
-	//나중에 필요하면 구현
+	TArray<FHitResult> HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(CurrentWeapon);
+
+	FVector Start = CameraComp->GetComponentLocation();
+	FVector End = Start + CameraComp->GetForwardVector() * 1000.0f;
+	FVector HalfSize = FVector(50.0f, 50.0f, 120.0f); // 박스 크기 지정
+	FRotator Orientation = CameraComp->GetComponentRotation();
+
+	bool bHit = GetWorld()->SweepMultiByChannel(
+		HitResult,
+		Start,
+		End,
+		Orientation.Quaternion(),
+		ECC_Visibility,
+		FCollisionShape::MakeBox(HalfSize),
+		Params
+	);
+
+	if (bHit)
+	{
+		for (const FHitResult& HitActor : HitResult)
+		{
+			if (AWeaponBase* HitWeapon = Cast<AWeaponBase>(HitActor.GetActor()))
+			{
+				PickUpWeapon(HitWeapon);
+				break;
+			}
+		}
+	}
+
+	DrawDebugBox(
+	GetWorld(),
+	(Start + End) * 0.5f,
+	HalfSize,
+	Orientation.Quaternion(),
+	bHit ? FColor::Green : FColor::Red,
+	false,
+	2.0f
+);
+	DrawDebugLine(
+	GetWorld(),
+	Start,
+	End,
+	FColor::Cyan,
+	false,
+	2.0f,
+	0,
+	2.0f
+);
 }
+
