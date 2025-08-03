@@ -1,6 +1,6 @@
 #include "GameFramework/MatrixGameState.h"
-
 #include "AI/EnemyCharacter.h"
+#include "Characters/MainPlayerController.h"
 #include "Engine/TargetPoint.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -14,13 +14,16 @@ AMatrixGameState::AMatrixGameState()
 void AMatrixGameState::BeginPlay()
 {
 	Super::BeginPlay();
+
 	StartWave();
+
 }
 
 void AMatrixGameState::StartWave()
 {
 	CurrentWave++;
 	// MVP에서는 웨이브마다 2명의 적을 스폰한다고 가정
+
 
 	UE_LOG(LogTemp, Warning, TEXT("Wave %d Started!"), CurrentWave);
 

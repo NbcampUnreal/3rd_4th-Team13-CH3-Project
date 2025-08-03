@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "UI/Widget/MainHUDWidget.h"
 #include "MainPlayerController.generated.h"
 
 class UInputMappingContext;
@@ -27,6 +28,13 @@ public:
 	UInputAction* ShootAction;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* InteractAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
+	TSubclassOf<UMainHUDWidget> HUDWidgetClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD")
+	UMainHUDWidget* HUDWidgetInstance;
+
+//	void NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo);
 
 protected:
 	virtual void BeginPlay() override;
