@@ -34,8 +34,24 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD")
 	UMainHUDWidget* HUDWidgetInstance;
 
-//	void NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo);
+	virtual void SetupInputComponent() override;
+
+	// 일시정지  UI On/Off 함수
+	void HandlePauseMenu();
+
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo);
 
 protected:
 	virtual void BeginPlay() override;
+
+private:
+	// 현재 게임이 Pause 상태인지 확인하는 변수
+	bool bIsPaused = false;
+
+	UPROPERTY(EditAnywhere, Category = "Menu")
+	TSubclassOf<UUserWidget> PauseMenuClass;
+
+	UPROPERTY()
+	UUserWidget* PauseMenuInstance;
 };
