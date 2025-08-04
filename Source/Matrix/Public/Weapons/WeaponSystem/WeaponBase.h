@@ -18,7 +18,7 @@ public:
 	AWeaponBase();
 
 	UFUNCTION(BlueprintCallable)
-	virtual void Shoot();
+	void Shoot();
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
 	FORCEINLINE int32 GetMaxBulletCount() const { return MaxBulletCount; }
@@ -44,6 +44,7 @@ protected:
 	int32 CurrentBulletCount;
 
 	virtual void BeginPlay() override;
+	virtual void FireBullet();
 
 private:
 	bool IsShootAvailable;

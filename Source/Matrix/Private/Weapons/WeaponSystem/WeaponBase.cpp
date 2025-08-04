@@ -7,7 +7,10 @@
 #include "Components/SphereComponent.h"
 
 AWeaponBase::AWeaponBase()
-	: IsShootAvailable(true)
+	: TriggerTime(1.0f)
+	, MaxBulletCount(10)
+	, CurrentBulletCount(MaxBulletCount)
+	, IsShootAvailable(true)
 {
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
 	SetRootComponent(CollisionComp);
@@ -20,10 +23,6 @@ AWeaponBase::AWeaponBase()
 	MuzzlePoint->ArrowColor = FColor::Red;
 	MuzzlePoint->bHiddenInGame = true;
 	MuzzlePoint->bIsScreenSizeScaled = true;
-	
-	TriggerTime = 1.0f;
-	MaxBulletCount = 10;
-	CurrentBulletCount = MaxBulletCount;
 }
 
 void AWeaponBase::BeginPlay()
@@ -36,25 +35,28 @@ void AWeaponBase::BeginPlay()
 void AWeaponBase::Shoot()
 {
 	if (!IsShootAvailable || !BulletPoolManager) return;
+	
+	IsShootAvailable = false;
+	GetWorldTimerManager().SetTimer(ShootTriggerTimerHandle, this, &AWeaponBase::SetShootAvailable, TriggerTime, false);
+	
 	if (CurrentBulletCount <= 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("There's No Bullet In Weapon"));
-
-		IsShootAvailable = false;
-		GetWorldTimerManager().SetTimer(ShootTriggerTimerHandle, this, &AWeaponBase::SetShootAvailable, TriggerTime, false);
-		
 		return;
 	}
+
+	FireBullet();
 	
+	CurrentBulletCount--;
+	UE_LOG(LogTemp, Warning, TEXT("Weapon's Bullet Count : %d / %d"), CurrentBulletCount, MaxBulletCount);
+}
+
+void AWeaponBase::FireBullet()
+{
 	if (ABulletBase* Bullet = BulletPoolManager->GetBullet(BulletClass))
 	{
 		Bullet->ActivateBullet(MuzzlePoint->GetComponentLocation(), MuzzlePoint->GetComponentRotation());
-		CurrentBulletCount--;
-		UE_LOG(LogTemp, Warning, TEXT("Weapon's Bullet Count : %d / %d"), CurrentBulletCount, MaxBulletCount);
 	}
-
-	IsShootAvailable = false;
-	GetWorldTimerManager().SetTimer(ShootTriggerTimerHandle, this, &AWeaponBase::SetShootAvailable, TriggerTime, false);
 }
 
 void AWeaponBase::SetShootAvailable()
