@@ -7,4 +7,9 @@ ARifle::ARifle()
 	CurrentBulletCount = MaxBulletCount;
 	AttachSocket = TEXT("rifle_r");
 	WeaponType = EWeaponType::Rifle;
+
+	if (FireAnim)
+	{
+		TriggerTime = FireAnim->GetPlayLength();
+	}
 }

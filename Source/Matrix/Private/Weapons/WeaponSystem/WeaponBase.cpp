@@ -10,9 +10,9 @@ AWeaponBase::AWeaponBase()
 	: TriggerTime(1.0f)
 	, MaxBulletCount(10)
 	, CurrentBulletCount(MaxBulletCount)
-	, IsShootAvailable(true)
-	, AttachSocket(TEXT("NONE"))
 	, WeaponType(EWeaponType::None)
+	, AttachSocket(TEXT("NONE"))
+	, bIsFiring(false)
 {
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
 	SetRootComponent(CollisionComp);
@@ -36,16 +36,19 @@ void AWeaponBase::BeginPlay()
 
 void AWeaponBase::Shoot()
 {
-	if (!IsShootAvailable || !BulletPoolManager) return;
-	
-	IsShootAvailable = false;
-	GetWorldTimerManager().SetTimer(ShootTriggerTimerHandle, this, &AWeaponBase::SetShootAvailable, TriggerTime, false);
+	if (bIsFiring || !BulletPoolManager) return;
+
+	//GetWorldTimerManager().ClearTimer(ShootTriggerTimerHandle);
+	//GetWorldTimerManager().SetTimer(ShootTriggerTimerHandle, this, &AWeaponBase::SetShootAvailable, TriggerTime, false);
 	
 	if (CurrentBulletCount <= 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("There's No Bullet In Weapon"));
 		return;
 	}
+
+	bIsFiring = true;
+	//UE_LOG(LogTemp, Warning, TEXT("IsFiring : true"));
 
 	FireBullet();
 	
@@ -63,7 +66,8 @@ void AWeaponBase::FireBullet()
 
 void AWeaponBase::SetShootAvailable()
 {
-	IsShootAvailable = true;
+	bIsFiring = false;
+	//UE_LOG(LogTemp, Warning, TEXT("IsFiring : false"));
 }
 
 void AWeaponBase::SetBulletPool()

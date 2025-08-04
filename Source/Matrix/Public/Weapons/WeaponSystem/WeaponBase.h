@@ -13,10 +13,10 @@ class ABulletPoolManager;
 UENUM(BlueprintType)
 enum class EWeaponType : uint8
 {
-	None UMETA(DisplayName="None"),
-	Rifle UMETA(DisplayName="Rifle"),
-	Pistol UMETA(DisplayName="Pistol"),
-	Shotgun UMETA(DisplayName="Shotgun")
+	None		UMETA(DisplayName="None"),
+	Rifle		UMETA(DisplayName="Rifle"),
+	Pistol  	UMETA(DisplayName="Pistol"),
+	Shotgun 	UMETA(DisplayName="Shotgun")
 };
 
 UCLASS()
@@ -61,12 +61,13 @@ protected:
 	EWeaponType WeaponType; //무기 Enum 멤버 선언
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon")
 	FName AttachSocket; //무기 부착 소켓
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Weapon")
+	bool bIsFiring;
 
 	virtual void BeginPlay() override;
 	virtual void FireBullet();
 
 private:
-	bool IsShootAvailable;
 	FTimerHandle ShootTriggerTimerHandle;
 
 	void SetShootAvailable();

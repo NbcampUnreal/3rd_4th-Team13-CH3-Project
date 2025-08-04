@@ -11,4 +11,7 @@ class MATRIX_API ARifle : public AWeaponBase
 	
 public:	
 	ARifle();
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	UAnimSequence* FireAnim;
 };
