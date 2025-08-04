@@ -12,6 +12,9 @@ AShotgun::AShotgun()
 
 	NumBulletsPerShot = 5;
 	SpreadAngle = 5.0f;
+
+	AttachSocket = TEXT("shotgun_r");
+	WeaponType = EWeaponType::Shotgun;
 }
 
 void AShotgun::FireBullet()

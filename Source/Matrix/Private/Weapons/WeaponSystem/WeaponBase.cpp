@@ -11,6 +11,8 @@ AWeaponBase::AWeaponBase()
 	, MaxBulletCount(10)
 	, CurrentBulletCount(MaxBulletCount)
 	, IsShootAvailable(true)
+	, AttachSocket(TEXT("NONE"))
+	, WeaponType(EWeaponType::None)
 {
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
 	SetRootComponent(CollisionComp);

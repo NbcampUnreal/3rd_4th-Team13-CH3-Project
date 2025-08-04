@@ -9,6 +9,16 @@ class USphereComponent;
 class ABulletBase;
 class ABulletPoolManager;
 
+//무기 리스트 열거형
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	None UMETA(DisplayName="None"),
+	Rifle UMETA(DisplayName="Rifle"),
+	Pistol UMETA(DisplayName="Pistol"),
+	Shotgun UMETA(DisplayName="Shotgun")
+};
+
 UCLASS()
 class MATRIX_API AWeaponBase : public AActor
 {
@@ -24,7 +34,11 @@ public:
 	FORCEINLINE int32 GetMaxBulletCount() const { return MaxBulletCount; }
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
 	FORCEINLINE int32 GetCurrentBulletCount() const { return CurrentBulletCount; }
-
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	FName GetAttachSocket() const { return AttachSocket; }
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	EWeaponType GetWeaponType() const { return WeaponType; }
+	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	USphereComponent* CollisionComp;
@@ -42,6 +56,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shoot")
 	int32 MaxBulletCount;
 	int32 CurrentBulletCount;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon")
+	EWeaponType WeaponType; //무기 Enum 멤버 선언
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon")
+	FName AttachSocket; //무기 부착 소켓
 
 	virtual void BeginPlay() override;
 	virtual void FireBullet();

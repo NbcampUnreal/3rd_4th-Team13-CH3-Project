@@ -213,7 +213,7 @@ void AMainPlayerCharacter::PickUpWeapon(AWeaponBase* NewWeapon)
 	EAttachmentRule::SnapToTarget,
 	true
 );
-	CurrentWeapon->AttachToComponent(GetMesh(), AttachRules, TEXT("rifle_r"));
+	CurrentWeapon->AttachToComponent(GetMesh(), AttachRules, CurrentWeapon->GetAttachSocket());
 }
 
 void AMainPlayerCharacter::Interact(const FInputActionValue& Value)
