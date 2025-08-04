@@ -4,7 +4,6 @@
 #include "Characters/MainPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -15,7 +14,8 @@ AMainPlayerCharacter::AMainPlayerCharacter()
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArmComp->SetupAttachment(RootComponent);
 	SpringArmComp->bUsePawnControlRotation = true;
-
+	SpringArmComp->bDoCollisionTest = true;
+	
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName);
 	CameraComp->bUsePawnControlRotation = false;
@@ -207,8 +207,13 @@ void AMainPlayerCharacter::PickUpWeapon(AWeaponBase* NewWeapon)
 	
 	CurrentWeapon = NewWeapon; //새 무기 장착
 	// 무기를 캐릭터에 부착
-	FAttachmentTransformRules AttachRules(EAttachmentRule::SnapToTarget, true);
-	CurrentWeapon->AttachToComponent(GetMesh(), AttachRules, TEXT("gun_r"));
+	FAttachmentTransformRules AttachRules(
+	EAttachmentRule::SnapToTarget,
+	EAttachmentRule::SnapToTarget,
+	EAttachmentRule::SnapToTarget,
+	true
+);
+	CurrentWeapon->AttachToComponent(GetMesh(), AttachRules, TEXT("rifle_r"));
 }
 
 void AMainPlayerCharacter::Interact(const FInputActionValue& Value)
@@ -218,9 +223,9 @@ void AMainPlayerCharacter::Interact(const FInputActionValue& Value)
 	Params.AddIgnoredActor(this);
 	Params.AddIgnoredActor(CurrentWeapon);
 
-	FVector Start = CameraComp->GetComponentLocation();
-	FVector End = Start + CameraComp->GetForwardVector() * 1000.0f;
-	FVector HalfSize = FVector(50.0f, 50.0f, 120.0f); // 박스 크기 지정
+	FVector Start = GetActorLocation();
+	FVector End = Start + CameraComp->GetForwardVector() * 350.0f;
+	FVector HalfSize = FVector(10.0f, 100.0f, 100.0f); // 박스 크기 지정
 	FRotator Orientation = CameraComp->GetComponentRotation();
 
 	bool bHit = GetWorld()->SweepMultiByChannel(
@@ -228,7 +233,7 @@ void AMainPlayerCharacter::Interact(const FInputActionValue& Value)
 		Start,
 		End,
 		Orientation.Quaternion(),
-		ECC_Visibility,
+		ECC_WorldStatic,
 		FCollisionShape::MakeBox(HalfSize),
 		Params
 	);
