@@ -3,6 +3,8 @@
 #include "NiagaraComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemInterface.h" 
 
 ABulletBase::ABulletBase()
 {
@@ -36,17 +38,37 @@ void ABulletBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	UE_LOG(LogTemp, Warning, TEXT("ABulletBase BeginPlay called for %s"), *GetName()); // Added log
+
 	CollisionComp->OnComponentHit.AddDynamic(this, &ABulletBase::OnBulletHit);
 }
 
 void ABulletBase::OnBulletHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (OtherActor && OtherActor->IsA(APawn::StaticClass())
-		&& OtherActor->ActorHasTag(TEXT("Enemy")))
+	UE_LOG(LogTemp, Warning, TEXT("ABulletBase OnBulletHit called. Hit Actor: %s"), OtherActor ? *OtherActor->GetName() : TEXT("None")); // Added log
+
+	if ((OtherActor != nullptr) && (OtherActor != this))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Bullet Hit Pawn : %s"), *OtherActor->GetName());
+		IAbilitySystemInterface* TargetASI = Cast<IAbilitySystemInterface>(OtherActor);
+		if (TargetASI)
+		{
+			UAbilitySystemComponent* TargetASC = TargetASI->GetAbilitySystemComponent();
+			if (TargetASC)
+			{
+				// Apply GameplayEffect
+				if (HasAuthority() && DamageEffectClass)
+				{
+					FGameplayEffectContextHandle ContextHandle = TargetASC->MakeEffectContext();
+					ContextHandle.AddInstigator(GetInstigator(), this);
+
+					TargetASC->ApplyGameplayEffectToSelf(DamageEffectClass->GetDefaultObject<UGameplayEffect>(), 1.0f, ContextHandle);
+				}
+			}
+		}
 	}
+
+	Destroy(); // Destroy bullet on hit
 }
 
 
@@ -95,4 +117,5 @@ void ABulletBase::DeactivateBullet()
 	
 	GetWorldTimerManager().ClearTimer(DeactivateTimerHandle);
 }
+
 

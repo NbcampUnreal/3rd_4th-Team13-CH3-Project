@@ -213,6 +213,41 @@ void AEnemyAIController::UpdateChase()
 {
 	if (CurrentTarget && bIsChasing)
 	{
-		MoveToActor(CurrentTarget, 100.0f);
+		float Distance = FVector::Dist(GetPawn()->GetActorLocation(), CurrentTarget->GetActorLocation());
+
+		if (Distance <= AttackRange)
+		{
+			StopMovement();
+			StartAttacking();
+		}
+		else
+		{
+			StopAttacking();
+			MoveToActor(CurrentTarget, 100.0f);
+		}
+	}
+}
+
+void AEnemyAIController::StartAttacking()
+{
+	if (bIsAttacking) return;
+
+	bIsAttacking = true;
+	GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemyAIController::UpdateAttack, 1.0f, true, 0.0f);
+}
+
+void AEnemyAIController::StopAttacking()
+{
+	if (!bIsAttacking) return;
+
+	bIsAttacking = false;
+	GetWorldTimerManager().ClearTimer(AttackTimer);
+}
+
+void AEnemyAIController::UpdateAttack()
+{
+	if (AEnemyCharacter* AIChar = Cast<AEnemyCharacter>(GetPawn()))
+	{
+		AIChar->FireProjectile();
 	}
 }

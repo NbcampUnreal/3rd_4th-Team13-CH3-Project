@@ -54,4 +54,14 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float MoveRadius = 1000.0f;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	float AttackRange = 200.0f;
+
+	bool bIsAttacking = false;
+	FTimerHandle AttackTimer;
+
+	void StartAttacking();
+	void StopAttacking();
+	void UpdateAttack();
 };

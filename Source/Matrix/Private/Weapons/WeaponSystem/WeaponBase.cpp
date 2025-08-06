@@ -1,4 +1,6 @@
 #include "Weapons/WeaponSystem/WeaponBase.h"
+
+#include "Characters/MainPlayerController.h"
 #include "Weapons/WeaponSystem/BulletBase.h"
 #include "Weapons/WeaponSystem/BulletPoolManager.h"
 
@@ -66,6 +68,38 @@ void AWeaponBase::Shoot()
 	
 	CurrentBulletCount--;
 	UE_LOG(LogTemp, Warning, TEXT("Weapon's Bullet Count : %d / %d"), CurrentBulletCount, MaxBulletCount);
+
+	if (OwnerPC)
+	{
+		if (AMainPlayerController* PC = Cast<AMainPlayerController>(OwnerPC))
+		{
+			PC->NotifyAmmoChanged(CurrentBulletCount, MaxBulletCount);
+		}
+	}
+}
+
+void AWeaponBase::SetWeaponOwner(AActor* NewOwner)
+{
+	if (!NewOwner) return;
+	
+	OwnerPawn = Cast<APawn>(NewOwner);
+	if (OwnerPawn)
+	{
+		OwnerPC = Cast<APlayerController>(OwnerPawn->GetController());
+	}
+}
+
+void AWeaponBase::ResetWeaponOwner()
+{
+	if (OwnerPawn)
+	{
+		OwnerPawn = nullptr;
+	}
+
+	if (OwnerPC)
+	{
+		OwnerPC = nullptr;
+	}
 }
 
 bool AWeaponBase::FireBullet()
