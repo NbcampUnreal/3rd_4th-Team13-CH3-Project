@@ -34,6 +34,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
 	float BulletSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
+	float BulletLifeSpan;
 	
 	virtual void BeginPlay() override;
 	

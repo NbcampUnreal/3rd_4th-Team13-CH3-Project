@@ -201,6 +201,7 @@ void AMainPlayerCharacter::PickUpWeapon(AWeaponBase* NewWeapon)
 
 	if (CurrentWeapon)
 	{
+		CurrentWeapon->ResetWeaponOwner();
 		CurrentWeapon->Destroy(); //기존 무기 Destroy
 		CurrentWeapon = nullptr;
 	}
@@ -214,6 +215,12 @@ void AMainPlayerCharacter::PickUpWeapon(AWeaponBase* NewWeapon)
 	true
 );
 	CurrentWeapon->AttachToComponent(GetMesh(), AttachRules, CurrentWeapon->GetAttachSocket());
+	CurrentWeapon->SetWeaponOwner(this);
+
+	if (AMainPlayerController* PlayerController = Cast<AMainPlayerController>(GetController()))
+	{
+		PlayerController->NotifyAmmoChanged(CurrentWeapon->GetCurrentBulletCount(), CurrentWeapon->GetMaxBulletCount());
+	}
 }
 
 void AMainPlayerCharacter::Interact(const FInputActionValue& Value)

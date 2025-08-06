@@ -30,6 +30,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Shoot();
 	
+	void SetWeaponOwner(AActor* NewOwner);
+	void ResetWeaponOwner();
+	
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
 	FORCEINLINE int32 GetMaxBulletCount() const { return MaxBulletCount; }
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
@@ -75,6 +78,11 @@ protected:
 	virtual bool FireBullet();
 
 private:
+	UPROPERTY()
+	APawn* OwnerPawn;
+	UPROPERTY()
+	APlayerController* OwnerPC;
+	
 	FTimerHandle ShootTriggerTimerHandle;
 
 	void SetShootAvailable();
