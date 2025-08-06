@@ -1,5 +1,6 @@
 #include "Weapons/WeaponSystem/BulletBase.h"
 
+#include "NiagaraComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
@@ -9,7 +10,6 @@ ABulletBase::ABulletBase()
 	SetRootComponent(CollisionComp);
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel1);
-
 	CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
@@ -23,6 +23,10 @@ ABulletBase::ABulletBase()
 	ProjectileMovementComp->Bounciness = 0.5f;
 	ProjectileMovementComp->ProjectileGravityScale = 0.0f;
 
+	TrailEffectComp = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TrailEffectComp"));
+	TrailEffectComp->SetupAttachment(CollisionComp);
+	TrailEffectComp->bAutoActivate = false;
+	
 	BulletSpeed = 2000.0f;
 	ProjectileMovementComp->InitialSpeed = BulletSpeed;
 	ProjectileMovementComp->MaxSpeed = BulletSpeed;
@@ -60,13 +64,24 @@ void ABulletBase::ActivateBullet(FVector Location, FRotator Rotation)
 		FVector FireDirection = GetActorForwardVector();
 		ProjectileMovementComp->Velocity = FireDirection * ProjectileMovementComp->InitialSpeed;
 	}
+	
 	bIsActive = true;
+
+	if (TrailEffectComp && TrailEffectComp->GetAsset())
+	{
+		TrailEffectComp->Activate();
+	}
 	
 	GetWorldTimerManager().SetTimer(DeactivateTimerHandle, this, &ABulletBase::DeactivateBullet, 3.0f, false);
 }
 
 void ABulletBase::DeactivateBullet()
 {
+	if (TrailEffectComp && TrailEffectComp->GetAsset())
+	{
+		TrailEffectComp->Deactivate();
+	}
+
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
 	SetActorTickEnabled(false);

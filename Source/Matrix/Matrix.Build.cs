@@ -24,7 +24,10 @@ public class Matrix : ModuleRules
 			"SlateCore",
 			"GameplayAbilities",
 			"GameplayTags",
-			"GameplayTasks"
+			"GameplayTasks",
+			// Niagara
+			"Niagara",
+			"NiagaraCore"
 		});
 				
 		// Uncomment if you are using Slate UI

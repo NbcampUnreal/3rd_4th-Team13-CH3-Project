@@ -20,7 +20,7 @@ AShotgun::AShotgun()
 void AShotgun::FireBullet()
 {
 	const FVector FireLocation = MuzzlePoint->GetComponentLocation();
-	const FRotator BaseRotation = MuzzlePoint->GetComponentRotation();
+	const FRotator BaseRotation = GetFireDirection().Rotation();
 
 	for (int32 i = 0; i < NumBulletsPerShot; i++)
 	{

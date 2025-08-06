@@ -6,6 +6,8 @@
 
 class USphereComponent;
 class UProjectileMovementComponent;
+class UNiagaraComponent;
+class UNiagaraSystem;
 
 UCLASS()
 class MATRIX_API ABulletBase : public AActor
@@ -27,6 +29,8 @@ protected:
 	UStaticMeshComponent* MeshComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	UProjectileMovementComponent* ProjectileMovementComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VFX")
+	UNiagaraComponent* TrailEffectComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
 	float BulletSpeed;
