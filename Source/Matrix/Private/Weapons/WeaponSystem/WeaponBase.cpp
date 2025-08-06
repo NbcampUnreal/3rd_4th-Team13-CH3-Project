@@ -61,7 +61,7 @@ void AWeaponBase::Shoot()
 
 	if (FireEffect)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(this, FireEffect, MuzzlePoint->GetComponentLocation());
+		UGameplayStatics::SpawnEmitterAtLocation(this, FireEffect, MuzzlePoint->GetComponentLocation(), MuzzlePoint->GetComponentRotation());
 	}
 	
 	CurrentBulletCount--;
