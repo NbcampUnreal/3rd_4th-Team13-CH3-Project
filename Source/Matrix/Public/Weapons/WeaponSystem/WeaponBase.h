@@ -38,6 +38,8 @@ public:
 	FName GetAttachSocket() const { return AttachSocket; }
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	EWeaponType GetWeaponType() const { return WeaponType; }
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	FVector GetFireDirection() const;		// 총알 발사 방향 계산 함수
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")

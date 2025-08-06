@@ -60,7 +60,25 @@ void AWeaponBase::FireBullet()
 {
 	if (ABulletBase* Bullet = BulletPoolManager->GetBullet(BulletClass))
 	{
-		Bullet->ActivateBullet(MuzzlePoint->GetComponentLocation(), MuzzlePoint->GetComponentRotation());
+		FVector FireDirection = GetFireDirection();
+		FRotator FireRotation = FireDirection.Rotation();
+
+		/*GEngine->AddOnScreenDebugMessage(
+			-1,                     
+			5.0f,                   
+			FColor::Green,          
+			FireDirection.ToString()
+		);
+
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			5.0f,
+			FColor::Green,
+			FireRotation.ToString()
+		);*/
+
+		Bullet->ActivateBullet(MuzzlePoint->GetComponentLocation(), FireRotation);
+	//	Bullet->ActivateBullet(MuzzlePoint->GetComponentLocation(), MuzzlePoint->GetComponentRotation());
 	}
 }
 
@@ -82,4 +100,28 @@ void AWeaponBase::SetBulletPool()
 	{
 		UE_LOG(LogTemp, Error, TEXT("There is no BulletPoolManager in the world"));
 	}
+}
+
+FVector AWeaponBase::GetFireDirection() const
+{
+	if (APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController()))
+	{
+		int32 ViewportX, ViewportY;
+		PC->GetViewportSize(ViewportX, ViewportY);
+
+		FVector2D ScreenCrosshair(ViewportX * 0.5f, ViewportY * 0.5f);
+
+		FVector WorldOrigin, WorldDirection;
+		if (PC->DeprojectScreenPositionToWorld(ScreenCrosshair.X, ScreenCrosshair.Y, WorldOrigin, WorldDirection))
+		{
+			// 라인트레이스 끝 3000.0f(30m) 거리로 계산
+			FVector TraceEnd = WorldOrigin + WorldDirection * 3000.0f;
+
+			// 총구 기준 방향값 계산후 반환 (1이하 값으로 정규화) 
+			return (TraceEnd - MuzzlePoint->GetComponentLocation()).GetSafeNormal();
+		}
+	}
+
+	// 계산 실패 시 총구 정면 방향값 반환
+	return MuzzlePoint->GetForwardVector();
 }
