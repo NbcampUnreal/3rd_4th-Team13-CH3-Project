@@ -18,5 +18,5 @@ public:
 	float SpreadAngle;
 
 protected:
-	virtual void FireBullet() override;
+	virtual bool FireBullet() override;
 };

@@ -48,15 +48,27 @@ void AWeaponBase::Shoot()
 	}
 
 	bIsFiring = true;
-	//UE_LOG(LogTemp, Warning, TEXT("IsFiring : true"));
 
-	FireBullet();
+	if (!FireBullet())
+	{
+		return;
+	}
+		
+	if (FireSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+	}
+
+	if (FireEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(this, FireEffect, MuzzlePoint->GetComponentLocation());
+	}
 	
 	CurrentBulletCount--;
 	UE_LOG(LogTemp, Warning, TEXT("Weapon's Bullet Count : %d / %d"), CurrentBulletCount, MaxBulletCount);
 }
 
-void AWeaponBase::FireBullet()
+bool AWeaponBase::FireBullet()
 {
 	const FVector FireDirection = GetFireDirection();
 	const FRotator FireRotation = FireDirection.Rotation();
@@ -67,13 +79,16 @@ void AWeaponBase::FireBullet()
 		// GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FireRotation.ToString());
 
 		Bullet->ActivateBullet(MuzzlePoint->GetComponentLocation(), FireRotation);
+
+		return true;
 	}
+
+	return false;
 }
 
 void AWeaponBase::SetShootAvailable()
 {
 	bIsFiring = false;
-	//UE_LOG(LogTemp, Warning, TEXT("IsFiring : false"));
 }
 
 void AWeaponBase::SetBulletPool()

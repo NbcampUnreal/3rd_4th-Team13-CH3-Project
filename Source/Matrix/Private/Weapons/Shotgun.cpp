@@ -17,7 +17,7 @@ AShotgun::AShotgun()
 	WeaponType = EWeaponType::Shotgun;
 }
 
-void AShotgun::FireBullet()
+bool AShotgun::FireBullet()
 {
 	const FVector FireLocation = MuzzlePoint->GetComponentLocation();
 	const FRotator BaseRotation = GetFireDirection().Rotation();
@@ -32,5 +32,11 @@ void AShotgun::FireBullet()
 		{
 			Bullet->ActivateBullet(FireLocation, SpreadRotation);
 		}
+		else
+		{
+			return false;
+		}
 	}
+
+	return true;
 }

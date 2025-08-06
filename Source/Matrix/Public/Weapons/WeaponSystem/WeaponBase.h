@@ -65,9 +65,14 @@ protected:
 	FName AttachSocket; //무기 부착 소켓
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Weapon")
 	bool bIsFiring;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	USoundBase* FireSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UParticleSystem* FireEffect;
+	
 	virtual void BeginPlay() override;
-	virtual void FireBullet();
+	virtual bool FireBullet();
 
 private:
 	FTimerHandle ShootTriggerTimerHandle;
