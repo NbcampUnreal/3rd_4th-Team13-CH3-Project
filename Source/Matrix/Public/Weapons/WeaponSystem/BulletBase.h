@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "GameplayEffect.h"
 #include "BulletBase.generated.h"
 
 class USphereComponent;
@@ -35,6 +34,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
 	float BulletSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
+	float BulletLifeSpan;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;

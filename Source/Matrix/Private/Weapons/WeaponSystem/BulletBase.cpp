@@ -1,5 +1,6 @@
 #include "Weapons/WeaponSystem/BulletBase.h"
 
+#include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
@@ -32,6 +33,7 @@ ABulletBase::ABulletBase()
 	BulletSpeed = 2000.0f;
 	ProjectileMovementComp->InitialSpeed = BulletSpeed;
 	ProjectileMovementComp->MaxSpeed = BulletSpeed;
+	BulletLifeSpan = 2.0f;
 }
 
 void ABulletBase::BeginPlay()
@@ -94,7 +96,7 @@ void ABulletBase::ActivateBullet(FVector Location, FRotator Rotation)
 		TrailEffectComp->Activate();
 	}
 	
-	GetWorldTimerManager().SetTimer(DeactivateTimerHandle, this, &ABulletBase::DeactivateBullet, 3.0f, false);
+	GetWorldTimerManager().SetTimer(DeactivateTimerHandle, this, &ABulletBase::DeactivateBullet, BulletLifeSpan, false);
 }
 
 void ABulletBase::DeactivateBullet()
