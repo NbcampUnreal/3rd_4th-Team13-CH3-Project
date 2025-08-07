@@ -2,6 +2,7 @@
 #include "EnhancedInputComponent.h"
 #include "Weapons/WeaponSystem/WeaponBase.h"
 #include "Characters/MainPlayerController.h"
+#include "UI/Widget/WeaponHUDWidget.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -213,12 +214,19 @@ void AMainPlayerCharacter::PickUpWeapon(AWeaponBase* NewWeapon)
 	EAttachmentRule::SnapToTarget,
 	EAttachmentRule::SnapToTarget,
 	true
-);
+	);	
+
 	CurrentWeapon->AttachToComponent(GetMesh(), AttachRules, CurrentWeapon->GetAttachSocket());
 	CurrentWeapon->SetWeaponOwner(this);
 
+
 	if (AMainPlayerController* PlayerController = Cast<AMainPlayerController>(GetController()))
 	{
+		if (PlayerController->WeaponHUDWidgetInstance)
+		{
+			PlayerController->WeaponHUDWidgetInstance->UpdateWeaponIcon(CurrentWeapon->GetWeaponType());
+		}
+
 		PlayerController->NotifyAmmoChanged(CurrentWeapon->GetCurrentBulletCount(), CurrentWeapon->GetMaxBulletCount());
 	}
 }

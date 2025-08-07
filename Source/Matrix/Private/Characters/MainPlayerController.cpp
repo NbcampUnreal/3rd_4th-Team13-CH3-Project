@@ -40,6 +40,15 @@ void AMainPlayerController::BeginPlay()
 			HUDWidgetInstance->AddToViewport();
 		}
 	}
+
+	if (WeaponHUDWidgetClass)
+	{
+		WeaponHUDWidgetInstance = CreateWidget<UWeaponHUDWidget>(this, WeaponHUDWidgetClass);
+		if (WeaponHUDWidgetInstance)
+		{
+			WeaponHUDWidgetInstance->AddToViewport();
+		}
+	}
 }
 
 void AMainPlayerController::NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo)

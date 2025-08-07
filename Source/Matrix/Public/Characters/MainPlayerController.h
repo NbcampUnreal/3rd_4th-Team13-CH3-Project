@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "UI/Widget/MainHUDWidget.h"
+#include "UI/Widget/WeaponHUDWidget.h"
 #include "MainPlayerController.generated.h"
 
 class UInputMappingContext;
@@ -33,6 +34,11 @@ public:
 	TSubclassOf<UMainHUDWidget> HUDWidgetClass;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD")
 	UMainHUDWidget* HUDWidgetInstance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
+	TSubclassOf<UWeaponHUDWidget> WeaponHUDWidgetClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD")
+	UWeaponHUDWidget* WeaponHUDWidgetInstance;
 
 	virtual void SetupInputComponent() override;
 
