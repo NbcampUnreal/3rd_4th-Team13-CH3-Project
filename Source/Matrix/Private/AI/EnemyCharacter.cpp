@@ -1,11 +1,11 @@
 #include "AI/EnemyCharacter.h"
-#include "AbilitySystemComponent.h" // Added back
+#include "AbilitySystemComponent.h"
 #include "AI/EnemyAIController.h"
 #include "Animation/AnimInstance.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/MatrixAttributeSet.h" // Added back
+#include "GameFramework/MatrixAttributeSet.h"
 #include "Kismet/GameplayStatics.h"
-#include "Projectiles/Projectile.h"
+#include "Weapons/WeaponSystem/WeaponBase.h"
 
 AEnemyCharacter::AEnemyCharacter()
 {
@@ -33,6 +33,20 @@ void AEnemyCharacter::BeginPlay()
 	UE_LOG(LogTemp, Error, TEXT("========== %s's BeginPlay HAS BEEN CALLED! =========="), *GetName());
 
 	Super::BeginPlay();
+
+	// --- 무기 장착 ---
+	if (DefaultWeaponClass)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
+		EquippedWeapon = GetWorld()->SpawnActor<AWeaponBase>(DefaultWeaponClass, GetActorLocation(), GetActorRotation(), SpawnParams);
+		if (EquippedWeapon)
+		{
+			EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r_weapon_socket"));
+			EquippedWeapon->SetWeaponOwner(this);
+		}
+	}
 
 	// --- ASC 초기화 --- 
 	if (AbilitySystemComponent)
@@ -79,28 +93,16 @@ UAbilitySystemComponent* AEnemyCharacter::GetAbilitySystemComponent() const
 
 void AEnemyCharacter::FireProjectile()
 {
-	if (!ProjectileClass)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ProjectileClass is not set for %s"), *GetName());
-		return;
-	}
-
-	FVector HandLocation = GetMesh()->GetSocketLocation(TEXT("hand_r"));
-	FRotator Rotation = GetActorRotation();
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.Instigator = GetInstigator();
-
-	AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, HandLocation, Rotation, SpawnParams);
-	if (Projectile)
+	if (EquippedWeapon)
 	{
 		if (FireMontage)
 		{
 			PlayAnimMontage(FireMontage);
 		}
-		
-		FVector LaunchDirection = Rotation.Vector();
-		Projectile->FireInDirection(LaunchDirection);
+		EquippedWeapon->Shoot();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s has no weapon to fire!"), *GetName());
 	}
 }

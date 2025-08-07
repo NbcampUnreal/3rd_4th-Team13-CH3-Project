@@ -35,8 +35,11 @@ public:
 	void FireProjectile();
 
 protected:
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	TSubclassOf<class ABulletBase> BulletClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<class AWeaponBase> DefaultWeaponClass;
+
+	UPROPERTY(VisibleInstanceOnly, Category = "Combat")
+	class AWeaponBase* EquippedWeapon;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	UAnimMontage* FireMontage;
