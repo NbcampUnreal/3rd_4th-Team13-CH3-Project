@@ -7,6 +7,9 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbility.h"
 #include "Abilities/GameplayAbilityTypes.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/MatrixGameMode.h"
+
 
 UGA_AiDeath::UGA_AiDeath()
 {
@@ -47,6 +50,17 @@ void UGA_AiDeath::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 	UE_LOG(LogTemp, Error, TEXT("ActivateAbility"));
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	AGameModeBase* GM = UGameplayStatics::GetGameMode(GetWorld());
+	if (GM)
+	{
+		AMatrixGameMode* MatrixGameMode = Cast<AMatrixGameMode>(GM);
+		if (MatrixGameMode)
+		{
+			MatrixGameMode->EnemyKilled();
+			UE_LOG(LogTemp, Log, TEXT("GA_AiDeath: Notified GameMode of enemy death."));
+		}
+	}
+	
 	UE_LOG(LogTemp, Warning, TEXT("GA_AiDeath has been ACTIVATED for %s!"), *GetAvatarActorFromActorInfo()->GetName());
 
 	if (UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())

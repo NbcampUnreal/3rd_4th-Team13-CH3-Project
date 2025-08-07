@@ -2,22 +2,26 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "Engine/DataTable.h"
+#include "GameplayTagContainer.h"
 #include "MatrixGameMode.generated.h"
 
 class AMatrixGameState;
 class AEnemyCharacter;
-class ATargetPoint;
 
 USTRUCT(BlueprintType)
 struct FEnemySpawnInfo
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AEnemyCharacter> EnemyClass;
 
-	UPROPERTY(EditAnywhere)
-	TArray<ATargetPoint*> SpawnPoints;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FGameplayTag SpawnPointTag;
+    
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 SpawnCount = 1;
 };
 
 USTRUCT(BlueprintType)
@@ -25,10 +29,7 @@ struct FWaveData : public FTableRowBase
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
-	int32 EnemiesToSpawn = 0;
-
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FEnemySpawnInfo> SpawnInfos;
 };
 
@@ -55,10 +56,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Game Rule")
 	float TimeBetweenWaves = 10.0f;
     
-	// 스폰할 적 클래스 
-	UPROPERTY(EditDefaultsOnly, Category="Game Rule")
-	TSubclassOf<AEnemyCharacter> EnemyToSpawnClass;
-	
 	virtual void BeginPlay() override;
 	void StartWave();
 	void EndWave();
@@ -74,4 +71,7 @@ private:
 	UDataTable* LevelDataTable;
 
 	UDataTable* CurrentWaveDataTable;
+
+	UPROPERTY()
+	class AMatrixSpawnManager* SpawnManager;
 };
