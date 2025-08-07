@@ -40,8 +40,6 @@ void ABulletBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UE_LOG(LogTemp, Warning, TEXT("ABulletBase BeginPlay called for %s"), *GetName()); // Added log
-
 	CollisionComp->OnComponentHit.AddDynamic(this, &ABulletBase::OnBulletHit);
 }
 

@@ -64,7 +64,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon")
 	EWeaponType WeaponType; //무기 Enum 멤버 선언
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon")
 	FName AttachSocket; //무기 부착 소켓
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Weapon")
 	bool bIsFiring;

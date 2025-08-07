@@ -6,6 +6,7 @@
 
 class UAIPerceptionComponent;
 class UAISenseConfig_Sight;
+class UAISenseConfig_Damage; // Added for damage sense
 
 UCLASS()
 class MATRIX_API AEnemyAIController : public AAIController
@@ -15,11 +16,7 @@ class MATRIX_API AEnemyAIController : public AAIController
 public:
 	AEnemyAIController();
 
-	FORCEINLINE UBlackboardComponent* GetBlackboardComp() const
-	{
-		return BlackboardComp;
-	}
-	// void StartBehaviorTree();
+	FORCEINLINE UBlackboardComponent* GetBlackboardComp() const { return BlackboardComp; }
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
@@ -29,39 +26,21 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	UAISenseConfig_Sight* SightConfig;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+	UAISenseConfig_Damage* DamageConfig; // Added for damage sense
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	UBlackboardComponent* BlackboardComp;
 	
-	UPROPERTY()
-	AActor* CurrentTarget = nullptr;
-
 	UFUNCTION()
 	void OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
-
-	bool bIsChasing = false;
-	FTimerHandle ChaseTimer;
 
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
 
-	void StartChasing(AActor* Target);
-	void StopChasing();
-	void UpdateChase();
+	void PerformAttack();
 
 private:
-	void MoveToRandomLocation();
-
-	FTimerHandle RandomMoveTimer;
-
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float MoveRadius = 1000.0f;
-
 	UPROPERTY(EditAnywhere, Category = "AI")
-	float AttackRange = 200.0f;
-
-	bool bIsAttacking = false;
-	FTimerHandle AttackTimer;
-
-	void StartAttacking();
-	void StopAttacking();
-	void UpdateAttack();
+	float AttackRange = 800.0f;
 };

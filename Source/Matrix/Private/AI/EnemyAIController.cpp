@@ -1,12 +1,13 @@
 #include "AI/EnemyAIController.h"
-
-#include "NavigationSystem.h"
-#include "TimerManager.h"
 #include "AI/EnemyCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "BehaviorTree/BehaviorTree.h"
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
+#include "Perception/AISenseConfig_Damage.h" // Added for damage sense
+#include "Perception/AISense_Damage.h" // Added for UAISense_Damage
+#include "Perception/AISense.h" // Added for UAISense::GetSenseID
 
 AEnemyAIController::AEnemyAIController()
 {
@@ -26,7 +27,14 @@ AEnemyAIController::AEnemyAIController()
 	AIPerception->ConfigureSense(*SightConfig);
 	AIPerception->SetDominantSense(SightConfig->GetSenseImplementation());
 
+	// Configure Damage Sense
+	DamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("DamageConfig"));
+	AIPerception->ConfigureSense(*DamageConfig);
+
 	BlackboardComp = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackBoard"));
+
+	AttackRange = 800.0f;
+	MoveRadius = 1000.0f;
 }
 
 void AEnemyAIController::BeginPlay()
@@ -37,8 +45,6 @@ void AEnemyAIController::BeginPlay()
 	{
 		BlackboardComp->SetValueAsBool(TEXT("CanSeeTarget"), false);
 		BlackboardComp->SetValueAsBool(TEXT("IsInvestigating"), false);
-
-		// StartBehaviorTree();
 	}
 	else
 	{
@@ -47,24 +53,9 @@ void AEnemyAIController::BeginPlay()
 	
 	if (AIPerception)
 	{
-		AIPerception->OnTargetPerceptionUpdated.AddDynamic(
-			this,
-			&AEnemyAIController::OnPerceptionUpdated
-		);
+		AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyAIController::OnPerceptionUpdated);
 	}
 }
-
-// void AEnemyAIController::StartBehaviorTree()
-// {
-// 	if (BehaviorTreeAsset)
-// 	{
-// 		RunBehaviorTree(BehaviorTreeAsset);
-// 	}
-// 	else
-// 	{
-// 		UE_LOG(LogTemp, Error, TEXT("Behavior Tree Asset not set!"));
-// 	}
-// }
 
 void AEnemyAIController::OnPossess(APawn* InPawn)
 {
@@ -73,180 +64,60 @@ void AEnemyAIController::OnPossess(APawn* InPawn)
 	if (InPawn)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Sparta] AI Controller is controlling %s."), *InPawn->GetName());
-	}
-}
-
-void AEnemyAIController::MoveToRandomLocation()
-{
-	APawn* MyPawn = GetPawn();
-	if (!MyPawn)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[Sparta] No Pawn to control."));
-	}
-
-	UNavigationSystemV1* NavSystem = UNavigationSystemV1::GetCurrent(GetWorld());
-	if (!NavSystem)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[Sparta] Could not find Navigation System."));
-	}
-
-	FNavLocation RandomLocation;
-	bool bFoundLocation = NavSystem->GetRandomReachablePointInRadius(
-		MyPawn->GetActorLocation(),
-		MoveRadius,
-		RandomLocation
-	);
-
-	if (bFoundLocation)
-	{
-		MoveToLocation(RandomLocation.Location);
-
-		UE_LOG(LogTemp, Warning, TEXT("[Sparta] Move target: %s"), *RandomLocation.Location.ToString());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[Sparta] Could not find a reachable location."));
+		if (BlackboardComp)
+		{
+			APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+			if (PlayerPawn)
+			{
+				BlackboardComp->SetValueAsObject(TEXT("TargetActor"), PlayerPawn);
+				BlackboardComp->SetValueAsVector(TEXT("TargetLastKnownLocation"), PlayerPawn->GetActorLocation());
+				BlackboardComp->SetValueAsBool(TEXT("CanSeeTarget"), true); // Assume seen if known
+			}
+		}
+		if (BehaviorTreeAsset)
+		{
+			RunBehaviorTree(BehaviorTreeAsset);
+		}
 	}
 }
 
 void AEnemyAIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-	if (Actor != PlayerPawn)
+	if (Actor != PlayerPawn) return;
+
+	if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 	{
-		return;
-	}
-
-	if (Stimulus.WasSuccessfullySensed())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[Sparta] Saw something! %s"), *Actor->GetName());
-
-		DrawDebugString(
-			GetWorld(),
-			Actor->GetActorLocation() + FVector(0, 0, 100),
-			FString::Printf(TEXT("Saw: %s"), *Actor->GetName()),
-			nullptr,
-			FColor::Green,
-			2.0f,
-			true
-		);
-		
-		BlackboardComp->SetValueAsObject(TEXT("TargetActor"), Actor);
-		BlackboardComp->SetValueAsBool(TEXT("CanSeeTarget"), true);
-		BlackboardComp->SetValueAsVector(TEXT("TargetLastKnownLocation"), Actor->GetActorLocation());
-		BlackboardComp->SetValueAsBool(TEXT("IsInvestigating"), false);
-		
-		StartChasing(Actor);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[Sparta] Missed it! %s"), *Actor->GetName());
-
-		DrawDebugString(
-			GetWorld(),
-			Actor->GetActorLocation() + FVector(0, 0, 100),
-			FString::Printf(TEXT("Missed: %s"), *Actor->GetName()),
-			nullptr,
-			FColor::Red,
-			2.0f,
-			true
-		);
-
-		BlackboardComp->SetValueAsBool(TEXT("CanSeeTarget"), false);
-		BlackboardComp->SetValueAsBool(TEXT("IsInvestigating"), true);
-		
-		StopChasing();
-	}
-}
-
-void AEnemyAIController::StartChasing(AActor* Target)
-{
-	if (bIsChasing && CurrentTarget == Target) return;
-
-	CurrentTarget = Target;
-	bIsChasing = true;
-
-	GetWorldTimerManager().ClearTimer(RandomMoveTimer);
-
-	if (AEnemyCharacter* AIChar = Cast<AEnemyCharacter>(GetPawn()))
-	{
-		AIChar->SetMovementSpeed(AIChar->RunSpeed);
-	}
-
-	UpdateChase();
-	GetWorldTimerManager().SetTimer(
-		ChaseTimer,
-		this,
-		&AEnemyAIController::UpdateChase,
-		0.25f,
-		true
-	);
-}
-
-void AEnemyAIController::StopChasing()
-{
-	if (!bIsChasing) return;
-
-	CurrentTarget = nullptr;
-	bIsChasing = false;
-
-	GetWorldTimerManager().ClearTimer(ChaseTimer);
-
-	StopMovement();
-
-	if (AEnemyCharacter* AIChar = Cast<AEnemyCharacter>(GetPawn()))
-	{
-		AIChar->SetMovementSpeed(AIChar->WalkSpeed);
-	}
-
-	GetWorldTimerManager().SetTimer(
-		RandomMoveTimer,
-		this,
-		&AEnemyAIController::MoveToRandomLocation,
-		3.0f,
-		true,
-		2.0f
-	);
-}
-
-void AEnemyAIController::UpdateChase()
-{
-	if (CurrentTarget && bIsChasing)
-	{
-		float Distance = FVector::Dist(GetPawn()->GetActorLocation(), CurrentTarget->GetActorLocation());
-
-		if (Distance <= AttackRange)
+		if (Stimulus.WasSuccessfullySensed())
 		{
-			StopMovement();
-			StartAttacking();
+			UE_LOG(LogTemp, Warning, TEXT("[Sparta] Saw target: %s"), *Actor->GetName());
+			BlackboardComp->SetValueAsObject(TEXT("TargetActor"), Actor);
+			BlackboardComp->SetValueAsBool(TEXT("CanSeeTarget"), true);
+			BlackboardComp->SetValueAsVector(TEXT("TargetLastKnownLocation"), Actor->GetActorLocation());
+			BlackboardComp->SetValueAsBool(TEXT("IsInvestigating"), false);
 		}
 		else
 		{
-			StopAttacking();
-			MoveToActor(CurrentTarget, 100.0f);
+			UE_LOG(LogTemp, Warning, TEXT("[Sparta] Lost target: %s"), *Actor->GetName());
+			BlackboardComp->SetValueAsBool(TEXT("CanSeeTarget"), false);
+			BlackboardComp->SetValueAsBool(TEXT("IsInvestigating"), true);
+		}
+	}
+	else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>())
+	{
+		if (Stimulus.WasSuccessfullySensed()) // Damage sense always successfully sensed if triggered
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Sparta] Received damage from: %s"), *Actor->GetName());
+			BlackboardComp->SetValueAsBool(TEXT("PlayerAttacked"), true); // Set Blackboard key
+			// You might want to clear this key after a short delay or after evade/cover
 		}
 	}
 }
 
-void AEnemyAIController::StartAttacking()
+void AEnemyAIController::PerformAttack()
 {
-	if (bIsAttacking) return;
-
-	bIsAttacking = true;
-	GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemyAIController::UpdateAttack, 1.0f, true, 0.0f);
-}
-
-void AEnemyAIController::StopAttacking()
-{
-	if (!bIsAttacking) return;
-
-	bIsAttacking = false;
-	GetWorldTimerManager().ClearTimer(AttackTimer);
-}
-
-void AEnemyAIController::UpdateAttack()
-{
-	if (AEnemyCharacter* AIChar = Cast<AEnemyCharacter>(GetPawn()))
+	AEnemyCharacter* AIChar = Cast<AEnemyCharacter>(GetPawn());
+	if (AIChar)
 	{
 		AIChar->FireProjectile();
 	}
