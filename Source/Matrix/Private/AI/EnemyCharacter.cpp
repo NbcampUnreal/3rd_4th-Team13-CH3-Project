@@ -20,6 +20,7 @@ AEnemyCharacter::AEnemyCharacter()
 
 	MaxHealth = 100.0f;
 	Health = MaxHealth; 
+	bIsAttacking = false;
 
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 	AbilitySystemComponent->SetIsReplicated(true);
@@ -43,7 +44,8 @@ void AEnemyCharacter::BeginPlay()
 		EquippedWeapon = GetWorld()->SpawnActor<AWeaponBase>(DefaultWeaponClass, GetActorLocation(), GetActorRotation(), SpawnParams);
 		if (EquippedWeapon)
 		{
-			EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r_weapon_socket"));
+			FName WeaponSocketName = EquippedWeapon->GetAttachSocket();
+			EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
 			EquippedWeapon->SetWeaponOwner(this);
 		}
 	}
@@ -95,14 +97,15 @@ void AEnemyCharacter::FireProjectile()
 {
 	if (EquippedWeapon)
 	{
-		if (FireMontage)
-		{
-			PlayAnimMontage(FireMontage);
-		}
 		EquippedWeapon->Shoot();
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s has no weapon to fire!"), *GetName());
 	}
+}
+
+void AEnemyCharacter::OnAttackAnimationEnd()
+{
+	// This function is no longer responsible for attack state.
 }

@@ -15,11 +15,7 @@ class MATRIX_API AEnemyAIController : public AAIController
 public:
 	AEnemyAIController();
 
-	FORCEINLINE UBlackboardComponent* GetBlackboardComp() const
-	{
-		return BlackboardComp;
-	}
-	// void StartBehaviorTree();
+	FORCEINLINE UBlackboardComponent* GetBlackboardComp() const { return BlackboardComp; }
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
@@ -47,21 +43,20 @@ protected:
 	void StopChasing();
 	void UpdateChase();
 
+	void StartAttacking();
+	void StopAttacking();
+	void PerformAttack();
+
 private:
 	void MoveToRandomLocation();
 
 	FTimerHandle RandomMoveTimer;
+	FTimerHandle AttackTimer;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float MoveRadius = 1000.0f;
-
 	UPROPERTY(EditAnywhere, Category = "AI")
-	float AttackRange = 200.0f;
+	float AttackRange = 800.0f;
 
 	bool bIsAttacking = false;
-	FTimerHandle AttackTimer;
-
-	void StartAttacking();
-	void StopAttacking();
-	void UpdateAttack();
 };

@@ -40,8 +40,8 @@ void AWeaponBase::Shoot()
 {
 	if (bIsFiring || !BulletPoolManager) return;
 
-	//GetWorldTimerManager().ClearTimer(ShootTriggerTimerHandle);
-	//GetWorldTimerManager().SetTimer(ShootTriggerTimerHandle, this, &AWeaponBase::SetShootAvailable, TriggerTime, false);
+	// 발사 가능 상태를 TriggerTime 후에 복구하는 타이머 설정
+	GetWorldTimerManager().SetTimer(ShootTriggerTimerHandle, this, &AWeaponBase::SetShootAvailable, TriggerTime, false);
 	
 	if (CurrentBulletCount <= 0)
 	{
@@ -53,6 +53,9 @@ void AWeaponBase::Shoot()
 
 	if (!FireBullet())
 	{
+		// 발사에 실패하면 즉시 발사 가능 상태로 복귀
+		GetWorldTimerManager().ClearTimer(ShootTriggerTimerHandle);
+		bIsFiring = false;
 		return;
 	}
 		

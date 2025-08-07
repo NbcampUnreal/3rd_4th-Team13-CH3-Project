@@ -1,5 +1,4 @@
 #include "AI/EnemyAIController.h"
-
 #include "NavigationSystem.h"
 #include "TimerManager.h"
 #include "AI/EnemyCharacter.h"
@@ -27,6 +26,9 @@ AEnemyAIController::AEnemyAIController()
 	AIPerception->SetDominantSense(SightConfig->GetSenseImplementation());
 
 	BlackboardComp = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackBoard"));
+
+	AttackRange = 800.0f;
+	MoveRadius = 1000.0f;
 }
 
 void AEnemyAIController::BeginPlay()
@@ -37,8 +39,6 @@ void AEnemyAIController::BeginPlay()
 	{
 		BlackboardComp->SetValueAsBool(TEXT("CanSeeTarget"), false);
 		BlackboardComp->SetValueAsBool(TEXT("IsInvestigating"), false);
-
-		// StartBehaviorTree();
 	}
 	else
 	{
@@ -47,24 +47,9 @@ void AEnemyAIController::BeginPlay()
 	
 	if (AIPerception)
 	{
-		AIPerception->OnTargetPerceptionUpdated.AddDynamic(
-			this,
-			&AEnemyAIController::OnPerceptionUpdated
-		);
+		AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyAIController::OnPerceptionUpdated);
 	}
 }
-
-// void AEnemyAIController::StartBehaviorTree()
-// {
-// 	if (BehaviorTreeAsset)
-// 	{
-// 		RunBehaviorTree(BehaviorTreeAsset);
-// 	}
-// 	else
-// 	{
-// 		UE_LOG(LogTemp, Error, TEXT("Behavior Tree Asset not set!"));
-// 	}
-// }
 
 void AEnemyAIController::OnPossess(APawn* InPawn)
 {
@@ -79,58 +64,28 @@ void AEnemyAIController::OnPossess(APawn* InPawn)
 void AEnemyAIController::MoveToRandomLocation()
 {
 	APawn* MyPawn = GetPawn();
-	if (!MyPawn)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[Sparta] No Pawn to control."));
-	}
+	if (!MyPawn) return;
 
 	UNavigationSystemV1* NavSystem = UNavigationSystemV1::GetCurrent(GetWorld());
-	if (!NavSystem)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[Sparta] Could not find Navigation System."));
-	}
+	if (!NavSystem) return;
 
 	FNavLocation RandomLocation;
-	bool bFoundLocation = NavSystem->GetRandomReachablePointInRadius(
-		MyPawn->GetActorLocation(),
-		MoveRadius,
-		RandomLocation
-	);
+	bool bFoundLocation = NavSystem->GetRandomReachablePointInRadius(MyPawn->GetActorLocation(), MoveRadius, RandomLocation);
 
 	if (bFoundLocation)
 	{
 		MoveToLocation(RandomLocation.Location);
-
-		UE_LOG(LogTemp, Warning, TEXT("[Sparta] Move target: %s"), *RandomLocation.Location.ToString());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[Sparta] Could not find a reachable location."));
 	}
 }
 
 void AEnemyAIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-	if (Actor != PlayerPawn)
-	{
-		return;
-	}
+	if (Actor != PlayerPawn) return;
 
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Sparta] Saw something! %s"), *Actor->GetName());
-
-		DrawDebugString(
-			GetWorld(),
-			Actor->GetActorLocation() + FVector(0, 0, 100),
-			FString::Printf(TEXT("Saw: %s"), *Actor->GetName()),
-			nullptr,
-			FColor::Green,
-			2.0f,
-			true
-		);
-		
+		UE_LOG(LogTemp, Warning, TEXT("[Sparta] Saw target: %s"), *Actor->GetName());
 		BlackboardComp->SetValueAsObject(TEXT("TargetActor"), Actor);
 		BlackboardComp->SetValueAsBool(TEXT("CanSeeTarget"), true);
 		BlackboardComp->SetValueAsVector(TEXT("TargetLastKnownLocation"), Actor->GetActorLocation());
@@ -140,18 +95,7 @@ void AEnemyAIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Sparta] Missed it! %s"), *Actor->GetName());
-
-		DrawDebugString(
-			GetWorld(),
-			Actor->GetActorLocation() + FVector(0, 0, 100),
-			FString::Printf(TEXT("Missed: %s"), *Actor->GetName()),
-			nullptr,
-			FColor::Red,
-			2.0f,
-			true
-		);
-
+		UE_LOG(LogTemp, Warning, TEXT("[Sparta] Lost target: %s"), *Actor->GetName());
 		BlackboardComp->SetValueAsBool(TEXT("CanSeeTarget"), false);
 		BlackboardComp->SetValueAsBool(TEXT("IsInvestigating"), true);
 		
@@ -173,14 +117,7 @@ void AEnemyAIController::StartChasing(AActor* Target)
 		AIChar->SetMovementSpeed(AIChar->RunSpeed);
 	}
 
-	UpdateChase();
-	GetWorldTimerManager().SetTimer(
-		ChaseTimer,
-		this,
-		&AEnemyAIController::UpdateChase,
-		0.25f,
-		true
-	);
+	GetWorldTimerManager().SetTimer(ChaseTimer, this, &AEnemyAIController::UpdateChase, 0.25f, true);
 }
 
 void AEnemyAIController::StopChasing()
@@ -191,6 +128,7 @@ void AEnemyAIController::StopChasing()
 	bIsChasing = false;
 
 	GetWorldTimerManager().ClearTimer(ChaseTimer);
+	StopAttacking();
 
 	StopMovement();
 
@@ -199,14 +137,7 @@ void AEnemyAIController::StopChasing()
 		AIChar->SetMovementSpeed(AIChar->WalkSpeed);
 	}
 
-	GetWorldTimerManager().SetTimer(
-		RandomMoveTimer,
-		this,
-		&AEnemyAIController::MoveToRandomLocation,
-		3.0f,
-		true,
-		2.0f
-	);
+	GetWorldTimerManager().SetTimer(RandomMoveTimer, this, &AEnemyAIController::MoveToRandomLocation, 3.0f, true, 2.0f);
 }
 
 void AEnemyAIController::UpdateChase()
@@ -232,21 +163,25 @@ void AEnemyAIController::StartAttacking()
 {
 	if (bIsAttacking) return;
 
+	UE_LOG(LogTemp, Warning, TEXT("AI StartAttacking"));
 	bIsAttacking = true;
-	GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemyAIController::UpdateAttack, 1.0f, true, 0.0f);
+	// 3초마다 PerformAttack을 호출하는 타이머 설정
+	GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemyAIController::PerformAttack, 3.0f, true, 0.0f);
 }
 
 void AEnemyAIController::StopAttacking()
 {
 	if (!bIsAttacking) return;
 
+	UE_LOG(LogTemp, Warning, TEXT("AI StopAttacking"));
 	bIsAttacking = false;
 	GetWorldTimerManager().ClearTimer(AttackTimer);
 }
 
-void AEnemyAIController::UpdateAttack()
+void AEnemyAIController::PerformAttack()
 {
-	if (AEnemyCharacter* AIChar = Cast<AEnemyCharacter>(GetPawn()))
+	AEnemyCharacter* AIChar = Cast<AEnemyCharacter>(GetPawn());
+	if (AIChar)
 	{
 		AIChar->FireProjectile();
 	}

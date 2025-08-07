@@ -10,6 +10,7 @@
 class UMatrixAttributeSet;
 class UAbilitySystemComponent;
 class UGameplayAbility;
+class AWeaponBase;
 
 UCLASS()
 class MATRIX_API AEnemyCharacter : public ACharacter, public IAbilitySystemInterface
@@ -28,21 +29,24 @@ public:
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float Health;
 
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "State")
+	bool bIsAttacking;
+
 	void SetMovementSpeed(float NewSpeed);
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintCallable, Category = "AI")
 	void FireProjectile();
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void OnAttackAnimationEnd();
+	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	TSubclassOf<class AWeaponBase> DefaultWeaponClass;
+	TSubclassOf<AWeaponBase> DefaultWeaponClass;
 
 	UPROPERTY(VisibleInstanceOnly, Category = "Combat")
-	class AWeaponBase* EquippedWeapon;
-
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	UAnimMontage* FireMontage;
+	AWeaponBase* EquippedWeapon;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ability")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
