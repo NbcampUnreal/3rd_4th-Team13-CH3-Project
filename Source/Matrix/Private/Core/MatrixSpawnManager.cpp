@@ -2,6 +2,7 @@
 #include "Core/MatrixSpawnPoint.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameplayTagAssetInterface.h"
+#include "GameFramework/MatrixGameMode.h"
 
 AMatrixSpawnManager::AMatrixSpawnManager()
 {
@@ -11,6 +12,12 @@ AMatrixSpawnManager::AMatrixSpawnManager()
 void AMatrixSpawnManager::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AMatrixGameMode* GameMode = Cast<AMatrixGameMode>(UGameplayStatics::GetGameMode(this));
+	if (GameMode)
+	{
+		GameMode->RegisterSpawnManager(this);
+	}
 
 	SpawnPointsByTag.Empty();
 

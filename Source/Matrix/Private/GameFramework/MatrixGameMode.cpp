@@ -22,12 +22,6 @@ void AMatrixGameMode::BeginPlay()
         MatrixGameState->SetGameState(EGameState::Playing);
     }
 
-    SpawnManager = Cast<AMatrixSpawnManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AMatrixSpawnManager::StaticClass()));
-    if (!SpawnManager)
-    {
-        UE_LOG(LogTemp, Error, TEXT("FATAL ERROR: SpawnManager not found in the level! Spawning will not work."));
-    }
-
     if (MatrixGameState && MatrixGameState->CurrentGameState == EGameState::Playing)
     {
         UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance());
@@ -190,4 +184,10 @@ void AMatrixGameMode::RequestTogglePause()
         }
         // GameOver나 GameClear 상태에서는 일시정지 불가!!
     }
+}
+
+void AMatrixGameMode::RegisterSpawnManager(AMatrixSpawnManager* InSpawnManager)
+{
+    SpawnManager = InSpawnManager;
+    UE_LOG(LogTemp, Warning, TEXT("SpawnManager has been registered to GameMode!"));
 }

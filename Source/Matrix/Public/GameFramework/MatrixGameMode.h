@@ -52,6 +52,7 @@ public:
 	void EnemyKilled();
 	void PlayerDied();
 	void RequestTogglePause();
+	void RegisterSpawnManager(AMatrixSpawnManager* InSpawnManager);
 
 protected:
 	// 웨이브 사이의 대기 시간 

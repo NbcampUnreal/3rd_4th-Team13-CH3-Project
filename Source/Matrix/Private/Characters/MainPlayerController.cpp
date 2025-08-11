@@ -86,6 +86,12 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 	switch (NewState)
 	{
 	case EGameState::Playing:
+		if (!HUDWidgetInstance && HUDWidgetClass) 
+		{
+			HUDWidgetInstance = CreateWidget<UMainHUDWidget>(this, HUDWidgetClass);
+			HUDWidgetInstance->AddToViewport();
+		}
+
 		if(HUDWidgetInstance) HUDWidgetInstance->SetVisibility(ESlateVisibility::Visible);
 		SetShowMouseCursor(false);
 		SetInputMode(FInputModeGameOnly());
