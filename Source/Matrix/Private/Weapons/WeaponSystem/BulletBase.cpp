@@ -6,6 +6,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h" 
+#include "Weapons/WeaponSystem/WeaponBase.h"
 
 ABulletBase::ABulletBase()
 {
@@ -48,23 +49,12 @@ void ABulletBase::OnBulletHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 {
 	UE_LOG(LogTemp, Warning, TEXT("ABulletBase OnBulletHit called. Hit Actor: %s"), OtherActor ? *OtherActor->GetName() : TEXT("None")); // Added log
 
-	if ((OtherActor != nullptr) && (OtherActor != this))
+	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherActor != OwnerPawn))
 	{
-		IAbilitySystemInterface* TargetASI = Cast<IAbilitySystemInterface>(OtherActor);
-		if (TargetASI)
+		// Apply GameplayEffect
+		if (HasAuthority())
 		{
-			UAbilitySystemComponent* TargetASC = TargetASI->GetAbilitySystemComponent();
-			if (TargetASC)
-			{
-				// Apply GameplayEffect
-				if (HasAuthority() && DamageEffectClass)
-				{
-					FGameplayEffectContextHandle ContextHandle = TargetASC->MakeEffectContext();
-					ContextHandle.AddInstigator(GetInstigator(), this);
-
-					TargetASC->ApplyGameplayEffectToSelf(DamageEffectClass->GetDefaultObject<UGameplayEffect>(), 1.0f, ContextHandle);
-				}
-			}
+			OwnerWeapon->ApplyBulletDamage(OtherActor);
 		}
 	}
 
@@ -72,7 +62,7 @@ void ABulletBase::OnBulletHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 }
 
 
-void ABulletBase::ActivateBullet(FVector Location, FRotator Rotation)
+void ABulletBase::ActivateBullet(FVector Location, FRotator Rotation, APawn* NewOwner, AWeaponBase* NewWeapon)
 {
 	SetActorLocation(Location);
 	SetActorRotation(Rotation);
@@ -86,8 +76,10 @@ void ABulletBase::ActivateBullet(FVector Location, FRotator Rotation)
 		FVector FireDirection = GetActorForwardVector();
 		ProjectileMovementComp->Velocity = FireDirection * ProjectileMovementComp->InitialSpeed;
 	}
-	
+
 	bIsActive = true;
+	OwnerPawn = NewOwner;
+	OwnerWeapon = NewWeapon;
 
 	if (TrailEffectComp && TrailEffectComp->GetAsset())
 	{
@@ -114,6 +106,8 @@ void ABulletBase::DeactivateBullet()
 	}
 
 	bIsActive = false;
+	OwnerPawn = nullptr;
+	OwnerWeapon = nullptr;
 	
 	GetWorldTimerManager().ClearTimer(DeactivateTimerHandle);
 }

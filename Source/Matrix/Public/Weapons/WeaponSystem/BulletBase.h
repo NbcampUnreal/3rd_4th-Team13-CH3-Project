@@ -5,6 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "BulletBase.generated.h"
 
+class AWeaponBase;
 class USphereComponent;
 class UProjectileMovementComponent;
 class UNiagaraComponent;
@@ -20,7 +21,7 @@ public:
 
 	FORCEINLINE bool IsActive() const { return bIsActive; }
 
-	void ActivateBullet(FVector Location, FRotator Rotation);
+	void ActivateBullet(FVector Location, FRotator Rotation, APawn* NewOwner, AWeaponBase* NewWeapon);
 	void DeactivateBullet();
 
 protected:
@@ -37,9 +38,6 @@ protected:
 	float BulletSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
 	float BulletLifeSpan;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Damage")
-	TSubclassOf<UGameplayEffect> DamageEffectClass;
 	
 	virtual void BeginPlay() override;
 	
@@ -49,4 +47,9 @@ protected:
 private:
 	FTimerHandle DeactivateTimerHandle;
 	bool bIsActive;
+
+	UPROPERTY()
+	APawn* OwnerPawn;
+	UPROPERTY()
+	AWeaponBase* OwnerWeapon;
 };

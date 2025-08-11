@@ -104,8 +104,3 @@ void AEnemyCharacter::FireProjectile()
 		UE_LOG(LogTemp, Warning, TEXT("%s has no weapon to fire!"), *GetName());
 	}
 }
-
-void AEnemyCharacter::OnAttackAnimationEnd()
-{
-	// This function is no longer responsible for attack state.
-}

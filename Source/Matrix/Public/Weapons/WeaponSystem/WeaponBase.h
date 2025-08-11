@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "WeaponBase.generated.h"
 
+class UGameplayEffect;
 class UArrowComponent;
 class USphereComponent;
 class ABulletBase;
@@ -32,15 +33,17 @@ public:
 	
 	void SetWeaponOwner(AActor* NewOwner);
 	void ResetWeaponOwner();
+	void ApplyBulletDamage(AActor* TargetActor);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
 	FORCEINLINE int32 GetMaxBulletCount() const { return MaxBulletCount; }
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
 	FORCEINLINE int32 GetCurrentBulletCount() const { return CurrentBulletCount; }
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	FName GetAttachSocket() const { return AttachSocket; }
+	FORCEINLINE FName GetAttachSocket() const { return AttachSocket; }
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	EWeaponType GetWeaponType() const { return WeaponType; }
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	FVector GetFireDirection() const;		// 총알 발사 방향 계산 함수
 	
@@ -64,25 +67,29 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon")
 	EWeaponType WeaponType; //무기 Enum 멤버 선언
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	FName AttachSocket; //무기 부착 소켓
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Weapon")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	bool bIsFiring;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	float WeaponDamage;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<UGameplayEffect> BulletDamageEffect; 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	USoundBase* FireSound;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	UParticleSystem* FireEffect;
 	
-	virtual void BeginPlay() override;
-	virtual bool FireBullet();
-
-private:
 	UPROPERTY()
 	APawn* OwnerPawn;
 	UPROPERTY()
 	APlayerController* OwnerPC;
 	
+	virtual void BeginPlay() override;
+	virtual bool FireBullet();
+
+private:
 	FTimerHandle ShootTriggerTimerHandle;
 
 	void SetShootAvailable();

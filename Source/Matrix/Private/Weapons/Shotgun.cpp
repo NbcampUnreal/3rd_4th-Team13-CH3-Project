@@ -30,7 +30,7 @@ bool AShotgun::FireBullet()
 
 		if (ABulletBase* Bullet = BulletPoolManager->GetBullet(BulletClass))
 		{
-			Bullet->ActivateBullet(FireLocation, SpreadRotation);
+			Bullet->ActivateBullet(FireLocation, SpreadRotation, OwnerPawn, this);
 		}
 		else
 		{

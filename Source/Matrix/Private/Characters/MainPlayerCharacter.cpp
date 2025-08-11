@@ -1,12 +1,14 @@
 #include "Characters/MainPlayerCharacter.h"
-#include "EnhancedInputComponent.h"
-#include "Weapons/WeaponSystem/WeaponBase.h"
 #include "Characters/MainPlayerController.h"
-#include "UI/Widget/WeaponHUDWidget.h"
-#include "Camera/CameraComponent.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "Kismet/GameplayStatics.h"
+#include "Weapons/WeaponSystem/WeaponBase.h"
 
+#include "EnhancedInputComponent.h"
+#include "AbilitySystemComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Camera/CameraComponent.h"
+#include "UI/Widget/WeaponHUDWidget.h"
+#include "GameFramework/MatrixAttributeSet.h"
+#include "GameFramework/SpringArmComponent.h"
 
 AMainPlayerCharacter::AMainPlayerCharacter()
 {
@@ -25,11 +27,39 @@ AMainPlayerCharacter::AMainPlayerCharacter()
 	bIsInput = false;
 	bIsLook = false;
 	CurrentWeapon = nullptr;
+
+	// Set GAS
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComp"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+	
+	AttributeSet = CreateDefaultSubobject<UMatrixAttributeSet>(TEXT("AttributeSet"));
+}
+
+UAbilitySystemComponent* AMainPlayerCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 
 void AMainPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);
+		UE_LOG(LogTemp, Warning, TEXT("%s: ASC Initialized with ActorInfo."), *GetName());
+	}
+
+	if (AbilitySystemComponent && DeathAbilityClass)
+	{
+		FGameplayAbilitySpecHandle AbilityHandle = AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(DeathAbilityClass, 1, 0, this));
+		
+		if (!AbilityHandle.IsValid())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s: Failed to give Death Ability! Handle is invalid."), *GetName());
+		}
+	}
 }
 
 void AMainPlayerCharacter::Tick(float DeltaTime)

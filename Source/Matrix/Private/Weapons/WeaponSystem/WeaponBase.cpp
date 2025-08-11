@@ -7,6 +7,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/ArrowComponent.h"
 #include "Components/SphereComponent.h"
+#include "AbilitySystemGlobals.h"
+#include "GameplayEffect.h"
+#include "AbilitySystemComponent.h"
 
 AWeaponBase::AWeaponBase()
 	: TriggerTime(1.0f)
@@ -15,6 +18,7 @@ AWeaponBase::AWeaponBase()
 	, WeaponType(EWeaponType::None)
 	, AttachSocket(TEXT("NONE"))
 	, bIsFiring(false)
+	, WeaponDamage(100.0f)
 {
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
 	SetRootComponent(CollisionComp);
@@ -115,7 +119,7 @@ bool AWeaponBase::FireBullet()
 		// GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FireDirection.ToString());
 		// GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FireRotation.ToString());
 
-		Bullet->ActivateBullet(MuzzlePoint->GetComponentLocation(), FireRotation);
+		Bullet->ActivateBullet(MuzzlePoint->GetComponentLocation(), FireRotation, OwnerPawn, this);
 
 		return true;
 	}
@@ -139,6 +143,33 @@ void AWeaponBase::SetBulletPool()
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("There is no BulletPoolManager in the world"));
+	}
+}
+
+void AWeaponBase::ApplyBulletDamage(AActor* TargetActor)
+{
+	if (!TargetActor) return;
+	
+	UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor);
+	UAbilitySystemComponent* SourceASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwnerPawn);
+
+	//UE_LOG(LogTemp, Warning, TEXT("TargetASC : %s, TargetActor : %s"), *TargetASC->GetName(), *TargetActor->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("SourceASC : %s, SourceActor : %s"), *SourceASC->GetName(), *OwnerPawn->GetName());
+	
+	if (SourceASC && TargetASC && BulletDamageEffect)
+	{
+		FGameplayEffectContextHandle ContextHandle = SourceASC->MakeEffectContext();
+		ContextHandle.AddSourceObject(this);
+		
+		FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(BulletDamageEffect, 1.0f, ContextHandle);
+
+		if (SpecHandle.IsValid())
+		{
+			FGameplayTag DamageTag = FGameplayTag::RequestGameplayTag(FName("Data.Damage"));
+			SpecHandle.Data->SetSetByCallerMagnitude(DamageTag, WeaponDamage);
+			
+			SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
+		}
 	}
 }
 
