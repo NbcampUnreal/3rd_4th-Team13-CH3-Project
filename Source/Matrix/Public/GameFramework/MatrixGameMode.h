@@ -50,6 +50,8 @@ class MATRIX_API AMatrixGameMode : public AGameMode
 public:
 	AMatrixGameMode();
 	void EnemyKilled();
+	void PlayerDied();
+	void RequestTogglePause();
 
 protected:
 	// 웨이브 사이의 대기 시간 
@@ -59,7 +61,7 @@ protected:
 	virtual void BeginPlay() override;
 	void StartWave();
 	void EndWave();
-	void StartNextLevel();
+	void PrepareNextLevel();
 
 private:
 	FTimerHandle TimerHandle_NextWaveStart;
@@ -74,4 +76,6 @@ private:
 
 	UPROPERTY()
 	class AMatrixSpawnManager* SpawnManager;
+
+	void CheckGameClearCondition();
 };

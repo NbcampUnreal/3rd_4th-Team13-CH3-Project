@@ -1,6 +1,9 @@
 #include "Characters/MainPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 #include "Blueprint/UserWidget.h"
+#include "Core/MatrixGameTypes.h"
+#include "GameFramework/MatrixGameMode.h"
+#include "GameFramework/MatrixGameState.h"
 #include "Kismet/GameplayStatics.h"
 
 AMainPlayerController::AMainPlayerController()
@@ -32,6 +35,18 @@ void AMainPlayerController::BeginPlay()
 		}
 	}
 
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this](){
+		AMatrixGameState* MatrixGameState = GetWorld()->GetGameState<AMatrixGameState>();
+		if (MatrixGameState && MatrixGameState->CurrentGameState == EGameState::Playing)
+		{
+			MatrixGameState->OnGameStateChanged.AddDynamic(this, &AMainPlayerController::OnGameStateChanged);
+
+			OnGameStateChanged(MatrixGameState->CurrentGameState);
+		}
+	}, 0.1f, false);
+	
+	/*	OnGameStateChanged 함수가 역할을 대신합니다! 혹시몰라 주석처리만 해놨어요!
 	if (HUDWidgetClass)
 	{
 		HUDWidgetInstance = CreateWidget<UMainHUDWidget>(this, HUDWidgetClass);
@@ -49,7 +64,70 @@ void AMainPlayerController::BeginPlay()
 			WeaponHUDWidgetInstance->AddToViewport();
 		}
 	}
+	*/
 }
+
+
+void AMainPlayerController::OnGameStateChanged(EGameState NewState)
+{
+	// 화면을 덮는 위젯이 있다면 일단 제거
+	if (CurrentScreenWidget)
+	{
+		CurrentScreenWidget->RemoveFromParent();
+		CurrentScreenWidget = nullptr;
+	}
+    
+	// 메인 HUD도 상태에 따라 껐다 켰다 할 수 있어요!
+	if(HUDWidgetInstance)
+	{
+		HUDWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	switch (NewState)
+	{
+	case EGameState::Playing:
+		if(HUDWidgetInstance) HUDWidgetInstance->SetVisibility(ESlateVisibility::Visible);
+		SetShowMouseCursor(false);
+		SetInputMode(FInputModeGameOnly());
+		break;
+
+	case EGameState::Paused:
+		if (PauseMenuClass)
+		{
+			CurrentScreenWidget = CreateWidget<UUserWidget>(this, PauseMenuClass);
+			CurrentScreenWidget->AddToViewport();
+			SetShowMouseCursor(true);
+			SetInputMode(FInputModeGameAndUI()); // 게임은 멈춰있지만 UI와 상호작용
+		}
+		break;
+
+	case EGameState::GameOver:
+		if (GameOverWidgetClass)
+		{
+			CurrentScreenWidget = CreateWidget<UUserWidget>(this, GameOverWidgetClass);
+			CurrentScreenWidget->AddToViewport();
+			SetShowMouseCursor(true);
+			SetInputMode(FInputModeUIOnly());
+		}
+		break;
+
+	case EGameState::GameClear:
+		if (GameClearWidgetClass)
+		{
+			CurrentScreenWidget = CreateWidget<UUserWidget>(this, GameClearWidgetClass);
+			CurrentScreenWidget->AddToViewport();
+			SetShowMouseCursor(true);
+			SetInputMode(FInputModeUIOnly());
+		}
+		break;
+        
+	default:
+		SetShowMouseCursor(false);
+		SetInputMode(FInputModeGameOnly());
+		break;
+	}
+}
+
 
 void AMainPlayerController::NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo)
 {
@@ -66,6 +144,16 @@ void AMainPlayerController::SetupInputComponent()
 	InputComponent->BindAction("Pause", IE_Pressed, this, &AMainPlayerController::HandlePauseMenu);
 }
 
+void AMainPlayerController::HandlePauseMenu()
+{
+	AMatrixGameMode* GameMode = GetWorld()->GetAuthGameMode<AMatrixGameMode>();
+	if (GameMode)
+	{
+		GameMode->RequestTogglePause();
+	}
+}
+
+/* 게임 모드에서 Pause를 관리할 수 있도록 구조를 좀 바꿨습니다. 혹시 몰라 주석처리해놓습니다.
 void AMainPlayerController::HandlePauseMenu()
 {
 	if (!bIsPaused)
@@ -108,3 +196,4 @@ void AMainPlayerController::HandlePauseMenu()
 		bShowMouseCursor = false;
 	}
 }
+*/

@@ -27,4 +27,19 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Game Data")
 	void AdvanceToNextLevel();
+
+	UFUNCTION(BlueprintCallable, Category = "Game Flow")
+	void StartGame();
+
+	UFUNCTION(BlueprintCallable, Category = "Game Flow")
+	void GoToMainMenu();
+
+	void AdvanceToNextStreamingLevel();
+
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Game Flow")
+	FName MainGameLevelName;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Game Flow")
+	FName MainMenuLevelName;
 };

@@ -1,6 +1,7 @@
 #include "GameFramework/MatrixGameMode.h"
 #include "GameFramework/MatrixGameState.h"
 #include "AI/EnemyCharacter.h"
+#include "Core/MatrixGameTypes.h"
 #include "Core/MatrixSpawnManager.h"
 #include "Engine/TargetPoint.h"
 #include "GameFramework/MatrixGameInstance.h"
@@ -16,6 +17,10 @@ void AMatrixGameMode::BeginPlay()
     Super::BeginPlay();
 
     MatrixGameState = GetGameState<AMatrixGameState>();
+    if (MatrixGameState)
+    {
+        MatrixGameState->SetGameState(EGameState::Playing);
+    }
 
     SpawnManager = Cast<AMatrixSpawnManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AMatrixSpawnManager::StaticClass()));
     if (!SpawnManager)
@@ -23,20 +28,23 @@ void AMatrixGameMode::BeginPlay()
         UE_LOG(LogTemp, Error, TEXT("FATAL ERROR: SpawnManager not found in the level! Spawning will not work."));
     }
 
-    UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance());
-    if (GameInstance && LevelDataTable)
+    if (MatrixGameState && MatrixGameState->CurrentGameState == EGameState::Playing)
     {
-        FString ContextString;
-        FLevelData* CurrentLevelData = LevelDataTable->FindRow<FLevelData>(FName(*FString::FromInt(GameInstance->CurrentLevel)), ContextString);
-        
-        if (CurrentLevelData)
+        UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance());
+        if (GameInstance && LevelDataTable)
         {
-            UE_LOG(LogTemp, Warning, TEXT("Level %d"), GameInstance->CurrentLevel);
-            CurrentWaveDataTable = CurrentLevelData->WaveDataTable;
-            if (CurrentWaveDataTable)
+            FString ContextString;
+            FLevelData* CurrentLevelData = LevelDataTable->FindRow<FLevelData>(FName(*FString::FromInt(GameInstance->CurrentLevel)), ContextString);
+        
+            if (CurrentLevelData)
             {
-                UE_LOG(LogTemp, Warning, TEXT("Level %d has %d waves."), GameInstance->CurrentLevel, CurrentWaveDataTable->GetRowNames().Num());
-                StartWave();
+                UE_LOG(LogTemp, Warning, TEXT("Level %d"), GameInstance->CurrentLevel);
+                CurrentWaveDataTable = CurrentLevelData->WaveDataTable;
+                if (CurrentWaveDataTable)
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("Level %d has %d waves."), GameInstance->CurrentLevel, CurrentWaveDataTable->GetRowNames().Num());
+                    StartWave();
+                }
             }
         }
     }
@@ -119,7 +127,7 @@ void AMatrixGameMode::EndWave()
     if (MatrixGameState->CurrentWave >= CurrentWaveDataTable->GetRowNames().Num())
     {
         UE_LOG(LogTemp, Warning, TEXT("Level Cleared! Proceeding to next level."));
-        StartNextLevel();
+        PrepareNextLevel();
     }
     else
     {
@@ -127,15 +135,59 @@ void AMatrixGameMode::EndWave()
     }
 }
 
-void AMatrixGameMode::StartNextLevel()
+void AMatrixGameMode::PrepareNextLevel()
 {
     UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance());
     if (GameInstance)
     {
         GameInstance->AdvanceToNextLevel();
-        // TODO: 실제 레벨 전환 로직 구현
-        // UGameplayStatics::OpenLevel
-        // 일단 로그만 먼저 출력 후 추후 구현 예정
-        // UGameplayStatics::OpenLevel(this, FName("Level_BossFight"));
+        CheckGameClearCondition();
+    }
+}
+
+void AMatrixGameMode::CheckGameClearCondition()
+{
+    UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance());
+    if (GameInstance && MatrixGameState)
+    {
+        if (GameInstance->CurrentLevel > GameInstance->MaxLevel)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("모든 레벨 클리어! Game Clear!"))
+            MatrixGameState->SetGameState(EGameState::GameClear);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Proceeding to Level %d"), GameInstance->CurrentLevel);
+            GameInstance->AdvanceToNextStreamingLevel();
+            // TOdo: 새 레벨의 웨이브 데이터 테이블 로드 & StartWave()
+        }
+    }
+}
+
+void AMatrixGameMode::PlayerDied()
+{
+    if (MatrixGameState)
+    {
+        MatrixGameState->SetGameState(EGameState::GameOver);
+    }
+}
+
+void AMatrixGameMode::RequestTogglePause()
+{
+    if (MatrixGameState)
+    {
+        EGameState CurrentState = MatrixGameState->CurrentGameState;
+        // 오직 '플레이 중'일 때만 '일시정지'로 OR '일시정지' 상태일 때만 '플레이 중'으로 변경 가능
+        if (CurrentState == EGameState::Playing)
+        {
+            MatrixGameState->SetGameState(EGameState::Paused);
+            UGameplayStatics::SetGamePaused(GetWorld(), true); // 게임 월드 시간 정지
+        }
+        else if (CurrentState == EGameState::Paused)
+        {
+            MatrixGameState->SetGameState(EGameState::Playing);
+            UGameplayStatics::SetGamePaused(GetWorld(), false); // 게임 월드 시간 재개
+        }
+        // GameOver나 GameClear 상태에서는 일시정지 불가!!
     }
 }

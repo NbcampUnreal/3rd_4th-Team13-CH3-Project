@@ -42,17 +42,25 @@ public:
 
 	virtual void SetupInputComponent() override;
 
-	// ÀÏ½ÃÁ¤Áö  UI On/Off ÇÔ¼ö
+	// ï¿½Ï½ï¿½ï¿½ï¿½ï¿½ï¿½  UI On/Off ï¿½Ô¼ï¿½
 	void HandlePauseMenu();
 
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> GameOverWidgetClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> GameClearWidgetClass;
+	
 protected:
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	void OnGameStateChanged(EGameState NewState);
+
 private:
-	// ÇöÀç °ÔÀÓÀÌ Pause »óÅÂÀÎÁö È®ÀÎÇÏ´Â º¯¼ö
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Pause ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
 	bool bIsPaused = false;
 
 	UPROPERTY(EditAnywhere, Category = "Menu")
@@ -60,4 +68,7 @@ private:
 
 	UPROPERTY()
 	UUserWidget* PauseMenuInstance;
+
+	UPROPERTY()
+	UUserWidget* CurrentScreenWidget; // Pause, GameOver, GameClear ë“± ê¸°ì¡´ í™”ë©´ì— ë®ëŠ” ìœ„ì ¯ ë³€ìˆ˜ì…ë‹ˆë‹¤!
 };
