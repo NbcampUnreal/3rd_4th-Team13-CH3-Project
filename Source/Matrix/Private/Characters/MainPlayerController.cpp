@@ -4,6 +4,7 @@
 #include "Core/MatrixGameTypes.h"
 #include "GameFramework/MatrixGameMode.h"
 #include "GameFramework/MatrixGameState.h"
+#include "GameFramework/MatrixLevelManager.h"
 #include "Kismet/GameplayStatics.h"
 
 AMainPlayerController::AMainPlayerController()
@@ -157,6 +158,78 @@ void AMainPlayerController::HandlePauseMenu()
 	{
 		GameMode->RequestTogglePause();
 	}
+}
+
+// === 게임 흐름 관리 함수들 (간소화) ===
+
+void AMainPlayerController::StartGame()
+{
+	if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+	{
+		LevelManager->StartGame();
+	}
+}
+
+void AMainPlayerController::EndGame(const FString& EndReason)
+{
+	if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+	{
+		LevelManager->EndGame(EndReason);
+	}
+}
+
+void AMainPlayerController::GoToMainMenu()
+{
+	if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+	{
+		LevelManager->GoToMainMenu();
+	}
+}
+
+void AMainPlayerController::RestartGame()
+{
+	if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+	{
+		LevelManager->RestartGame();
+	}
+}
+
+void AMainPlayerController::RequestLevelTransition(const FName& TargetLevel)
+{
+	if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+	{
+		// 기본적으로 일반 전환으로 처리
+		LevelManager->RequestLevelTransition(TargetLevel, ELevelTransitionType::NextLevel);
+	}
+}
+
+bool AMainPlayerController::IsInGame() const
+{
+	if (const UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+	{
+		return LevelManager->IsInGame();
+	}
+	return false;
+}
+
+// === 테스트용 함수들 ===
+
+void AMainPlayerController::TestGameOver()
+{
+	UE_LOG(LogTemp, Log, TEXT("Testing Game Over"));
+	EndGame("Test Game Over");
+}
+
+void AMainPlayerController::TestGameClear()
+{
+	UE_LOG(LogTemp, Log, TEXT("Testing Game Clear"));
+	EndGame("Test Game Clear");
+}
+
+void AMainPlayerController::TestNextLevel()
+{
+	UE_LOG(LogTemp, Log, TEXT("Testing Next Level"));
+	RequestLevelTransition("S_Floor1");
 }
 
 /* 게임 모드에서 Pause를 관리할 수 있도록 구조를 좀 바꿨습니다. 혹시 몰라 주석처리해놓습니다.

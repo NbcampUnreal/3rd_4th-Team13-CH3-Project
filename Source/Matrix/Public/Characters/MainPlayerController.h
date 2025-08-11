@@ -53,6 +53,43 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UUserWidget> GameClearWidgetClass;
 	
+	// === 게임 흐름 관리 함수들 (간소화) ===
+	
+	// 게임 시작/끝 관리
+	UFUNCTION(BlueprintCallable, Category = "Game Flow")
+	void StartGame();
+	
+	UFUNCTION(BlueprintCallable, Category = "Game Flow")
+	void EndGame(const FString& EndReason = "Normal");
+	
+	UFUNCTION(BlueprintCallable, Category = "Game Flow")
+	void GoToMainMenu();
+	
+	UFUNCTION(BlueprintCallable, Category = "Game Flow")
+	void RestartGame();
+	
+	// 레벨 전환 관리
+	UFUNCTION(BlueprintCallable, Category = "Game Flow")
+	void RequestLevelTransition(const FName& TargetLevel);
+	
+	// 현재 게임 상태 확인
+	UFUNCTION(BlueprintCallable, Category = "Game Flow")
+	bool IsInGame() const;
+	
+	// === 테스트용 함수들 ===
+	
+	// 게임 오버 테스트
+	UFUNCTION(BlueprintCallable, Category = "Test")
+	void TestGameOver();
+	
+	// 게임 클리어 테스트
+	UFUNCTION(BlueprintCallable, Category = "Test")
+	void TestGameClear();
+	
+	// 다음 레벨 테스트
+	UFUNCTION(BlueprintCallable, Category = "Test")
+	void TestNextLevel();
+	
 protected:
 	virtual void BeginPlay() override;
 

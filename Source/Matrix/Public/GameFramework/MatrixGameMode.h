@@ -8,6 +8,7 @@
 
 class AMatrixGameState;
 class AEnemyCharacter;
+class AMatrixSpawnManager;
 
 USTRUCT(BlueprintType)
 struct FEnemySpawnInfo
