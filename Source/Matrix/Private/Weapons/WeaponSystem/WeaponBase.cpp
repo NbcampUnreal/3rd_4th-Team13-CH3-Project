@@ -111,8 +111,7 @@ void AWeaponBase::ResetWeaponOwner()
 
 bool AWeaponBase::FireBullet()
 {
-	const FVector FireDirection = GetFireDirection();
-	const FRotator FireRotation = FireDirection.Rotation();
+	const FRotator FireRotation = GetFireDirection().Rotation();
 
 	if (ABulletBase* Bullet = BulletPoolManager->GetBullet(BulletClass))
 	{
@@ -173,8 +172,18 @@ void AWeaponBase::ApplyBulletDamage(AActor* TargetActor)
 	}
 }
 
+void AWeaponBase::SetTargetLocation(const FVector& NewTargetLocation)
+{
+	TargetLocation = NewTargetLocation;
+}
+
 FVector AWeaponBase::GetFireDirection() const
 {
+	if (!TargetLocation.IsZero())
+	{
+		return (TargetLocation - MuzzlePoint->GetComponentLocation()).GetSafeNormal();
+	}
+	
 	if (APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController()))
 	{
 		int32 ViewportX, ViewportY;

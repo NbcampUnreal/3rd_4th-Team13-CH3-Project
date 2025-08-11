@@ -30,6 +30,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void Shoot();
+	UFUNCTION(BlueprintCallable)
+	void SetTargetLocation(const FVector& NewTargetLocation);
 	
 	void SetWeaponOwner(AActor* NewOwner);
 	void ResetWeaponOwner();
@@ -84,7 +86,9 @@ protected:
 	UPROPERTY()
 	APawn* OwnerPawn;
 	UPROPERTY()
-	APlayerController* OwnerPC;
+	AController* OwnerPC;
+	UPROPERTY()
+	FVector TargetLocation;
 	
 	virtual void BeginPlay() override;
 	virtual bool FireBullet();
