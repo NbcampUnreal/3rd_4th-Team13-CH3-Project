@@ -12,6 +12,8 @@
 #include "GameplayEffect.h"
 #include "AbilitySystemComponent.h"
 #include "GameFramework/MatrixAttributeSet.h"
+#include "GameFramework/MatrixAttributeSet.h"
+#include "AI/EnemyCharacter.h"
 
 AWeaponBase::AWeaponBase()
 	: TriggerTime(1.0f)
@@ -153,6 +155,18 @@ bool AWeaponBase::FireBullet()
 {
 	const FRotator FireRotation = GetFireDirection().Rotation();
 
+	if (!BulletPoolManager)
+	{
+		UE_LOG(LogTemp, Error, TEXT("WeaponBase: BulletPoolManager is NULL!"));
+		return false;
+	}
+
+	if (!BulletClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("WeaponBase: BulletClass is NULL!"));
+		return false;
+	}
+
 	if (ABulletBase* Bullet = BulletPoolManager->GetBullet(BulletClass))
 	{
 		// GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FireDirection.ToString());
@@ -181,7 +195,7 @@ void AWeaponBase::SetBulletPool()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("There is no BulletPoolManager in the world"));
+		
 	}
 }
 
@@ -191,7 +205,7 @@ void AWeaponBase::ApplyBulletDamage(AActor* TargetActor, const FHitResult& HitRe
 	
 	UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor);
 	UAbilitySystemComponent* SourceASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwnerPawn);
-
+	
 	if (SourceASC && TargetASC && BulletDamageEffect)
 	{
 		FGameplayEffectContextHandle ContextHandle = SourceASC->MakeEffectContext();
@@ -239,6 +253,11 @@ void AWeaponBase::SetTargetLocation(const FVector& NewTargetLocation)
 
 FVector AWeaponBase::GetFireDirection() const
 {
+	if (Cast<AEnemyCharacter>(OwnerPawn))
+	{
+		return MuzzlePoint->GetForwardVector();
+	}
+	
 	if (!TargetLocation.IsZero())
 	{
 		return (TargetLocation - MuzzlePoint->GetComponentLocation()).GetSafeNormal();

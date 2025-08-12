@@ -1,9 +1,13 @@
 #include "Weapons/WeaponSystem/BulletBase.h"
 
+#include "NiagaraSystem.h"
+#include "NiagaraComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
+#include "Abilities/GameplayAbilityTypes.h"
+#include "AbilitySystemBlueprintLibrary.h"
 
 #include "Weapons/WeaponSystem/WeaponBase.h"
 
@@ -11,18 +15,19 @@ ABulletBase::ABulletBase()
 {
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
 	SetRootComponent(CollisionComp);
-	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel1);
-	CollisionComp->SetCollisionResponseToAllChannels(ECR_Overlap);
+	CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
-	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 	
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetupAttachment(CollisionComp);
 
 	ProjectileMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComp"));
 	ProjectileMovementComp->bRotationFollowsVelocity = true;
-	ProjectileMovementComp->bShouldBounce = false;
+	ProjectileMovementComp->bShouldBounce = true;
+	ProjectileMovementComp->Bounciness = 0.5f;
 	ProjectileMovementComp->ProjectileGravityScale = 0.0f;
 
 	TrailEffectComp = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TrailEffectComp"));
@@ -75,6 +80,8 @@ void ABulletBase::OnBulletOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 			OwnerWeapon->ApplyBulletDamage(OtherActor, SweepResult);
 		}
 	}
+
+	Destroy(); // Destroy bullet on hit
 }
 
 void ABulletBase::ActivateBullet(FVector Location, FRotator Rotation, APawn* NewOwner, AWeaponBase* NewWeapon)

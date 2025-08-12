@@ -5,13 +5,9 @@
 #include "NavigationSystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "Animation/AnimInstance.h"
-#include "Animation/MatrixAnimInstance.h"
 
 UUGA_Evade::UUGA_Evade()
 {
-	// Set ability tags, cooldowns, costs here if needed
 	AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Ability.Evade")));
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
@@ -34,52 +30,41 @@ void UUGA_Evade::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const 
 		return;
 	}
 
-	UBlackboardComponent* BlackboardComp = EnemyAIController->GetBlackboardComp();
-	if (!BlackboardComp)
+	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	if (!PlayerPawn)
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
-	
-	FVector EvadeLocation = BlackboardComp->GetValueAsVector(FName("TargetLocation"));
 
-	// --- Implement your evade logic here ---
-	// This is a basic example. You'll likely want to:
-	// 1. Trigger animation in ABP.
-	// 2. Use CharacterMovementComponent to perform a dash/jump.
-	// 3. Apply temporary invulnerability or speed boost.
+	FVector CharacterLocation = Character->GetActorLocation();
+	FVector PlayerLocation = PlayerPawn->GetActorLocation();
+	FVector DirectionFromPlayer = (CharacterLocation - PlayerLocation).GetSafeNormal();
 
-	// Example: Triggering animation in ABP by setting a boolean variable
-	if (Character->GetMesh() && Character->GetMesh()->GetAnimInstance())
+	// Calculate a perpendicular direction for evasion
+	FVector EvadeDirection = FVector::CrossProduct(DirectionFromPlayer, FVector::UpVector).GetSafeNormal();
+	if (FMath::RandBool())
 	{
-		// Assuming you have a boolean variable named "bIsEvading" in your Animation Blueprint
-		// Character->GetMesh()->GetAnimInstance()->SetCustomBoolProperty("bIsEvading", true); // Pseudocode
+		EvadeDirection *= -1.0f;
 	}
 
-	// Example: Perform a simple dash/jump
-	// Character->LaunchCharacter(FVector(0, 0, 500), false, true); // Jump straight up
-	// Character->GetCharacterMovement()->AddImpulse(Character->GetActorForwardVector() * 1000.0f, true); // Dash forward
+	float EvadeDistance = 500.0f; // Distance to evade
+	FVector EvadeLocation = CharacterLocation + EvadeDirection * EvadeDistance;
 
-	// Example: Move to the calculated evade location
-	EnemyAIController->MoveToLocation(EvadeLocation);
+	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+	if (NavSys)
+	{
+		FNavLocation RandomLocation;
+		if (NavSys->GetRandomReachablePointInRadius(EvadeLocation, 200.0f, RandomLocation))
+		{
+			EnemyAIController->MoveToLocation(RandomLocation.Location);
+		}
+	}
 
-	// If the ability is instant or movement is handled by the ability, end it.
-	// For movement abilities, you might wait for movement completion or animation end.
 	EndAbility(Handle, ActorInfo, ActivationInfo, false, false);
 }
 
 void UUGA_Evade::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-
-	// Example: Resetting the boolean variable in ABP when ability ends
-	ACharacter* Character = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
-	if (Character && Character->GetMesh() && Character->GetMesh()->GetAnimInstance())
-	{
-		UMatrixAnimInstance* MatrixAnimInstance = Cast<UMatrixAnimInstance>(Character->GetMesh()->GetAnimInstance());
-		if (MatrixAnimInstance)
-		{
-			MatrixAnimInstance->bIsEvading = false;
-		}
-	}
 }

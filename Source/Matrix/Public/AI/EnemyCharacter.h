@@ -35,6 +35,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "AI")
 	void FireProjectile();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	AWeaponBase* GetEquippedWeapon() const;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
@@ -50,6 +53,9 @@ protected:
 	TObjectPtr<UMatrixAttributeSet> AttributeSet;
 	UPROPERTY(EditDefaultsOnly, Category = "Ability")
 	TSubclassOf<UGameplayAbility> DeathAbilityClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Ability")
+	TSubclassOf<UGameplayAbility> AttackAbilityClass; // <--- ADDED THIS LINE
 	
 	virtual void BeginPlay() override;
 };

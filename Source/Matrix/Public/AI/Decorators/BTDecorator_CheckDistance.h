@@ -17,11 +17,15 @@ protected:
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Blackboard")
+	FBlackboardKeySelector TargetActorKey;
+
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
 	FBlackboardKeySelector TargetLocationKey;
 
 	UPROPERTY(EditAnywhere, Category = "Condition")
 	float DistanceThreshold = 500.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Condition")
-	bool bCheckWithinRange = true; // If true, checks if distance is <= threshold, else checks if distance is > threshold
+	bool bCheckWithinRange = true;
 };
+
