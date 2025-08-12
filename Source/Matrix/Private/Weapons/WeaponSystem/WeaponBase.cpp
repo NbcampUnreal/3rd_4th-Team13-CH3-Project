@@ -1,5 +1,6 @@
 #include "Weapons/WeaponSystem/WeaponBase.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "Characters/MainPlayerController.h"
 #include "Weapons/WeaponSystem/BulletBase.h"
 #include "Weapons/WeaponSystem/BulletPoolManager.h"
@@ -10,6 +11,7 @@
 #include "AbilitySystemGlobals.h"
 #include "GameplayEffect.h"
 #include "AbilitySystemComponent.h"
+#include "GameFramework/MatrixAttributeSet.h"
 
 AWeaponBase::AWeaponBase()
 	: TriggerTime(1.0f)
@@ -145,16 +147,13 @@ void AWeaponBase::SetBulletPool()
 	}
 }
 
-void AWeaponBase::ApplyBulletDamage(AActor* TargetActor)
+void AWeaponBase::ApplyBulletDamage(AActor* TargetActor, const FHitResult& HitResult)
 {
 	if (!TargetActor) return;
 	
 	UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor);
 	UAbilitySystemComponent* SourceASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwnerPawn);
 
-	//UE_LOG(LogTemp, Warning, TEXT("TargetASC : %s, TargetActor : %s"), *TargetASC->GetName(), *TargetActor->GetName());
-	//UE_LOG(LogTemp, Warning, TEXT("SourceASC : %s, SourceActor : %s"), *SourceASC->GetName(), *OwnerPawn->GetName());
-	
 	if (SourceASC && TargetASC && BulletDamageEffect)
 	{
 		FGameplayEffectContextHandle ContextHandle = SourceASC->MakeEffectContext();
@@ -168,8 +167,31 @@ void AWeaponBase::ApplyBulletDamage(AActor* TargetActor)
 			SpecHandle.Data->SetSetByCallerMagnitude(DamageTag, WeaponDamage);
 			
 			SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
+
+			float CurrentHealth = TargetASC->GetNumericAttribute(UMatrixAttributeSet::GetHealthAttribute());
+			if (CurrentHealth <= 0.0f)
+			{
+				SendEventData(HitResult);
+			}
 		}
 	}
+}
+
+void AWeaponBase::SendEventData(const FHitResult& HitResult)
+{
+	FVector NormalImpulse = HitResult.ImpactNormal * 3000.0f;
+
+	FGameplayEventData EventData;
+	EventData.Instigator = OwnerPawn;
+	EventData.Target = HitResult.GetActor();
+	EventData.EventTag = FGameplayTag::RequestGameplayTag(FName("GameplayEvent.Death"));
+
+	FTargetData_HitWithImpulse* TargetData = new FTargetData_HitWithImpulse();
+	TargetData->ImpactPoint = HitResult.ImpactPoint;
+	TargetData->Impulse = NormalImpulse;
+	EventData.TargetData.Add(TargetData);
+	
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(HitResult.GetActor(), EventData.EventTag, EventData);
 }
 
 void AWeaponBase::SetTargetLocation(const FVector& NewTargetLocation)

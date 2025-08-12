@@ -35,7 +35,7 @@ public:
 	
 	void SetWeaponOwner(AActor* NewOwner);
 	void ResetWeaponOwner();
-	void ApplyBulletDamage(AActor* TargetActor);
+	void ApplyBulletDamage(AActor* TargetActor, const FHitResult& HitResult);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
 	FORCEINLINE int32 GetMaxBulletCount() const { return MaxBulletCount; }
@@ -98,4 +98,5 @@ private:
 
 	void SetShootAvailable();
 	void SetBulletPool();
+	void SendEventData(const FHitResult& HitResult);
 };

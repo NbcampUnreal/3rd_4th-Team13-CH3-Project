@@ -78,21 +78,21 @@ void UMatrixAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 		// 현재 체력 값 로그 추가
 		UE_LOG(LogTemp, Warning, TEXT("%s's Health changed to: %f"), *GetOwningActor()->GetName(), GetHealth()); // 추가
 		
-		if (GetHealth() <= 0.0f)
-		{
-			UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
-			if (ASC)
-			{
-				FGameplayEventData Payload;
-				Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("GameplayEvent.Death"));
-				Payload.Instigator = Data.EffectSpec.GetEffectContext().GetInstigator();
-				Payload.Target = GetOwningActor();
-				Payload.ContextHandle = Data.EffectSpec.GetEffectContext();
-				Payload.OptionalObject = Data.EffectSpec.GetEffectContext().GetSourceObject();
-				Payload.EventMagnitude = Data.EvaluatedData.Magnitude;
-				UE_LOG(LogTemp, Error, TEXT("Character %s is out of health. Sending GameplayEvent.Death!"), *GetOwningActor()->GetName());
-				ASC->HandleGameplayEvent(Payload.EventTag, &Payload);
-			}
-		}
+		//if (GetHealth() <= 0.0f)
+		//{
+		//	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+		//	if (ASC)
+		//	{
+		//		FGameplayEventData Payload;
+		//		Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("GameplayEvent.Death"));
+		//		Payload.Instigator = Data.EffectSpec.GetEffectContext().GetInstigator();
+		//		Payload.Target = GetOwningActor();
+		//		Payload.ContextHandle = Data.EffectSpec.GetEffectContext();
+		//		Payload.OptionalObject = Data.EffectSpec.GetEffectContext().GetSourceObject();
+		//		Payload.EventMagnitude = Data.EvaluatedData.Magnitude;
+		//		UE_LOG(LogTemp, Error, TEXT("Character %s is out of health. Sending GameplayEvent.Death!"), *GetOwningActor()->GetName());
+		//		ASC->HandleGameplayEvent(Payload.EventTag, &Payload);
+		//	}
+		//}
 	}
 }

@@ -7,12 +7,13 @@
 #include "Abilities/GameplayAbility.h"
 #include "Abilities/GameplayAbilityTypes.h"
 #include "Kismet/GameplayStatics.h"
-#include "GameFramework/MatrixGameMode.h"
 #include "GeometryCollection/GeometryCollectionActor.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
 
 #include "AI/EnemyCharacter.h"
+#include "GameFramework/MatrixGameMode.h"
 #include "Characters/MainPlayerCharacter.h"
+#include "Weapons/WeaponSystem/BulletBase.h"
 
 UGA_Death::UGA_Death()
 	: ChaosActorLifeSpan(3.0f)
@@ -77,9 +78,12 @@ void UGA_Death::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const F
 	{
 		HandleAIDeath(AI);
 	}
-
+	
 	// ChaosSystem 파괴 연출
-	SpawnChaosDestruction(OwnerActor);
+	if (ChaosDestructionClass)
+	{
+		SpawnChaosDestruction(OwnerActor, TriggerEventData);
+	}
 
 	// 메시 & 충돌 & 이동 비활성화
 	if (ACharacter* Character = Cast<ACharacter>(OwnerActor))
@@ -135,16 +139,16 @@ void UGA_Death::HandleAIDeath(AEnemyCharacter* Enemy)
 	}
 }
 
-void UGA_Death::SpawnChaosDestruction(AActor* OwnerActor)
+void UGA_Death::SpawnChaosDestruction(AActor* OwnerActor, const FGameplayEventData* TriggerEventData)
 {
 	if (!OwnerActor || !ChaosDestructionClass) return;
 
 	FVector SpawnLoc = OwnerActor->GetActorLocation();
 	SpawnLoc.Z -= 90.0f;
 	FRotator SpawnRot = OwnerActor->GetActorRotation();
+	SpawnRot.Yaw -= 90.0f;
 
 	AGeometryCollectionActor* ChaosActor = OwnerActor->GetWorld()->SpawnActor<AGeometryCollectionActor>(ChaosDestructionClass, SpawnLoc, SpawnRot);
-	UE_LOG(LogTemp, Warning, TEXT("GA_AiDeath: Spawned ChaosDestruction at %s."), *SpawnLoc.ToString());
 	
 	if (ChaosActor)
 	{
@@ -161,6 +165,17 @@ void UGA_Death::SpawnChaosDestruction(AActor* OwnerActor)
 			const float FinalImpulseStrength = ImpulseStrength;
 			const float FinalImpulseRadius = ImpulseRadius;
 			FVector HitLocation = OwnerActor->GetActorLocation();
+
+			if (TriggerEventData && TriggerEventData->TargetData.Num() > 0)
+			{
+				if (const FTargetData_HitWithImpulse* HitData = static_cast<const FTargetData_HitWithImpulse*>(TriggerEventData->TargetData.Get(0)))
+				{
+					HitLocation = HitData->ImpactPoint;
+
+					GeometryCollection->AddImpulseAtLocation(HitData->Impulse, HitLocation);
+					UE_LOG(LogTemp, Warning, TEXT("GA_AiDeath: Added Impulse at %s."), *HitLocation.ToString());
+				}
+			}
 
 			GetWorld()->GetTimerManager().SetTimerForNextTick([GeometryCollection, HitLocation, FinalImpulseStrength, FinalImpulseRadius]()
 			{

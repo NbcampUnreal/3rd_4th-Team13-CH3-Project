@@ -1,9 +1,11 @@
 #include "Weapons/WeaponSystem/BulletBase.h"
 
-#include "NiagaraSystem.h"
-#include "NiagaraComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "NiagaraSystem.h"
+#include "NiagaraComponent.h"
+#include "Abilities/GameplayAbilityTypes.h"
+#include "AbilitySystemBlueprintLibrary.h"
 
 #include "Weapons/WeaponSystem/WeaponBase.h"
 
@@ -53,13 +55,12 @@ void ABulletBase::OnBulletHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 		// Apply GameplayEffect
 		if (HasAuthority())
 		{
-			OwnerWeapon->ApplyBulletDamage(OtherActor);
+			OwnerWeapon->ApplyBulletDamage(OtherActor, Hit);
 		}
 	}
 
 	Destroy(); // Destroy bullet on hit
 }
-
 
 void ABulletBase::ActivateBullet(FVector Location, FRotator Rotation, APawn* NewOwner, AWeaponBase* NewWeapon)
 {

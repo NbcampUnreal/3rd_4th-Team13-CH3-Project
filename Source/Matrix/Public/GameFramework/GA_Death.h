@@ -31,5 +31,5 @@ protected:
 private:
 	void HandlePlayerDeath(AMainPlayerCharacter* Player);
 	void HandleAIDeath(AEnemyCharacter* Enemy);
-	void SpawnChaosDestruction(AActor* OwnerActor);
+	void SpawnChaosDestruction(AActor* OwnerActor, const FGameplayEventData* TriggerEventData);
 };
