@@ -4,8 +4,6 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "NiagaraSystem.h"
 #include "NiagaraComponent.h"
-#include "Abilities/GameplayAbilityTypes.h"
-#include "AbilitySystemBlueprintLibrary.h"
 
 #include "Weapons/WeaponSystem/WeaponBase.h"
 
@@ -13,19 +11,18 @@ ABulletBase::ABulletBase()
 {
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
 	SetRootComponent(CollisionComp);
-	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel1);
-	CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	CollisionComp->SetCollisionResponseToAllChannels(ECR_Overlap);
 	CollisionComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
-	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetupAttachment(CollisionComp);
 
 	ProjectileMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComp"));
 	ProjectileMovementComp->bRotationFollowsVelocity = true;
-	ProjectileMovementComp->bShouldBounce = true;
-	ProjectileMovementComp->Bounciness = 0.5f;
+	ProjectileMovementComp->bShouldBounce = false;
 	ProjectileMovementComp->ProjectileGravityScale = 0.0f;
 
 	TrailEffectComp = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TrailEffectComp"));
@@ -42,24 +39,42 @@ void ABulletBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ABulletBase::OnBulletOverlap);
 	CollisionComp->OnComponentHit.AddDynamic(this, &ABulletBase::OnBulletHit);
 }
 
 void ABulletBase::OnBulletHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
+	if ((OtherActor == nullptr) && (OtherActor == this) && (OtherActor == OwnerPawn))
+	{
+		return;
+	}
+	
 	UE_LOG(LogTemp, Warning, TEXT("ABulletBase OnBulletHit called. Hit Actor: %s"), OtherActor ? *OtherActor->GetName() : TEXT("None")); // Added log
 
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherActor != OwnerPawn))
+	DeactivateBullet();
+}
+
+void ABulletBase::OnBulletOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if ((OtherActor == nullptr) && (OtherActor == this) && (OtherActor == OwnerPawn))
 	{
-		// Apply GameplayEffect
-		if (HasAuthority())
-		{
-			OwnerWeapon->ApplyBulletDamage(OtherActor, Hit);
-		}
+		return;
 	}
 
-	Destroy(); // Destroy bullet on hit
+	UE_LOG(LogTemp, Warning, TEXT("ABulletBase OnBulletOverlap called. Hit Actor: %s"), OtherActor ? *OtherActor->GetName() : TEXT("None")); // Added log
+	
+	ECollisionChannel HitChannel = OtherComp ? OtherComp->GetCollisionObjectType() : OtherActor->GetRootComponent()->GetCollisionObjectType();
+
+	if (HitChannel == ECC_Pawn)
+	{
+		if (HasAuthority())
+		{
+			OwnerWeapon->ApplyBulletDamage(OtherActor, SweepResult);
+		}
+	}
 }
 
 void ABulletBase::ActivateBullet(FVector Location, FRotator Rotation, APawn* NewOwner, AWeaponBase* NewWeapon)
