@@ -138,9 +138,9 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 
 void AMainPlayerController::NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo)
 {
-	if (HUDWidgetInstance)
+	if (WeaponHUDWidgetInstance)
 	{
-		HUDWidgetInstance->UpdateAmmo(CurrentAmmo, MaxAmmo);
+		WeaponHUDWidgetInstance->UpdateAmmo(CurrentAmmo, MaxAmmo);
 	}
 }
 
