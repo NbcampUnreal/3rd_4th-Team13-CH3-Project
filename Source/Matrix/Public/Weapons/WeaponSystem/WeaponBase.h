@@ -35,7 +35,9 @@ public:
 	
 	void SetWeaponOwner(AActor* NewOwner);
 	void ResetWeaponOwner();
+	void AttachToOwner(USceneComponent* ParentComp);
 	void ApplyBulletDamage(AActor* TargetActor, const FHitResult& HitResult);
+	UStaticMeshComponent* GetMeshComp() const { return MeshComp; }
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
 	FORCEINLINE int32 GetMaxBulletCount() const { return MaxBulletCount; }
@@ -50,6 +52,8 @@ public:
 	FVector GetFireDirection() const;		// 총알 발사 방향 계산 함수
 	
 protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+	USceneComponent* RootComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	USphereComponent* CollisionComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
@@ -76,7 +80,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	float WeaponDamage;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	TSubclassOf<UGameplayEffect> BulletDamageEffect; 
+	TSubclassOf<UGameplayEffect> BulletDamageEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+	FRotator MeshInitialRotation;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+	FVector MeshInitialScale;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	USoundBase* FireSound;

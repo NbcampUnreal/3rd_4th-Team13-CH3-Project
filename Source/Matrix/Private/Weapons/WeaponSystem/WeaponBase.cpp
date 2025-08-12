@@ -21,15 +21,27 @@ AWeaponBase::AWeaponBase()
 	, AttachSocket(TEXT("NONE"))
 	, bIsFiring(false)
 	, WeaponDamage(100.0f)
+	, MeshInitialRotation(FRotator::ZeroRotator)
+	, MeshInitialScale(FVector::OneVector)
 {
+	RootComp = CreateDefaultSubobject<USceneComponent>(TEXT("RootComp"));
+	SetRootComponent(RootComp);
+	
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
-	SetRootComponent(CollisionComp);
+	CollisionComp->SetupAttachment(RootComp);
+	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	CollisionComp->SetCollisionObjectType(ECC_WorldDynamic);
+	CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
-	MeshComp->SetupAttachment(CollisionComp);
+	MeshComp->SetupAttachment(RootComp);
+	MeshComp->SetSimulatePhysics(true);
+	MeshComp->SetEnableGravity(true);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	MeshComp->SetCollisionObjectType(ECC_PhysicsBody);
 
 	MuzzlePoint = CreateDefaultSubobject<UArrowComponent>(TEXT("MuzzlePoint"));
-	MuzzlePoint->SetupAttachment(CollisionComp);
+	MuzzlePoint->SetupAttachment(RootComp);
 	MuzzlePoint->ArrowColor = FColor::Red;
 	MuzzlePoint->bHiddenInGame = true;
 	MuzzlePoint->bIsScreenSizeScaled = true;
@@ -109,6 +121,32 @@ void AWeaponBase::ResetWeaponOwner()
 	{
 		OwnerPC = nullptr;
 	}
+
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	MeshComp->SetSimulatePhysics(true);
+	MeshComp->SetEnableGravity(true);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
+
+void AWeaponBase::AttachToOwner(USceneComponent* ParentComp)
+{
+	MeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector);
+	MeshComp->SetSimulatePhysics(false);
+	MeshComp->SetEnableGravity(false);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		
+	FAttachmentTransformRules AttachRules(
+	EAttachmentRule::SnapToTarget,
+	EAttachmentRule::SnapToTarget,
+	EAttachmentRule::SnapToTarget,
+	true
+	);
+
+	AttachToComponent(ParentComp, AttachRules, AttachSocket);
+	MeshComp->AttachToComponent(ParentComp, AttachRules, AttachSocket);
+
+	MeshComp->SetRelativeRotation(MeshInitialRotation);
+	MeshComp->SetRelativeScale3D(MeshInitialScale);
 }
 
 bool AWeaponBase::FireBullet()

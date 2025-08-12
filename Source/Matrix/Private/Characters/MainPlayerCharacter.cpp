@@ -232,24 +232,15 @@ void AMainPlayerCharacter::PickUpWeapon(AWeaponBase* NewWeapon)
 
 	if (CurrentWeapon)
 	{
-		CurrentWeapon->ResetWeaponOwner();
+		//CurrentWeapon->ResetWeaponOwner();
 		CurrentWeapon->Destroy(); //기존 무기 Destroy
 		CurrentWeapon = nullptr;
 	}
 	
 	CurrentWeapon = NewWeapon; //새 무기 장착
-	// 무기를 캐릭터에 부착
-	FAttachmentTransformRules AttachRules(
-	EAttachmentRule::SnapToTarget,
-	EAttachmentRule::SnapToTarget,
-	EAttachmentRule::SnapToTarget,
-	true
-	);	
-
-	CurrentWeapon->AttachToComponent(GetMesh(), AttachRules, CurrentWeapon->GetAttachSocket());
 	CurrentWeapon->SetWeaponOwner(this);
-
-
+	CurrentWeapon->AttachToOwner(GetMesh());
+	
 	if (AMainPlayerController* PlayerController = Cast<AMainPlayerController>(GetController()))
 	{
 		if (PlayerController->MainHUDWidgetInstance)
