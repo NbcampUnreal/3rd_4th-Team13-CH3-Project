@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayEffect.h"
 #include "GameFramework/Actor.h"
 #include "BulletBase.generated.h"
 
@@ -45,11 +44,11 @@ protected:
 	void OnBulletHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 private:
-	FTimerHandle DeactivateTimerHandle;
-	bool bIsActive;
-
 	UPROPERTY()
 	APawn* OwnerPawn;
 	UPROPERTY()
 	AWeaponBase* OwnerWeapon;
+
+	FTimerHandle DeactivateTimerHandle;
+	bool bIsActive;
 };

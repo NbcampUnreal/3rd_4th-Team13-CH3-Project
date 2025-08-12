@@ -27,7 +27,9 @@ public class Matrix : ModuleRules
 			"GameplayTasks",
 			// Niagara
 			"Niagara",
-			"NiagaraCore"
+			"NiagaraCore",
+			// Geometry Collection
+			"GeometryCollectionEngine"
 		});
 				
 		// Uncomment if you are using Slate UI

@@ -4,8 +4,7 @@
 #include "NiagaraComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "AbilitySystemComponent.h"
-#include "AbilitySystemInterface.h" 
+
 #include "Weapons/WeaponSystem/WeaponBase.h"
 
 ABulletBase::ABulletBase()
