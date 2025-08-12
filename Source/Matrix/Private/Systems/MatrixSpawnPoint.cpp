@@ -1,6 +1,6 @@
-#include "Core/MatrixSpawnPoint.h"
+#include "Systems/MatrixSpawnPoint.h"
 
 void AMatrixSpawnPoint::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const
 {
-	TagContainer.AppendTags(SpawnTags);
+	TagContainer = SpawnTags;
 }

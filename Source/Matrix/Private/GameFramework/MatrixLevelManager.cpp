@@ -3,6 +3,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "GameFramework/GameModeBase.h"
+#include "Engine/LevelStreaming.h"
 
 UMatrixLevelManager::UMatrixLevelManager()
 {
@@ -174,6 +175,79 @@ void UMatrixLevelManager::OnLevelTransitionFinished()
     UE_LOG(LogTemp, Log, TEXT("Level transition finished"));
 }
 
+// === 서브레벨 스트리밍 함수들 ===
+
+void UMatrixLevelManager::LoadSubLevel(const FName& SubLevelName, bool bMakeVisibleAfterLoad)
+{
+    if (SubLevelName.IsNone())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SubLevel name is None"));
+        return;
+    }
+    
+    if (IsSubLevelLoaded(SubLevelName))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SubLevel %s is already loaded"), *SubLevelName.ToString());
+        return;
+    }
+    
+    UE_LOG(LogTemp, Log, TEXT("Loading sublevel: %s"), *SubLevelName.ToString());
+    
+    // 서브레벨 로드
+    UGameplayStatics::LoadStreamLevel(GetWorld(), SubLevelName, true, bMakeVisibleAfterLoad, 
+        FLatentActionInfo(0, 0, TEXT("OnSubLevelLoaded"), this));
+}
+
+void UMatrixLevelManager::UnloadSubLevel(const FName& SubLevelName)
+{
+    if (SubLevelName.IsNone())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SubLevel name is None"));
+        return;
+    }
+    
+    if (!IsSubLevelLoaded(SubLevelName))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SubLevel %s is not loaded"), *SubLevelName.ToString());
+        return;
+    }
+    
+    UE_LOG(LogTemp, Log, TEXT("Unloading sublevel: %s"), *SubLevelName.ToString());
+    
+    // 서브레벨 언로드
+    UGameplayStatics::UnloadStreamLevel(GetWorld(), SubLevelName, 
+        FLatentActionInfo(0, 0, TEXT("OnSubLevelUnloaded"), this), false);
+}
+
+bool UMatrixLevelManager::IsSubLevelLoaded(const FName& SubLevelName) const
+{
+    if (SubLevelName.IsNone()) return false;
+    
+    UWorld* World = GetWorld();
+    if (!World) return false;
+    
+    // 현재 로드된 서브레벨들 확인
+    for (ULevelStreaming* StreamingLevel : World->GetStreamingLevels())
+    {
+        if (StreamingLevel && StreamingLevel->GetWorldAssetPackageFName() == SubLevelName)
+        {
+            return StreamingLevel->IsLevelLoaded();
+        }
+    }
+    
+    return false;
+}
+
+void UMatrixLevelManager::OnSubLevelLoaded(const FName& SubLevelName)
+{
+    UE_LOG(LogTemp, Log, TEXT("SubLevel %s loaded successfully"), *SubLevelName.ToString());
+}
+
+void UMatrixLevelManager::OnSubLevelUnloaded(const FName& SubLevelName)
+{
+    UE_LOG(LogTemp, Log, TEXT("SubLevel %s unloaded successfully"), *SubLevelName.ToString());
+}
+
 FName UMatrixLevelManager::GetCurrentLevel() const
 {
     return CurrentLevel;
@@ -218,9 +292,9 @@ FLevelInfo UMatrixLevelManager::GetLevelInfo(const FName& LevelName) const
 	FLevelInfo DefaultInfo;
 	DefaultInfo.LevelName = LevelName;
 	DefaultInfo.LevelType = ELevelType::Gameplay;
-	DefaultInfo.RequiredScore = 0;
-	DefaultInfo.TimeLimit = 0.0f;
-	DefaultInfo.bRequireBossDefeat = false;
+	DefaultInfo.DisplayName = LevelName.ToString();
+	DefaultInfo.bIsUnlocked = true;
+	DefaultInfo.ProgressState = ELevelProgressState::NotStarted;
 	
 	return DefaultInfo;
 }
@@ -234,31 +308,7 @@ bool UMatrixLevelManager::CheckLevelCompletionConditions(const FName& LevelName)
 {
 	FLevelInfo LevelInfo = GetLevelInfo(LevelName);
 	
-	// 기본 완료 조건들
-	bool bTimeLimitOK = true;
-	bool bScoreOK = true;
-	bool bBossDefeated = true;
-	
-	// 시간 제한 체크
-	if (LevelInfo.TimeLimit > 0.0f)
-	{
-		float CurrentTime = GetWorld()->GetTimeSeconds();
-		bTimeLimitOK = (CurrentTime - GameStartTime) <= LevelInfo.TimeLimit;
-	}
-	
-	// 점수 체크 (실제로는 게임 인스턴스에서 가져와야 함)
-	if (LevelInfo.RequiredScore > 0)
-	{
-		// TODO: 실제 점수 시스템과 연동
-		bScoreOK = true; // 임시로 true
-	}
-	
-	// 보스 처치 체크
-	if (LevelInfo.bRequireBossDefeat)
-	{
-		// TODO: 보스 처치 상태 확인
-		bBossDefeated = true; // 임시로 true
-	}
-	
-	return bTimeLimitOK && bScoreOK && bBossDefeated;
+	// 현재는 기본적으로 완료된 것으로 간주
+	// 향후 실제 완료 조건 로직 구현 예정
+	return LevelInfo.ProgressState == ELevelProgressState::Completed;
 }

@@ -1,5 +1,5 @@
-#include "Core/MatrixSpawnManager.h"
-#include "Core/MatrixSpawnPoint.h"
+#include "Systems/MatrixSpawnManager.h"
+#include "Systems/MatrixSpawnPoint.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameplayTagAssetInterface.h"
 #include "GameFramework/MatrixGameMode.h"
@@ -63,4 +63,3 @@ TArray<AActor*> AMatrixSpawnManager::GetSpawnPointsForTag(const FGameplayTag& In
 
 	return TArray<AActor*>();
 }
-

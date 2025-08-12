@@ -4,7 +4,7 @@
 
 AMatrixGameState::AMatrixGameState()
 {
-	CurrentGameState = EGameState::None;
+	CurrentGameState = EGameState::MainMenu;
 }
 
 void AMatrixGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

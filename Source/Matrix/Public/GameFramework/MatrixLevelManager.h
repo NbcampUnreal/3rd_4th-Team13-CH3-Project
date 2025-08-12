@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "Core/MatrixGameTypes.h"
+#include "Core/MatrixCoreTypes.h"
 #include "MatrixLevelManager.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelTransitionStarted, const FName&, LevelName);
@@ -52,6 +52,16 @@ public:
     // 레벨 전환 요청
     UFUNCTION(BlueprintCallable, Category = "Level Management")
     void RequestLevelTransition(const FName& TargetLevel, ELevelTransitionType TransitionType);
+    
+    // 서브레벨 로드/언로드
+    UFUNCTION(BlueprintCallable, Category = "Level Management")
+    void LoadSubLevel(const FName& SubLevelName, bool bMakeVisibleAfterLoad = true);
+    
+    UFUNCTION(BlueprintCallable, Category = "Level Management")
+    void UnloadSubLevel(const FName& SubLevelName);
+    
+    UFUNCTION(BlueprintCallable, Category = "Level Management")
+    bool IsSubLevelLoaded(const FName& SubLevelName) const;
     
     // 현재 레벨 정보
     UFUNCTION(BlueprintCallable, Category = "Level Management")
@@ -146,6 +156,10 @@ private:
     
     // 레벨 전환 완료 처리
     void OnLevelTransitionFinished();
+    
+    // 서브레벨 로드/언로드 완료 콜백
+    void OnSubLevelLoaded(const FName& SubLevelName);
+    void OnSubLevelUnloaded(const FName& SubLevelName);
     
     // 게임 상태 초기화
     void InitializeGameState();

@@ -1,7 +1,7 @@
 #include "Characters/MainPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 #include "Blueprint/UserWidget.h"
-#include "Core/MatrixGameTypes.h"
+#include "Core/MatrixCoreTypes.h"
 #include "GameFramework/MatrixGameMode.h"
 #include "GameFramework/MatrixGameState.h"
 #include "GameFramework/MatrixLevelManager.h"
@@ -160,7 +160,7 @@ void AMainPlayerController::HandlePauseMenu()
 	}
 }
 
-// === 게임 흐름 관리 함수들 (간소화) ===
+// === 게임 흐름 관리 함수들 ===
 
 void AMainPlayerController::StartGame()
 {
@@ -248,7 +248,6 @@ void AMainPlayerController::HandlePauseMenu()
 				PauseMenuInstance->AddToViewport();
 
 				PauseMenuInstance->SetIsFocusable(true);
-				PauseMenuInstance->bIsFocusable = true;	
 				PauseMenuInstance->SetKeyboardFocus();
 
 				FInputModeUIOnly InputMode;

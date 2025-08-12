@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameState.h"
-#include "Core/MatrixGameTypes.h"
+#include "Core/MatrixCoreTypes.h"
 #include "MatrixGameState.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameStateChanged, EGameState, NewState);

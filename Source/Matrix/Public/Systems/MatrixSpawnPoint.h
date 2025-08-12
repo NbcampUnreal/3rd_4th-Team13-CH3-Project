@@ -8,11 +8,11 @@
 UCLASS()
 class MATRIX_API AMatrixSpawnPoint : public ATargetPoint, public IGameplayTagAssetInterface
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Point")
-	FGameplayTagContainer SpawnTags;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Point")
+    FGameplayTagContainer SpawnTags;
 
-	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override;
+    virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override;
 };

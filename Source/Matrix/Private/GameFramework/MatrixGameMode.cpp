@@ -1,8 +1,8 @@
 #include "GameFramework/MatrixGameMode.h"
 #include "GameFramework/MatrixGameState.h"
 #include "AI/EnemyCharacter.h"
-#include "Core/MatrixGameTypes.h"
-#include "Core/MatrixSpawnManager.h"
+#include "Core/MatrixCoreTypes.h"
+#include "Systems/MatrixSpawnManager.h"
 #include "Engine/TargetPoint.h"
 #include "GameFramework/MatrixGameInstance.h"
 #include "Kismet/GameplayStatics.h"
@@ -152,8 +152,7 @@ void AMatrixGameMode::CheckGameClearCondition()
         else
         {
             UE_LOG(LogTemp, Warning, TEXT("Proceeding to Level %d"), GameInstance->CurrentLevel);
-            GameInstance->AdvanceToNextStreamingLevel();
-            // TOdo: 새 레벨의 웨이브 데이터 테이블 로드 & StartWave()
+            // 새 레벨의 웨이브 데이터 테이블 로드는 향후 구현 예정
         }
     }
 }
@@ -190,4 +189,72 @@ void AMatrixGameMode::RegisterSpawnManager(AMatrixSpawnManager* InSpawnManager)
 {
     SpawnManager = InSpawnManager;
     UE_LOG(LogTemp, Warning, TEXT("SpawnManager has been registered to GameMode!"));
+}
+
+// === 웨이브 관리 함수들 ===
+
+void AMatrixGameMode::StartSpecificWave(int32 WaveNumber)
+{
+    if (!MatrixGameState || !CurrentWaveDataTable || !SpawnManager) 
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Cannot start specific wave: Missing required components"));
+        return;
+    }
+    
+    // 웨이브 번호 설정
+    MatrixGameState->CurrentWave = WaveNumber;
+    MatrixGameState->EnemiesRemaining = 0;
+    
+    FString ContextString;
+    FWaveData* CurrentWaveData = CurrentWaveDataTable->FindRow<FWaveData>(FName(*FString::FromInt(WaveNumber)), ContextString);
+    
+    if (!CurrentWaveData)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Wave %d data not found"), WaveNumber);
+        return;
+    }
+    
+    UE_LOG(LogTemp, Warning, TEXT("Starting Specific Wave %d!"), WaveNumber);
+    
+    // 웨이브 데이터에 따라 적 스폰
+    for (const FEnemySpawnInfo& SpawnInfo : CurrentWaveData->SpawnInfos)
+    {
+        TArray<AActor*> AvailableSpawnPoints = SpawnManager->GetSpawnPointsForTag(SpawnInfo.SpawnPointTag);
+        
+        if (AvailableSpawnPoints.IsEmpty())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("No spawn points found for tag: %s"), *SpawnInfo.SpawnPointTag.ToString());
+            continue;
+        }
+        
+        if (!SpawnInfo.EnemyClass)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("EnemyClass is not set for spawn command with tag: %s"), *SpawnInfo.SpawnPointTag.ToString());
+            continue;
+        }
+        
+        MatrixGameState->EnemiesRemaining += SpawnInfo.SpawnCount;
+        
+        for (int32 i = 0; i < SpawnInfo.SpawnCount; ++i)
+        {
+            AActor* SpawnPoint = AvailableSpawnPoints[i % AvailableSpawnPoints.Num()];
+            
+            FActorSpawnParameters SpawnParams;
+            SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+            GetWorld()->SpawnActor<AEnemyCharacter>(SpawnInfo.EnemyClass, SpawnPoint->GetActorTransform(), SpawnParams);
+        }
+    }
+    
+    if (MatrixGameState->EnemiesRemaining == 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Wave %d has no enemies to spawn"), WaveNumber);
+    }
+}
+
+void AMatrixGameMode::ForceStartWave()
+{
+    if (!MatrixGameState) return;
+    
+    // 다음 웨이브 시작
+    StartWave();
 }

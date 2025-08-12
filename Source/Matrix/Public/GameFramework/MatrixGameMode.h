@@ -2,46 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
-#include "Engine/DataTable.h"
-#include "GameplayTagContainer.h"
+#include "Core/MatrixWaveTypes.h"
 #include "MatrixGameMode.generated.h"
 
 class AMatrixGameState;
-class AEnemyCharacter;
 class AMatrixSpawnManager;
-
-USTRUCT(BlueprintType)
-struct FEnemySpawnInfo
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<AEnemyCharacter> EnemyClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FGameplayTag SpawnPointTag;
-    
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 SpawnCount = 1;
-};
-
-USTRUCT(BlueprintType)
-struct FWaveData : public FTableRowBase
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FEnemySpawnInfo> SpawnInfos;
-};
-
-USTRUCT(BlueprintType)
-struct FLevelData : public FTableRowBase
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere)
-	UDataTable* WaveDataTable;
-};
 
 UCLASS()
 class MATRIX_API AMatrixGameMode : public AGameMode
@@ -54,6 +19,13 @@ public:
 	void PlayerDied();
 	void RequestTogglePause();
 	void RegisterSpawnManager(AMatrixSpawnManager* InSpawnManager);
+	
+	// 웨이브 관리 함수들
+	UFUNCTION(BlueprintCallable, Category = "Wave Management")
+	void StartSpecificWave(int32 WaveNumber);
+	
+	UFUNCTION(BlueprintCallable, Category = "Wave Management")
+	void ForceStartWave();
 
 protected:
 	// 웨이브 사이의 대기 시간 
