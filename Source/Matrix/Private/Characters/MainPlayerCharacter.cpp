@@ -252,9 +252,9 @@ void AMainPlayerCharacter::PickUpWeapon(AWeaponBase* NewWeapon)
 
 	if (AMainPlayerController* PlayerController = Cast<AMainPlayerController>(GetController()))
 	{
-		if (PlayerController->WeaponHUDWidgetInstance)
+		if (PlayerController->MainHUDWidgetInstance)
 		{
-			PlayerController->WeaponHUDWidgetInstance->UpdateWeaponIcon(CurrentWeapon->GetWeaponType());
+			PlayerController->MainHUDWidgetInstance->UpdateWeaponIcon(CurrentWeapon->GetWeaponType());
 			PlayerController->NotifyAmmoChanged(CurrentWeapon->GetCurrentBulletCount(), CurrentWeapon->GetMaxBulletCount());
 		}
 	}

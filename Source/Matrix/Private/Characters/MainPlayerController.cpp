@@ -14,8 +14,8 @@ AMainPlayerController::AMainPlayerController()
 	LookAction(nullptr), 
 	ShootAction(nullptr), 
 	InteractAction(nullptr),
-	HUDWidgetClass(nullptr),
-	HUDWidgetInstance(nullptr)
+	MainHUDWidgetClass(nullptr),
+	MainHUDWidgetInstance(nullptr)
 {
 
 }
@@ -48,9 +48,9 @@ void AMainPlayerController::BeginPlay()
 	}, 0.1f, false);
 	
 	/*	OnGameStateChanged 함수가 역할을 대신합니다! 혹시몰라 주석처리만 해놨어요!
-	if (HUDWidgetClass)
+	if (MainHUDWidgetClass)
 	{
-		HUDWidgetInstance = CreateWidget<UMainHUDWidget>(this, HUDWidgetClass);
+		HUDWidgetInstance = CreateWidget<UMainHUDWidget>(this, MainHUDWidgetClass);
 		if (HUDWidgetInstance)
 		{
 			HUDWidgetInstance->AddToViewport();
@@ -79,21 +79,21 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 	}
     
 	// 메인 HUD도 상태에 따라 껐다 켰다 할 수 있어요!
-	if(HUDWidgetInstance)
+	if(MainHUDWidgetInstance)
 	{
-		HUDWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
+		MainHUDWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
 	switch (NewState)
 	{
 	case EGameState::Playing:
-		if (!HUDWidgetInstance && HUDWidgetClass) 
+		if (!MainHUDWidgetInstance && MainHUDWidgetClass) 
 		{
-			HUDWidgetInstance = CreateWidget<UMainHUDWidget>(this, HUDWidgetClass);
-			HUDWidgetInstance->AddToViewport();
+			MainHUDWidgetInstance = CreateWidget<UMainHUDWidget>(this, MainHUDWidgetClass);
+			MainHUDWidgetInstance->AddToViewport();
 		}
 
-		if(HUDWidgetInstance) HUDWidgetInstance->SetVisibility(ESlateVisibility::Visible);
+		if(MainHUDWidgetInstance) MainHUDWidgetInstance->SetVisibility(ESlateVisibility::Visible);
 		SetShowMouseCursor(false);
 		SetInputMode(FInputModeGameOnly());
 		break;
@@ -138,9 +138,9 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 
 void AMainPlayerController::NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo)
 {
-	if (WeaponHUDWidgetInstance)
+	if (MainHUDWidgetInstance)
 	{
-		WeaponHUDWidgetInstance->UpdateAmmo(CurrentAmmo, MaxAmmo);
+		MainHUDWidgetInstance->UpdateAmmo(CurrentAmmo, MaxAmmo);
 	}
 }
 

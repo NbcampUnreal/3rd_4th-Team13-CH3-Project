@@ -31,14 +31,9 @@ public:
 	UInputAction* InteractAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
-	TSubclassOf<UMainHUDWidget> HUDWidgetClass;
+	TSubclassOf<UMainHUDWidget> MainHUDWidgetClass;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD")
-	UMainHUDWidget* HUDWidgetInstance;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
-	TSubclassOf<UWeaponHUDWidget> WeaponHUDWidgetClass;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD")
-	UWeaponHUDWidget* WeaponHUDWidgetInstance;
+	UMainHUDWidget* MainHUDWidgetInstance;
 
 	virtual void SetupInputComponent() override;
 
