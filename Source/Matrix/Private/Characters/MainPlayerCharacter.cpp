@@ -9,6 +9,10 @@
 #include "UI/Widget/WeaponHUDWidget.h"
 #include "GameFramework/MatrixAttributeSet.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/InventoryComponent.h"
+#include "Items/BaseItem.h"
+#include "Kismet/GameplayStatics.h"
+
 
 AMainPlayerCharacter::AMainPlayerCharacter()
 {
@@ -23,9 +27,13 @@ AMainPlayerCharacter::AMainPlayerCharacter()
 	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName);
 	CameraComp->bUsePawnControlRotation = false;
 
+	InventoryComp = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
+	
 	MoveSpeed = 500.f;
 	bIsInput = false;
 	bIsLook = false;
+	bCanHit = true;
+	bCanShoot = true;
 	CurrentWeapon = nullptr;
 
 	// Set GAS
@@ -153,6 +161,36 @@ void AMainPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 					&AMainPlayerCharacter::Interact
 				);
 			}
+			//퀵슬롯1
+			if (PlayerController->QuickSlot1Action)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->QuickSlot1Action,
+					ETriggerEvent::Triggered,
+					this,
+					&AMainPlayerCharacter::QuickSlot1
+				);
+			}
+			//퀵슬롯2
+			if (PlayerController->QuickSlot2Action)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->QuickSlot2Action,
+					ETriggerEvent::Triggered,
+					this,
+					&AMainPlayerCharacter::QuickSlot2
+				);
+			}
+			//퀵슬롯3
+			if (PlayerController->QuickSlot3Action)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->QuickSlot3Action,
+					ETriggerEvent::Triggered,
+					this,
+					&AMainPlayerCharacter::QuickSlot3
+				);
+			}
 		}
 	}
 }
@@ -219,7 +257,7 @@ void AMainPlayerCharacter::SlowWorld()
 
 void AMainPlayerCharacter::Shoot(const FInputActionValue& Value)
 {
-	if (CurrentWeapon)
+	if (CurrentWeapon && bCanShoot)
 	{
 		CurrentWeapon->Shoot(); //총 발사
 	}
@@ -247,6 +285,69 @@ void AMainPlayerCharacter::PickUpWeapon(AWeaponBase* NewWeapon)
 		{
 			PlayerController->MainHUDWidgetInstance->UpdateWeaponIcon(CurrentWeapon->GetWeaponType());
 			PlayerController->NotifyAmmoChanged(CurrentWeapon->GetCurrentBulletCount(), CurrentWeapon->GetMaxBulletCount());
+		}
+	}
+}
+
+void AMainPlayerCharacter::QuickSlot1(const FInputActionValue& Value)
+{
+	if (!CurrentWeapon)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[MainPlayerCharacter] Get Weapon Failed."))
+		return;
+	}
+	
+	if (Value.Get<bool>())
+	{
+		if (InventoryComp)
+		{
+			ABaseItem* Item = InventoryComp->GetItems(0);
+			if (Item)
+			{
+				InventoryComp->RemoveItem(0);
+			}
+		}
+	}
+}
+
+void AMainPlayerCharacter::QuickSlot2(const FInputActionValue& Value)
+{
+	if (!CurrentWeapon)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[MainPlayerCharacter] Get Weapon Failed."))
+		return;
+	}
+	
+	if (Value.Get<bool>())
+	{
+		if (InventoryComp)
+		{
+			ABaseItem* Item = InventoryComp->GetItems(1);
+			if (Item)
+			{
+				InventoryComp->RemoveItem(1);
+			}
+		}
+	}
+}
+
+void AMainPlayerCharacter::QuickSlot3(const FInputActionValue& Value)
+{
+	if (!CurrentWeapon)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[MainPlayerCharacter] Get Weapon Failed."))
+		return;
+	}
+	
+	if (Value.Get<bool>())
+	{
+		if (InventoryComp)
+		{
+			ABaseItem* Item = InventoryComp->GetItems(2);
+			if (Item)
+			{
+				InventoryComp->RemoveItem(2);
+			}
 		}
 	}
 }
@@ -280,6 +381,11 @@ void AMainPlayerCharacter::Interact(const FInputActionValue& Value)
 			if (AWeaponBase* HitWeapon = Cast<AWeaponBase>(HitActor.GetActor()))
 			{
 				PickUpWeapon(HitWeapon);
+				break;
+			}
+			else if (ABaseItem* HitItem = Cast<ABaseItem>(HitActor.GetActor()))
+			{
+				InventoryComp->AddItem(HitItem);
 				break;
 			}
 		}

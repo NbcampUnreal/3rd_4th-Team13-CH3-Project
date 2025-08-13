@@ -5,6 +5,7 @@
 #include "AbilitySystemInterface.h"
 #include "MainPlayerCharacter.generated.h"
 
+class UInventoryComponent;
 class UGameplayAbility;
 class UMatrixAttributeSet;
 class AWeaponBase;
@@ -27,6 +28,12 @@ public:
 	USpringArmComponent* SpringArmComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	UCameraComponent* CameraComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	UInventoryComponent* InventoryComp;
+
+	void SetCanShoot(bool NewCanShoot) {bCanShoot = NewCanShoot;};
+	void SetCanHit(bool NewCanHit) {bCanHit = NewCanHit;};
+	AWeaponBase* GetCurrentWeapon() {return CurrentWeapon;};
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
@@ -38,6 +45,11 @@ protected:
 	TObjectPtr<UMatrixAttributeSet> AttributeSet;		// 체력 AttributeSet
 	UPROPERTY(EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<UGameplayAbility> DeathAbilityClass;	// 사망 Ability
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	bool bCanHit;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	bool bCanShoot;
 	
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -55,7 +67,12 @@ protected:
 	void Shoot(const FInputActionValue& Value);
 	UFUNCTION()
 	void Interact(const FInputActionValue& Value);
-
+	UFUNCTION()
+	void QuickSlot1(const FInputActionValue& Value);
+	UFUNCTION()
+	void QuickSlot2(const FInputActionValue& Value);
+	UFUNCTION()
+	void QuickSlot3(const FInputActionValue& Value);
 	
 	//void OnDeath();
 	void PickUpWeapon(AWeaponBase* NewWeapon);

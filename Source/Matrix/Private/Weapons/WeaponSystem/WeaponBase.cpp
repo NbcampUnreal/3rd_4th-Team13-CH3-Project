@@ -281,3 +281,16 @@ FVector AWeaponBase::GetFireDirection() const
 
 	return MuzzlePoint->GetForwardVector();
 }
+
+void AWeaponBase::SetBulletCount(float Amount)
+{
+	CurrentBulletCount = FMath::Clamp(CurrentBulletCount + (MaxBulletCount * Amount), 0, MaxBulletCount);
+
+	if (OwnerPC)
+	{
+		if (AMainPlayerController* PC = Cast<AMainPlayerController>(OwnerPC))
+		{
+			PC->NotifyAmmoChanged(CurrentBulletCount, MaxBulletCount);
+		}
+	}
+}

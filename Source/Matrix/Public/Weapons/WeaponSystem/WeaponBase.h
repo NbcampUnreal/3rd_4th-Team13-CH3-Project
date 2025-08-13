@@ -35,9 +35,13 @@ public:
 	
 	void SetWeaponOwner(AActor* NewOwner);
 	void ResetWeaponOwner();
+	void SetBulletCount(float Amount);
 	void AttachToOwner(USceneComponent* ParentComp);
 	void ApplyBulletDamage(AActor* TargetActor, const FHitResult& HitResult);
 	UStaticMeshComponent* GetMeshComp() const { return MeshComp; }
+
+
+
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
 	FORCEINLINE int32 GetMaxBulletCount() const { return MaxBulletCount; }
@@ -50,6 +54,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	FVector GetFireDirection() const;		// 총알 발사 방향 계산 함수
+	
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")

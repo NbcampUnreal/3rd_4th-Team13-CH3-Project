@@ -15,9 +15,12 @@ AMainPlayerController::AMainPlayerController()
 	ShootAction(nullptr), 
 	InteractAction(nullptr),
 	MainHUDWidgetClass(nullptr),
-	MainHUDWidgetInstance(nullptr)
+	MainHUDWidgetInstance(nullptr),
+	QuickSlot1Action((nullptr)),
+	QuickSlot2Action((nullptr)),
+	QuickSlot3Action((nullptr)),
 {
-
+	
 }
 
 void AMainPlayerController::BeginPlay()
