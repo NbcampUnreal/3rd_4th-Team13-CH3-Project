@@ -43,9 +43,8 @@ void AEnemyCharacter::BeginPlay()
 		EquippedWeapon = GetWorld()->SpawnActor<AWeaponBase>(DefaultWeaponClass, GetActorLocation(), GetActorRotation(), SpawnParams);
 		if (EquippedWeapon)
 		{
-			FName WeaponSocketName = EquippedWeapon->GetAttachSocket();
-			EquippedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
 			EquippedWeapon->SetWeaponOwner(this);
+			EquippedWeapon->AttachToOwner(GetMesh());
 		}
 	}
 
