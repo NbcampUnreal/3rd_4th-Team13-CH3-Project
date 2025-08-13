@@ -360,8 +360,10 @@ void AMainPlayerCharacter::Interact(const FInputActionValue& Value)
 	Params.AddIgnoredActor(CurrentWeapon);
 
 	FVector Start = GetActorLocation();
-	FVector End = Start + CameraComp->GetForwardVector() * 350.0f;
-	FVector HalfSize = FVector(10.0f, 100.0f, 100.0f); // 박스 크기 지정
+	Start.Z += 80.f;
+	Start.X -= 50.f;
+	FVector End = Start + CameraComp->GetForwardVector() * 430.0f;
+	FVector HalfSize = FVector(10.0f, 110.0f, 110.0f); // 박스 크기 지정
 	FRotator Orientation = CameraComp->GetComponentRotation();
 
 	bool bHit = GetWorld()->SweepMultiByChannel(
