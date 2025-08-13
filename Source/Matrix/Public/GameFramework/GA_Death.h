@@ -21,7 +21,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Death|Chaos")
 	TSubclassOf<AActor> ChaosDestructionClass;
-	UPROPERTY(EditDefaultsOnly, Category = "Death|Chaos")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death|Chaos")
 	float ChaosActorLifeSpan;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death|Chaos")
 	float ImpulseStrength;

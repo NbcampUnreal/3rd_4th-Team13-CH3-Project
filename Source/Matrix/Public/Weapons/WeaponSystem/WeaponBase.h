@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "WeaponBase.generated.h"
 
+class UWeaponAttachmentComponent;
 class UGameplayEffect;
 class UArrowComponent;
 class USphereComponent;
@@ -27,21 +28,17 @@ class MATRIX_API AWeaponBase : public AActor
 	
 public:	
 	AWeaponBase();
+	
+	void SetWeaponOwner(AActor* NewOwner);
+	void ResetWeaponOwner();
+	void AttachToOwner(USceneComponent* ParentComp);
+	void DetachFromOwner();
+	void ApplyBulletDamage(AActor* TargetActor, const FHitResult& HitResult);
 
 	UFUNCTION(BlueprintCallable)
 	void Shoot();
 	UFUNCTION(BlueprintCallable)
 	void SetTargetLocation(const FVector& NewTargetLocation);
-	
-	void SetWeaponOwner(AActor* NewOwner);
-	void ResetWeaponOwner();
-	void SetBulletCount(float Amount);
-	void AttachToOwner(USceneComponent* ParentComp);
-	void ApplyBulletDamage(AActor* TargetActor, const FHitResult& HitResult);
-	UStaticMeshComponent* GetMeshComp() const { return MeshComp; }
-
-
-
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
 	FORCEINLINE int32 GetMaxBulletCount() const { return MaxBulletCount; }
@@ -51,10 +48,11 @@ public:
 	FORCEINLINE FName GetAttachSocket() const { return AttachSocket; }
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	FORCEINLINE UStaticMeshComponent* GetMeshComp() const { return MeshComp; }
 	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	FVector GetFireDirection() const;		// 총알 발사 방향 계산 함수
-	
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
@@ -65,6 +63,10 @@ protected:
 	UStaticMeshComponent* MeshComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	UArrowComponent* MuzzlePoint;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+	UWeaponAttachmentComponent* AttachmentComp;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet")
 	TSubclassOf<ABulletBase> BulletClass;
 	UPROPERTY()
@@ -78,18 +80,19 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon")
 	EWeaponType WeaponType; //무기 Enum 멤버 선언
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	FName AttachSocket; //무기 부착 소켓
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	bool bIsFiring;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	float WeaponDamage;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TSubclassOf<UGameplayEffect> BulletDamageEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	FName AttachSocket;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
 	FRotator MeshInitialRotation;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
 	FVector MeshInitialScale;
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	USoundBase* FireSound;
@@ -105,9 +108,10 @@ protected:
 	
 	virtual void BeginPlay() override;
 	virtual bool FireBullet();
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
-	FTimerHandle ShootTriggerTimerHandle;
+	FTimerHandle ShootTriggerTimer;
 
 	void SetShootAvailable();
 	void SetBulletPool();

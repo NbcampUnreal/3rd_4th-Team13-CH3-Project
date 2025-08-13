@@ -12,8 +12,7 @@
 #include "GameplayEffect.h"
 #include "AbilitySystemComponent.h"
 #include "GameFramework/MatrixAttributeSet.h"
-#include "GameFramework/MatrixAttributeSet.h"
-#include "AI/EnemyCharacter.h"
+#include "Weapons/WeaponSystem/Component/WeaponAttachmentComponent.h"
 
 AWeaponBase::AWeaponBase()
 	: TriggerTime(1.0f)
@@ -61,7 +60,7 @@ void AWeaponBase::Shoot()
 	if (bIsFiring || !BulletPoolManager) return;
 
 	// 발사 가능 상태를 TriggerTime 후에 복구하는 타이머 설정
-	GetWorldTimerManager().SetTimer(ShootTriggerTimerHandle, this, &AWeaponBase::SetShootAvailable, TriggerTime, false);
+	GetWorldTimerManager().SetTimer(ShootTriggerTimer, this, &AWeaponBase::SetShootAvailable, TriggerTime, false);
 	
 	if (CurrentBulletCount <= 0)
 	{
@@ -74,7 +73,11 @@ void AWeaponBase::Shoot()
 	if (!FireBullet())
 	{
 		// 발사에 실패하면 즉시 발사 가능 상태로 복귀
-		GetWorldTimerManager().ClearTimer(ShootTriggerTimerHandle);
+		if (ShootTriggerTimer.IsValid())
+		{
+			GetWorld()->GetTimerManager().ClearTimer(ShootTriggerTimer);
+			ShootTriggerTimer.Invalidate();
+		}
 		bIsFiring = false;
 		return;
 	}
@@ -123,11 +126,6 @@ void AWeaponBase::ResetWeaponOwner()
 	{
 		OwnerPC = nullptr;
 	}
-
-	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-	MeshComp->SetSimulatePhysics(true);
-	MeshComp->SetEnableGravity(true);
-	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 }
 
 void AWeaponBase::AttachToOwner(USceneComponent* ParentComp)
@@ -151,21 +149,17 @@ void AWeaponBase::AttachToOwner(USceneComponent* ParentComp)
 	MeshComp->SetRelativeScale3D(MeshInitialScale);
 }
 
+void AWeaponBase::DetachFromOwner()
+{
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	MeshComp->SetSimulatePhysics(true);
+	MeshComp->SetEnableGravity(true);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
+
 bool AWeaponBase::FireBullet()
 {
 	const FRotator FireRotation = GetFireDirection().Rotation();
-
-	if (!BulletPoolManager)
-	{
-		UE_LOG(LogTemp, Error, TEXT("WeaponBase: BulletPoolManager is NULL!"));
-		return false;
-	}
-
-	if (!BulletClass)
-	{
-		UE_LOG(LogTemp, Error, TEXT("WeaponBase: BulletClass is NULL!"));
-		return false;
-	}
 
 	if (ABulletBase* Bullet = BulletPoolManager->GetBullet(BulletClass))
 	{
@@ -178,6 +172,12 @@ bool AWeaponBase::FireBullet()
 	}
 
 	return false;
+}
+
+void AWeaponBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+	Super::EndPlay(EndPlayReason);
 }
 
 void AWeaponBase::SetShootAvailable()
@@ -195,7 +195,7 @@ void AWeaponBase::SetBulletPool()
 	}
 	else
 	{
-		
+		UE_LOG(LogTemp, Error, TEXT("There is no BulletPoolManager in the world"));
 	}
 }
 
@@ -205,7 +205,7 @@ void AWeaponBase::ApplyBulletDamage(AActor* TargetActor, const FHitResult& HitRe
 	
 	UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor);
 	UAbilitySystemComponent* SourceASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwnerPawn);
-	
+
 	if (SourceASC && TargetASC && BulletDamageEffect)
 	{
 		FGameplayEffectContextHandle ContextHandle = SourceASC->MakeEffectContext();
@@ -253,11 +253,6 @@ void AWeaponBase::SetTargetLocation(const FVector& NewTargetLocation)
 
 FVector AWeaponBase::GetFireDirection() const
 {
-	if (Cast<AEnemyCharacter>(OwnerPawn))
-	{
-		return MuzzlePoint->GetForwardVector();
-	}
-	
 	if (!TargetLocation.IsZero())
 	{
 		return (TargetLocation - MuzzlePoint->GetComponentLocation()).GetSafeNormal();
@@ -280,17 +275,4 @@ FVector AWeaponBase::GetFireDirection() const
 	}
 
 	return MuzzlePoint->GetForwardVector();
-}
-
-void AWeaponBase::SetBulletCount(float Amount)
-{
-	CurrentBulletCount = FMath::Clamp(CurrentBulletCount + (MaxBulletCount * Amount), 0, MaxBulletCount);
-
-	if (OwnerPC)
-	{
-		if (AMainPlayerController* PC = Cast<AMainPlayerController>(OwnerPC))
-		{
-			PC->NotifyAmmoChanged(CurrentBulletCount, MaxBulletCount);
-		}
-	}
 }

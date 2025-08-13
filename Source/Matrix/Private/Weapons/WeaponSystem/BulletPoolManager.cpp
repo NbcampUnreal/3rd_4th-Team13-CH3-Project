@@ -8,7 +8,6 @@ ABulletPoolManager::ABulletPoolManager()
 void ABulletPoolManager::BeginPlay()
 {
 	Super::BeginPlay();
-
 	
 	CreateBulletPool();
 }

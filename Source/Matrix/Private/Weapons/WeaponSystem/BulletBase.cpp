@@ -37,7 +37,7 @@ ABulletBase::ABulletBase()
 	BulletSpeed = 2000.0f;
 	ProjectileMovementComp->InitialSpeed = BulletSpeed;
 	ProjectileMovementComp->MaxSpeed = BulletSpeed;
-	BulletLifeSpan = 2.0f;
+	BulletLifeSpan = 3.0f;
 }
 
 void ABulletBase::BeginPlay()
@@ -48,8 +48,14 @@ void ABulletBase::BeginPlay()
 	CollisionComp->OnComponentHit.AddDynamic(this, &ABulletBase::OnBulletHit);
 }
 
+void ABulletBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+	Super::EndPlay(EndPlayReason);
+}
+
 void ABulletBase::OnBulletHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	FVector NormalImpulse, const FHitResult& Hit)
+                              FVector NormalImpulse, const FHitResult& Hit)
 {
 	if ((OtherActor == nullptr) && (OtherActor == this) && (OtherActor == OwnerPawn))
 	{
@@ -130,8 +136,12 @@ void ABulletBase::DeactivateBullet()
 	bIsActive = false;
 	OwnerPawn = nullptr;
 	OwnerWeapon = nullptr;
-	
-	GetWorldTimerManager().ClearTimer(DeactivateTimerHandle);
+
+	if (DeactivateTimerHandle.IsValid())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(DeactivateTimerHandle);
+		DeactivateTimerHandle.Invalidate();
+	}
 }
 
 

@@ -31,10 +31,10 @@ class MATRIX_API ABulletBase : public AActor
 public:	
 	ABulletBase();
 
-	FORCEINLINE bool IsActive() const { return bIsActive; }
-
 	void ActivateBullet(FVector Location, FRotator Rotation, APawn* NewOwner, AWeaponBase* NewWeapon);
 	void DeactivateBullet();
+
+	FORCEINLINE bool IsActive() const { return bIsActive; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
@@ -43,7 +43,7 @@ protected:
 	UStaticMeshComponent* MeshComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	UProjectileMovementComponent* ProjectileMovementComp;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VFX")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	UNiagaraComponent* TrailEffectComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
@@ -52,6 +52,7 @@ protected:
 	float BulletLifeSpan;
 	
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	UFUNCTION()
 	void OnBulletHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
