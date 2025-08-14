@@ -14,6 +14,8 @@ AMainPlayerController::AMainPlayerController()
 	LookAction(nullptr), 
 	ShootAction(nullptr), 
 	InteractAction(nullptr),
+	MainMenuWidgetClass(nullptr),
+	MainMenuWidgetInstance(nullptr),
 	MainHUDWidgetClass(nullptr),
 	MainHUDWidgetInstance(nullptr),
 	QuickSlot1Action((nullptr)),
@@ -42,7 +44,7 @@ void AMainPlayerController::BeginPlay()
 	FTimerHandle TimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this](){
 		AMatrixGameState* MatrixGameState = GetWorld()->GetGameState<AMatrixGameState>();
-		if (MatrixGameState && MatrixGameState->CurrentGameState == EGameState::Playing)
+		if (MatrixGameState)
 		{
 			MatrixGameState->OnGameStateChanged.AddDynamic(this, &AMainPlayerController::OnGameStateChanged);
 
@@ -74,6 +76,8 @@ void AMainPlayerController::BeginPlay()
 
 void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 {
+
+	UE_LOG(LogTemp, Warning, TEXT("[PC] State Changed -> %d"), (int32)NewState);
 	// 화면을 덮는 위젯이 있다면 일단 제거
 	if (CurrentScreenWidget)
 	{
@@ -89,6 +93,29 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 
 	switch (NewState)
 	{
+	case EGameState::MainMenu:
+		if (!MainMenuWidgetInstance && MainMenuWidgetClass)
+		{
+			MainMenuWidgetInstance = CreateWidget<UMainMenuWidget>(this, MainMenuWidgetClass);
+			if (MainMenuWidgetInstance)
+			{
+				MainMenuWidgetInstance->AddToViewport();
+
+				MainMenuWidgetInstance->OnStartRequested.AddDynamic(this, &AMainPlayerController::StartGame);
+				MainMenuWidgetInstance->OnOptionsRequested.AddDynamic(this, &AMainPlayerController::OpenOptions);
+				MainMenuWidgetInstance->OnExitRequested.AddDynamic(this, &AMainPlayerController::OnMenuExit);
+			}
+		}
+
+		if (MainMenuWidgetInstance)
+		{
+			MainMenuWidgetInstance->SetVisibility(ESlateVisibility::Visible);
+		}
+
+		SetShowMouseCursor(true);
+		SetInputMode(FInputModeUIOnly());
+		break;
+
 	case EGameState::Playing:
 		if (!MainHUDWidgetInstance && MainHUDWidgetClass) 
 		{
@@ -173,6 +200,11 @@ void AMainPlayerController::StartGame()
 	}
 }
 
+void AMainPlayerController::OpenOptions()
+{
+	
+}
+
 void AMainPlayerController::EndGame(const FString& EndReason)
 {
 	if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
@@ -195,6 +227,16 @@ void AMainPlayerController::RestartGame()
 	{
 		LevelManager->RestartGame();
 	}
+}
+
+void AMainPlayerController::OnMenuExit()
+{
+	UKismetSystemLibrary::QuitGame(
+		this,
+		this,
+		EQuitPreference::Quit,
+		false
+	);
 }
 
 void AMainPlayerController::RequestLevelTransition(const FName& TargetLevel)

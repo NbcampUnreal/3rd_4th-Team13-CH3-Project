@@ -4,7 +4,7 @@
 
 AMatrixGameState::AMatrixGameState()
 {
-	CurrentGameState = EGameState::MainMenu;
+
 }
 
 void AMatrixGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -20,11 +20,11 @@ void AMatrixGameState::SetGameState(EGameState NewState)
 {
 	if (HasAuthority())
 	{
-		if (CurrentGameState != NewState)
-		{
+		if (CurrentGameState == NewState) return;
+
 			CurrentGameState = NewState;
 			OnRep_GameState();
-		}
+	
 	}
 }
 

@@ -22,6 +22,7 @@ public class Matrix : ModuleRules
 			"UMG", 
 			"Slate", 
 			"SlateCore",
+			"MediaAssets",
 			"GameplayAbilities",
 			"GameplayTags",
 			"GameplayTasks",

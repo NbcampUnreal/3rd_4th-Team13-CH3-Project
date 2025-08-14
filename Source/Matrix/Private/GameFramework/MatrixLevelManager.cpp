@@ -1,4 +1,5 @@
 #include "GameFramework/MatrixLevelManager.h"
+#include "GameFramework/MatrixGameState.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
@@ -51,6 +52,11 @@ void UMatrixLevelManager::StartGame()
     
     // 게임 시작 레벨로 전환
     RequestLevelTransition(GameStartLevel, ELevelTransitionType::GameStart);
+
+  /*  if (AMatrixGameState* MartixGameState = GetWorld()->GetGameState<AMatrixGameState>())
+    {
+		MartixGameState->SetGameState(EGameState::Playing);
+    }*/
 }
 
 void UMatrixLevelManager::EndGame(const FString& EndReason)

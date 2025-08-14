@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "UI/Widget/MainMenuWidget.h"
 #include "UI/Widget/MainHUDWidget.h"
 #include "UI/Widget/WeaponHUDWidget.h"
 #include "MainPlayerController.generated.h"
@@ -36,6 +37,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* QuickSlot3Action;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UMainMenuWidget> MainMenuWidgetClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UMainMenuWidget* MainMenuWidgetInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
 	TSubclassOf<UMainHUDWidget> MainHUDWidgetClass;
@@ -69,6 +74,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Game Flow")
 	void RestartGame();
+
+	UFUNCTION(BlueprintCallable, Category = "Game Flow")
+	void OnMenuExit();
 	
 	// 레벨 전환 관리
 	UFUNCTION(BlueprintCallable, Category = "Game Flow")
@@ -91,6 +99,9 @@ public:
 	// 다음 레벨 테스트
 	UFUNCTION(BlueprintCallable, Category = "Test")
 	void TestNextLevel();
+
+	UFUNCTION(BlueprintCallable, Category = "Options")
+	void OpenOptions();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -110,4 +121,6 @@ private:
 
 	UPROPERTY()
 	UUserWidget* CurrentScreenWidget; // Pause, GameOver, GameClear 등 기존 화면에 덮는 위젯 변수입니다!
+
+
 };

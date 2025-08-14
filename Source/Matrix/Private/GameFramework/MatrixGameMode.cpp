@@ -17,12 +17,23 @@ void AMatrixGameMode::BeginPlay()
     Super::BeginPlay();
 
     MatrixGameState = GetGameState<AMatrixGameState>();
+    
     if (MatrixGameState)
     {
-        MatrixGameState->SetGameState(EGameState::Playing);
+		FString CurrentLevelName = GetWorld()->GetMapName();
+		CurrentLevelName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
+
+        if(CurrentLevelName == TEXT("L_MainMenu"))
+        {
+			MatrixGameState->SetGameState(EGameState::MainMenu);
+        }
+        else
+        {
+			MatrixGameState->SetGameState(EGameState::Playing);
+        }
     }
 
-    if (MatrixGameState && MatrixGameState->CurrentGameState == EGameState::Playing)
+    if (MatrixGameState && MatrixGameState->CurrentGameState == EGameState::Playing)   
     {
         UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance());
         if (GameInstance && LevelDataTable)
