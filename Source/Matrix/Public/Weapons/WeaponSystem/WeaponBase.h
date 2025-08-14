@@ -34,6 +34,7 @@ public:
 	
 	void SetWeaponOwner(AActor* NewOwner);
 	void ResetWeaponOwner();
+	void SetBulletCount(float Amount);
 	void AttachToOwner(USceneComponent* CharacterMesh);
 	void DetachFromOwner();
 	void ApplyBulletDamage(AActor* TargetActor, const FHitResult& HitResult);
