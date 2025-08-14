@@ -29,6 +29,7 @@ AWeaponBase::AWeaponBase()
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	CollisionComp->SetCollisionObjectType(ECC_WorldDynamic);
 	CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	CollisionComp->SetSphereRadius(90.0f);
 	
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetupAttachment(RootComp);
