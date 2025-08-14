@@ -12,9 +12,16 @@ class MATRIX_API UWeaponAttachmentComponent : public UActorComponent
 public:
 	UWeaponAttachmentComponent();
 
-	void AttachToOwner(USceneComponent* ParentComp);
-	void DetachFromOwner();
+	UFUNCTION(BlueprintCallable, Category = "Attachment")
+	void AttachToOwner(USceneComponent* CharacterMesh, AActor* WeaponActor, UStaticMeshComponent* WeaponMeshComp);
+	UFUNCTION(BlueprintCallable, Category = "Attachment")
+	void DetachFromOwner(AActor* WeaponActor, UStaticMeshComponent* WeaponMeshComp);
 
 protected:
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attachment")
+	FName AttachSocket;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Attachment")
+	FRotator MeshInitialRotation;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Attachment")
+	FVector MeshInitialScale;
 };

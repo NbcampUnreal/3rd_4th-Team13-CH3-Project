@@ -1,29 +1,25 @@
 #include "Weapons/WeaponSystem/WeaponBase.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
-#include "Characters/MainPlayerController.h"
-#include "Weapons/WeaponSystem/BulletBase.h"
-#include "Weapons/WeaponSystem/BulletPoolManager.h"
-
-#include "Kismet/GameplayStatics.h"
 #include "Components/ArrowComponent.h"
 #include "Components/SphereComponent.h"
-#include "AbilitySystemGlobals.h"
-#include "GameplayEffect.h"
-#include "AbilitySystemComponent.h"
-#include "GameFramework/MatrixAttributeSet.h"
+#include "Kismet/GameplayStatics.h"
+
 #include "Weapons/WeaponSystem/Component/WeaponAttachmentComponent.h"
+#include "Weapons/WeaponSystem/Component/WeaponDamageComponent.h"
+#include "Weapons/WeaponSystem/Component/WeaponEffectComponent.h"
+#include "Weapons/WeaponSystem/BulletPoolManager.h"
+#include "Weapons/WeaponSystem/BulletBase.h"
+#include "Characters/MainPlayerController.h"
 
 AWeaponBase::AWeaponBase()
-	: TriggerTime(1.0f)
-	, MaxBulletCount(10)
+	: WeaponType(EWeaponType::None)
+	, TriggerTime(3.0f)
+	, MaxBulletCount(30)
 	, CurrentBulletCount(MaxBulletCount)
-	, WeaponType(EWeaponType::None)
-	, AttachSocket(TEXT("NONE"))
 	, bIsFiring(false)
-	, WeaponDamage(100.0f)
-	, MeshInitialRotation(FRotator::ZeroRotator)
-	, MeshInitialScale(FVector::OneVector)
+	, BulletClass(nullptr)
+	, BulletPoolManager(nullptr)
+	, TargetLocation(FVector::ZeroVector)
 {
 	RootComp = CreateDefaultSubobject<USceneComponent>(TEXT("RootComp"));
 	SetRootComponent(RootComp);
@@ -46,13 +42,23 @@ AWeaponBase::AWeaponBase()
 	MuzzlePoint->ArrowColor = FColor::Red;
 	MuzzlePoint->bHiddenInGame = true;
 	MuzzlePoint->bIsScreenSizeScaled = true;
+
+	AttachmentComp = CreateDefaultSubobject<UWeaponAttachmentComponent>(TEXT("AttachmentComp"));
+	DamageComp = CreateDefaultSubobject<UWeaponDamageComponent>(TEXT("DamageComp"));
+	EffectComp = CreateDefaultSubobject<UWeaponEffectComponent>(TEXT("EffectComp"));
 }
 
 void AWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	SetBulletPool();
+}
+
+void AWeaponBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+	Super::EndPlay(EndPlayReason);
 }
 
 void AWeaponBase::Shoot()
@@ -60,7 +66,7 @@ void AWeaponBase::Shoot()
 	if (bIsFiring || !BulletPoolManager) return;
 
 	// 발사 가능 상태를 TriggerTime 후에 복구하는 타이머 설정
-	GetWorldTimerManager().SetTimer(ShootTriggerTimer, this, &AWeaponBase::SetShootAvailable, TriggerTime, false);
+	GetWorld()->GetTimerManager().SetTimer(ShootTriggerTimer, this, &AWeaponBase::SetShootAvailable, TriggerTime, false);
 	
 	if (CurrentBulletCount <= 0)
 	{
@@ -79,28 +85,88 @@ void AWeaponBase::Shoot()
 			ShootTriggerTimer.Invalidate();
 		}
 		bIsFiring = false;
-		return;
-	}
-		
-	if (FireSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+		return ;
 	}
 
-	if (FireEffect)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(this, FireEffect, MuzzlePoint->GetComponentLocation(), MuzzlePoint->GetComponentRotation());
-	}
-	
 	CurrentBulletCount--;
 	UE_LOG(LogTemp, Warning, TEXT("Weapon's Bullet Count : %d / %d"), CurrentBulletCount, MaxBulletCount);
+	
 
+	if (EffectComp)
+	{
+		EffectComp->PlayEffect(MuzzlePoint->GetComponentLocation(), MuzzlePoint->GetComponentRotation());
+	}
+	
 	if (OwnerPC)
 	{
 		if (AMainPlayerController* PC = Cast<AMainPlayerController>(OwnerPC))
 		{
 			PC->NotifyAmmoChanged(CurrentBulletCount, MaxBulletCount);
 		}
+	}
+}
+
+void AWeaponBase::SetTargetLocation(const FVector& NewTargetLocation)
+{
+	TargetLocation = NewTargetLocation;
+}
+
+bool AWeaponBase::FireBullet()
+{
+	const FRotator FireRotation = GetFireDirection().Rotation();
+
+	if (ABulletBase* Bullet = BulletPoolManager->GetBullet(BulletClass))
+	{
+		Bullet->ActivateBullet(MuzzlePoint->GetComponentLocation(), FireRotation, OwnerPawn, this);
+
+		return true;
+	}
+
+	return false;
+}
+
+FVector AWeaponBase::GetFireDirection() const
+{
+	if (!TargetLocation.IsZero())
+	{
+		return (TargetLocation - MuzzlePoint->GetComponentLocation()).GetSafeNormal();
+	}
+	
+	if (APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController()))
+	{
+		int32 ViewportX, ViewportY;
+		PC->GetViewportSize(ViewportX, ViewportY);
+
+		FVector2D ScreenCrosshair(ViewportX * 0.5f, ViewportY * 0.5f);
+
+		FVector WorldOrigin, WorldDirection;
+		if (PC->DeprojectScreenPositionToWorld(ScreenCrosshair.X, ScreenCrosshair.Y, WorldOrigin, WorldDirection))
+		{
+			FVector TraceEnd = WorldOrigin + WorldDirection * 3000.0f;
+
+			return (TraceEnd - MuzzlePoint->GetComponentLocation()).GetSafeNormal();
+		}
+	}
+
+	return MuzzlePoint->GetForwardVector();
+}
+
+void AWeaponBase::SetShootAvailable()
+{
+	bIsFiring = false;
+}
+
+void AWeaponBase::SetBulletPool()
+{
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABulletPoolManager::StaticClass(), FoundActors);
+	if (FoundActors.Num() > 0)
+	{
+		BulletPoolManager = Cast<ABulletPoolManager>(FoundActors[0]);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("There is no BulletPoolManager in the world"));
 	}
 }
 
@@ -128,151 +194,35 @@ void AWeaponBase::ResetWeaponOwner()
 	}
 }
 
-void AWeaponBase::AttachToOwner(USceneComponent* ParentComp)
+void AWeaponBase::AttachToOwner(USceneComponent* CharacterMesh)
 {
-	MeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector);
-	MeshComp->SetSimulatePhysics(false);
-	MeshComp->SetEnableGravity(false);
-	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		
-	FAttachmentTransformRules AttachRules(
-	EAttachmentRule::SnapToTarget,
-	EAttachmentRule::SnapToTarget,
-	EAttachmentRule::SnapToTarget,
-	true
-	);
-
-	AttachToComponent(ParentComp, AttachRules, AttachSocket);
-	MeshComp->AttachToComponent(ParentComp, AttachRules, AttachSocket);
-
-	MeshComp->SetRelativeRotation(MeshInitialRotation);
-	MeshComp->SetRelativeScale3D(MeshInitialScale);
+	if (!AttachmentComp)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Weapon Attachment Component not found"));
+		return;
+	}
+	
+	AttachmentComp->AttachToOwner(CharacterMesh, this, MeshComp);
 }
 
 void AWeaponBase::DetachFromOwner()
 {
-	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-	MeshComp->SetSimulatePhysics(true);
-	MeshComp->SetEnableGravity(true);
-	MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-}
-
-bool AWeaponBase::FireBullet()
-{
-	const FRotator FireRotation = GetFireDirection().Rotation();
-
-	if (ABulletBase* Bullet = BulletPoolManager->GetBullet(BulletClass))
+	if (!AttachmentComp)
 	{
-		// GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FireDirection.ToString());
-		// GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, FireRotation.ToString());
-
-		Bullet->ActivateBullet(MuzzlePoint->GetComponentLocation(), FireRotation, OwnerPawn, this);
-
-		return true;
+		UE_LOG(LogTemp, Error, TEXT("Weapon Attachment Component not found"));
+		return;
 	}
-
-	return false;
-}
-
-void AWeaponBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
-	Super::EndPlay(EndPlayReason);
-}
-
-void AWeaponBase::SetShootAvailable()
-{
-	bIsFiring = false;
-}
-
-void AWeaponBase::SetBulletPool()
-{
-	TArray<AActor*> FoundActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABulletPoolManager::StaticClass(), FoundActors);
-	if (FoundActors.Num() > 0)
-	{
-		BulletPoolManager = Cast<ABulletPoolManager>(FoundActors[0]);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("There is no BulletPoolManager in the world"));
-	}
+	
+	AttachmentComp->DetachFromOwner(this, MeshComp);
 }
 
 void AWeaponBase::ApplyBulletDamage(AActor* TargetActor, const FHitResult& HitResult)
 {
-	if (!TargetActor) return;
-	
-	UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor);
-	UAbilitySystemComponent* SourceASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwnerPawn);
-
-	if (SourceASC && TargetASC && BulletDamageEffect)
+	if (!DamageComp)
 	{
-		FGameplayEffectContextHandle ContextHandle = SourceASC->MakeEffectContext();
-		ContextHandle.AddSourceObject(this);
-		
-		FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(BulletDamageEffect, 1.0f, ContextHandle);
-
-		if (SpecHandle.IsValid())
-		{
-			FGameplayTag DamageTag = FGameplayTag::RequestGameplayTag(FName("Data.Damage"));
-			SpecHandle.Data->SetSetByCallerMagnitude(DamageTag, WeaponDamage);
-			
-			SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
-
-			float CurrentHealth = TargetASC->GetNumericAttribute(UMatrixAttributeSet::GetHealthAttribute());
-			if (CurrentHealth <= 0.0f)
-			{
-				SendEventData(HitResult);
-			}
-		}
-	}
-}
-
-void AWeaponBase::SendEventData(const FHitResult& HitResult)
-{
-	FVector NormalImpulse = HitResult.ImpactNormal * 3000.0f;
-
-	FGameplayEventData EventData;
-	EventData.Instigator = OwnerPawn;
-	EventData.Target = HitResult.GetActor();
-	EventData.EventTag = FGameplayTag::RequestGameplayTag(FName("GameplayEvent.Death"));
-
-	FTargetData_HitWithImpulse* TargetData = new FTargetData_HitWithImpulse();
-	TargetData->ImpactPoint = HitResult.ImpactPoint;
-	TargetData->Impulse = NormalImpulse;
-	EventData.TargetData.Add(TargetData);
-	
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(HitResult.GetActor(), EventData.EventTag, EventData);
-}
-
-void AWeaponBase::SetTargetLocation(const FVector& NewTargetLocation)
-{
-	TargetLocation = NewTargetLocation;
-}
-
-FVector AWeaponBase::GetFireDirection() const
-{
-	if (!TargetLocation.IsZero())
-	{
-		return (TargetLocation - MuzzlePoint->GetComponentLocation()).GetSafeNormal();
+		UE_LOG(LogTemp, Error, TEXT("Weapon Damage Component not found"));
+		return;
 	}
 	
-	if (APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController()))
-	{
-		int32 ViewportX, ViewportY;
-		PC->GetViewportSize(ViewportX, ViewportY);
-
-		FVector2D ScreenCrosshair(ViewportX * 0.5f, ViewportY * 0.5f);
-
-		FVector WorldOrigin, WorldDirection;
-		if (PC->DeprojectScreenPositionToWorld(ScreenCrosshair.X, ScreenCrosshair.Y, WorldOrigin, WorldDirection))
-		{
-			FVector TraceEnd = WorldOrigin + WorldDirection * 3000.0f;
-
-			return (TraceEnd - MuzzlePoint->GetComponentLocation()).GetSafeNormal();
-		}
-	}
-
-	return MuzzlePoint->GetForwardVector();
+	DamageComp->ApplyDamage(TargetActor, OwnerPawn, HitResult);
 }

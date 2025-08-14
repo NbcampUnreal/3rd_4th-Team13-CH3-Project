@@ -1,20 +1,30 @@
 #include "Weapons/WeaponSystem/Component/WeaponEffectComponent.h"
 
+#include "Kismet/GameplayStatics.h"
+
 UWeaponEffectComponent::UWeaponEffectComponent()
+	: FireSound(nullptr)
+	, FireEffect(nullptr)
 {
-	PrimaryComponentTick.bCanEverTick = true;
 }
 
-
-void UWeaponEffectComponent::BeginPlay()
+void UWeaponEffectComponent::PlayEffect(FVector PlayLocation, FRotator PlayRotation)
 {
-	Super::BeginPlay();
+	if (FireSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, FireSound, PlayLocation);
+	}
+
+	if (FireEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(this, FireEffect, PlayLocation, PlayRotation);
+	}
 }
 
-void UWeaponEffectComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                           FActorComponentTickFunction* ThisTickFunction)
+void UWeaponEffectComponent::SetEffects(USoundBase* SFX, UParticleSystem* VFX)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	FireSound = SFX;
+	FireEffect = VFX;
 }
+
 

@@ -4,6 +4,9 @@
 #include "GameFramework/Actor.h"
 #include "WeaponBase.generated.h"
 
+class UWeaponFireComponent;
+class UWeaponEffectComponent;
+class UWeaponDamageComponent;
 class UWeaponAttachmentComponent;
 class UGameplayEffect;
 class UArrowComponent;
@@ -31,7 +34,7 @@ public:
 	
 	void SetWeaponOwner(AActor* NewOwner);
 	void ResetWeaponOwner();
-	void AttachToOwner(USceneComponent* ParentComp);
+	void AttachToOwner(USceneComponent* CharacterMesh);
 	void DetachFromOwner();
 	void ApplyBulletDamage(AActor* TargetActor, const FHitResult& HitResult);
 
@@ -39,20 +42,17 @@ public:
 	void Shoot();
 	UFUNCTION(BlueprintCallable)
 	void SetTargetLocation(const FVector& NewTargetLocation);
-	
+
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
-	FORCEINLINE int32 GetMaxBulletCount() const { return MaxBulletCount; }
+	FORCEINLINE int32 GetMaxBulletCount() const { return MaxBulletCount; };
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
-	FORCEINLINE int32 GetCurrentBulletCount() const { return CurrentBulletCount; }
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	FORCEINLINE FName GetAttachSocket() const { return AttachSocket; }
+	FORCEINLINE int32 GetCurrentBulletCount() const { return CurrentBulletCount; };
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	FORCEINLINE UStaticMeshComponent* GetMeshComp() const { return MeshComp; }
-	
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	FVector GetFireDirection() const;		// 총알 발사 방향 계산 함수
+
+	FVector GetFireDirection() const;
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
@@ -66,54 +66,40 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	UWeaponAttachmentComponent* AttachmentComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+	UWeaponDamageComponent* DamageComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+	UWeaponEffectComponent* EffectComp;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet")
-	TSubclassOf<ABulletBase> BulletClass;
-	UPROPERTY()
-	ABulletPoolManager* BulletPoolManager;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shoot")
-	float TriggerTime;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shoot")
-	int32 MaxBulletCount;
-	int32 CurrentBulletCount;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Weapon")
-	EWeaponType WeaponType; //무기 Enum 멤버 선언
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
-	bool bIsFiring;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	float WeaponDamage;
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	TSubclassOf<UGameplayEffect> BulletDamageEffect;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-	FName AttachSocket;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
-	FRotator MeshInitialRotation;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
-	FVector MeshInitialScale;
-
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	USoundBase* FireSound;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	UParticleSystem* FireEffect;
-	
+	EWeaponType WeaponType;
 	UPROPERTY()
 	APawn* OwnerPawn;
 	UPROPERTY()
 	AController* OwnerPC;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire")
+	float TriggerTime;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Fire")
+	int32 MaxBulletCount;
+	int32 CurrentBulletCount;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Fire")
+	bool bIsFiring;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet")
+	TSubclassOf<ABulletBase> BulletClass;
+	UPROPERTY()
+	ABulletPoolManager* BulletPoolManager;
 	UPROPERTY()
 	FVector TargetLocation;
-	
-	virtual void BeginPlay() override;
-	virtual bool FireBullet();
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual bool FireBullet();
+	
 private:
 	FTimerHandle ShootTriggerTimer;
-
+	
 	void SetShootAvailable();
 	void SetBulletPool();
-	void SendEventData(const FHitResult& HitResult);
 };

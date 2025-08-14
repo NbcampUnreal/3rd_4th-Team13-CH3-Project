@@ -13,10 +13,14 @@ class MATRIX_API UWeaponEffectComponent : public UActorComponent
 public:
 	UWeaponEffectComponent();
 
+	UFUNCTION(BlueprintCallable, Category = "Effect")
+	void PlayEffect(FVector PlayLocation, FRotator PlayRotation);
+	UFUNCTION(BlueprintCallable, Category = "Effect")
+	void SetEffects(USoundBase* SFX, UParticleSystem* VFX);
+	
 protected:
-	virtual void BeginPlay() override;
-
-public:
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-	                           FActorComponentTickFunction* ThisTickFunction) override;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	USoundBase* FireSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UParticleSystem* FireEffect;
 };
