@@ -15,7 +15,7 @@ public:
 	UWeaponDamageComponent();
 
 	UFUNCTION(BlueprintCallable)
-	void ApplyDamage(AActor* TargetActor, AActor* SourceActor, const FHitResult& HitResult);
+	void ApplyDamage(AActor* TargetActor, AActor* SourceActor, const FHitResult& HitResult = FHitResult());
 
 	void SetBaseDamage(float Damage);
 	void SetDamageEffect(TSubclassOf<UGameplayEffect> DamageEffect);
@@ -28,4 +28,5 @@ protected:
 
 private:
 	void SendEventData(const FHitResult& HitResult, AActor* SourceActor);
+	void SendEventData(AActor* TargetActor, AActor* SourceActor);
 };

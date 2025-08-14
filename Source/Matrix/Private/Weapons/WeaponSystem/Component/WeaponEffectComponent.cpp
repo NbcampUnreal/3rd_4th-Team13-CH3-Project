@@ -8,7 +8,7 @@ UWeaponEffectComponent::UWeaponEffectComponent()
 {
 }
 
-void UWeaponEffectComponent::PlayEffect(FVector PlayLocation, FRotator PlayRotation)
+void UWeaponEffectComponent::PlayEffect(FVector PlayLocation, FRotator PlayRotation, FVector ParticleScale)
 {
 	if (FireSound)
 	{
@@ -17,7 +17,7 @@ void UWeaponEffectComponent::PlayEffect(FVector PlayLocation, FRotator PlayRotat
 
 	if (FireEffect)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(this, FireEffect, PlayLocation, PlayRotation);
+		UGameplayStatics::SpawnEmitterAtLocation(this, FireEffect, PlayLocation, PlayRotation, ParticleScale);
 	}
 }
 

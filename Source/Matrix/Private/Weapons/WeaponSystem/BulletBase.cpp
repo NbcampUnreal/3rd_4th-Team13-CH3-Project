@@ -102,7 +102,7 @@ void ABulletBase::ActivateBullet(FVector Location, FRotator Rotation, APawn* New
 	{
 		ProjectileMovementComp->SetUpdatedComponent(CollisionComp);
 		FVector FireDirection = GetActorForwardVector();
-		ProjectileMovementComp->Velocity = FireDirection * ProjectileMovementComp->InitialSpeed;
+		ProjectileMovementComp->Velocity = FireDirection * BulletSpeed;
 	}
 
 	bIsActive = true;

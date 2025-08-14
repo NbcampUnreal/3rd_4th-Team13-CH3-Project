@@ -95,7 +95,7 @@ void AWeaponBase::Shoot()
 
 	if (EffectComp)
 	{
-		EffectComp->PlayEffect(MuzzlePoint->GetComponentLocation(), MuzzlePoint->GetComponentRotation());
+		EffectComp->PlayEffect(MuzzlePoint->GetComponentLocation(), MuzzlePoint->GetComponentRotation(), FVector(0.3f));
 	}
 	
 	if (OwnerPC)

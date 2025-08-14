@@ -35,7 +35,14 @@ void UWeaponDamageComponent::ApplyDamage(AActor* TargetActor, AActor* SourceActo
 			float CurrentHealth = TargetASC->GetNumericAttribute(UMatrixAttributeSet::GetHealthAttribute());
 			if (CurrentHealth <= 0.0f)
 			{
-				SendEventData(HitResult, SourceActor);
+				if (!HitResult.ImpactPoint.IsZero())
+				{
+					SendEventData(HitResult, SourceActor);
+				}
+				else
+				{
+					SendEventData(TargetActor, SourceActor);
+				}
 			}
 		}
 	}
@@ -66,4 +73,14 @@ void UWeaponDamageComponent::SendEventData(const FHitResult& HitResult, AActor* 
 	EventData.TargetData.Add(TargetData);
 	
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(HitResult.GetActor(), EventData.EventTag, EventData);
+}
+
+void UWeaponDamageComponent::SendEventData(AActor* TargetActor, AActor* SourceActor)
+{
+	FGameplayEventData EventData;
+	EventData.Instigator = SourceActor;
+	EventData.Target = TargetActor;
+	EventData.EventTag = FGameplayTag::RequestGameplayTag(FName("GameplayEvent.Death"));
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetActor, EventData.EventTag, EventData);
 }

@@ -4,6 +4,8 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "Weapons/WeaponSystem/Component/WeaponDamageComponent.h"
+#include "Weapons/WeaponSystem/Component/WeaponEffectComponent.h"
 
 ABombItem::ABombItem()
 {
@@ -24,8 +26,10 @@ ABombItem::ABombItem()
 	ProjectileMovement->MaxSpeed = 1100.f;
 	ProjectileMovement->InitialSpeed = 1100.f;
 
+	DamageComp = CreateDefaultSubobject<UWeaponDamageComponent>(TEXT("DamageComp"));
+	EffectComp = CreateDefaultSubobject<UWeaponEffectComponent>(TEXT("EffectComp"));
+
 	ExplosionRadius = 500.f;
-	ExplosionDamage = 100.f;
 	ExplosionTime = 3.0f;
 	InitialSpeed = 2500.f;
 }
@@ -67,33 +71,58 @@ void ABombItem::BeginPlay()
 
 void ABombItem::Explode()
 {
+	if (!DamageComp)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Weapon Damage Component not found"));
+		return;
+	}
+
+	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	TArray<APawn*> DamagedPawns = GetPawnInExplosion(GetWorld(), GetActorLocation(), ExplosionRadius);
+
+	for (APawn* DamagedPawn : DamagedPawns)
+	{
+		DamageComp->ApplyDamage(DamagedPawn, PlayerPawn);
+	}
+	
+	if (EffectComp)
+	{
+		EffectComp->PlayEffect(GetActorLocation(), GetActorRotation(), FVector(8.0f));
+	}
+	
+	Destroy();
+}
+
+TArray<APawn*> ABombItem::GetPawnInExplosion(UWorld* World, const FVector& Origin, float ExplosionRange)
+{
+	TArray<AActor*> OverlappedActors;
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+
 	//폭발 범위 내 액터에게 데미지 적용 (플레이어 제외)
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	TArray<AActor*> IgnoredActors;
 	IgnoredActors.Add(PlayerPawn);
 
-	UGameplayStatics::ApplyRadialDamage(
-		this,
-		ExplosionDamage,
-		GetActorLocation(),
-		ExplosionRadius,
-		UDamageType::StaticClass(),
+	UKismetSystemLibrary::SphereOverlapActors(
+		World,
+		Origin,
+		ExplosionRange,
+		ObjectTypes,
+		APawn::StaticClass(),
 		IgnoredActors,
-		this,
-		GetInstigatorController(),
-		true
+		OverlappedActors
 	);
-	
-	if (ExplosionSound)
+
+	TArray<APawn*> Pawns;
+	for (AActor* OverlappedActor : OverlappedActors)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, GetActorLocation());
+		APawn* OverlappedPawn = Cast<APawn>(OverlappedActor);
+		if (OverlappedPawn)
+		{
+			Pawns.Add(OverlappedPawn);
+		}
 	}
-	
-	if (ExplosionParticle)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(this, ExplosionParticle, GetActorLocation(), FRotator::ZeroRotator,
-		FVector(8.0f), true);
-	}
-	
-	Destroy();
+
+	return Pawns;
 }

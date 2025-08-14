@@ -14,7 +14,7 @@ public:
 	UWeaponEffectComponent();
 
 	UFUNCTION(BlueprintCallable, Category = "Effect")
-	void PlayEffect(FVector PlayLocation, FRotator PlayRotation);
+	void PlayEffect(FVector PlayLocation, FRotator PlayRotation, FVector ParticleScale = FVector(1.0f));
 	UFUNCTION(BlueprintCallable, Category = "Effect")
 	void SetEffects(USoundBase* SFX, UParticleSystem* VFX);
 	

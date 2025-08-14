@@ -4,6 +4,8 @@
 #include "GameFramework/Actor.h"
 #include "BombItem.generated.h"
 
+class UWeaponEffectComponent;
+class UWeaponDamageComponent;
 class USphereComponent;
 class UStaticMeshComponent;
 class UProjectileMovementComponent;
@@ -27,6 +29,10 @@ protected:
 	UStaticMeshComponent* StaticMeshComp;
 	UPROPERTY(VisibleAnywhere, Category="Components")
 	UProjectileMovementComponent* ProjectileMovement;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	UWeaponDamageComponent* DamageComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	UWeaponEffectComponent* EffectComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
 	float InitialSpeed;
@@ -34,15 +40,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Explosion")
 	float ExplosionRadius;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Explosion")
-	float ExplosionDamage;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Explosion")
 	float ExplosionTime;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|Effects")
-	UParticleSystem* ExplosionParticle;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|Effects")
-	USoundBase* ExplosionSound;
 	
 	void Explode();
 
 	FTimerHandle TimerHandle_Explosion;
+
+private:
+	TArray<APawn*> GetPawnInExplosion(UWorld* World, const FVector& Origin, float ExplosionRange);
 };
