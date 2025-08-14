@@ -1,12 +1,20 @@
 #include "Systems/MatrixTriggerBox.h"
 #include "Characters/MainPlayerCharacter.h"
+#include "AI/EnemyCharacter.h"
 #include "GameFramework/MatrixGameMode.h"
 #include "GameFramework/MatrixLevelManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/TimelineComponent.h"
+
+// 상수 정의
+namespace MatrixTriggerBoxConstants
+{
+    constexpr float DOOR_SEARCH_RADIUS = 1000.0f;
+    constexpr float VALIDATION_TIMER_INTERVAL = 0.5f;
+}
 
 AMatrixTriggerBox::AMatrixTriggerBox()
 {
-    // 기본 설정
     bIsActivated = false;
     bIsUsed = false;
 }
@@ -15,9 +23,13 @@ void AMatrixTriggerBox::BeginPlay()
 {
     Super::BeginPlay();
     
-    // 오버랩 이벤트 바인딩
     OnActorBeginOverlap.AddDynamic(this, &AMatrixTriggerBox::OnBeginOverlap);
     OnActorEndOverlap.AddDynamic(this, &AMatrixTriggerBox::OnEndOverlap);
+    
+    if (TriggerInfo.TriggerType == EMatrixTriggerType::DoorControl)
+    {
+        InitializeDoorReference();
+    }
     
     if (bShowDebug)
     {
@@ -27,7 +39,16 @@ void AMatrixTriggerBox::BeginPlay()
 
 void AMatrixTriggerBox::OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
-    if (!CanActivate() || !IsPlayer(OtherActor)) return;
+    if (!CanActivate() || !IsValidActor(OtherActor)) 
+    {
+        return;
+    }
+    
+    if (TriggerInfo.TriggerType == EMatrixTriggerType::DoorControl)
+    {
+        HandleDoorControlOverlap(OtherActor);
+        return;
+    }
     
     if (TriggerInfo.TriggerCondition == ETriggerCondition::OnEnter)
     {
@@ -37,9 +58,12 @@ void AMatrixTriggerBox::OnBeginOverlap(AActor* OverlappedActor, AActor* OtherAct
 
 void AMatrixTriggerBox::OnEndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
-    if (!IsPlayer(OtherActor)) return;
+    if (TriggerInfo.TriggerType == EMatrixTriggerType::DoorControl)
+    {
+        return;
+    }
     
-    if (TriggerInfo.TriggerCondition == ETriggerCondition::OnExit)
+    if (IsValidActor(OtherActor) && TriggerInfo.TriggerCondition == ETriggerCondition::OnExit)
     {
         DeactivateTrigger();
     }
@@ -47,7 +71,11 @@ void AMatrixTriggerBox::OnEndOverlap(AActor* OverlappedActor, AActor* OtherActor
 
 void AMatrixTriggerBox::ActivateTrigger()
 {
-    if (bIsActivated || (bIsUsed && TriggerInfo.bOneTimeUse)) return;
+    bool bShouldBlock = bIsActivated || (bIsUsed && TriggerInfo.bOneTimeUse);
+    if (bShouldBlock) 
+    {
+        return;
+    }
     
     bIsActivated = true;
     
@@ -56,10 +84,8 @@ void AMatrixTriggerBox::ActivateTrigger()
         LogTriggerInfo(TEXT("Trigger Activated"));
     }
     
-    // 이벤트 브로드캐스트
     OnTriggerActivated.Broadcast(TriggerInfo);
     
-    // 지연 실행이 있다면 타이머 설정
     if (TriggerInfo.Delay > 0.0f)
     {
         GetWorld()->GetTimerManager().SetTimer(DelayTimerHandle, this, &AMatrixTriggerBox::ExecuteDelayedAction, TriggerInfo.Delay, false);
@@ -81,7 +107,6 @@ void AMatrixTriggerBox::DeactivateTrigger()
         LogTriggerInfo(TEXT("Trigger Deactivated"));
     }
     
-    // 이벤트 브로드캐스트
     OnTriggerDeactivated.Broadcast(TriggerInfo);
 }
 
@@ -106,14 +131,14 @@ void AMatrixTriggerBox::ExecuteTriggerAction()
     case EMatrixTriggerType::WaveStart:
         HandleWaveStart();
         break;
-    case EMatrixTriggerType::DoorOpen:
-        HandleDoorOpen();
+    case EMatrixTriggerType::DoorControl:
+        HandleDoorControl();
         break;
     case EMatrixTriggerType::Custom:
         HandleCustom();
         break;
     default:
-        UE_LOG(LogTemp, Warning, TEXT("Unknown trigger type"));
+        UE_LOG(LogTemp, Warning, TEXT("[%s] Unknown trigger type"), *GetName());
         break;
     }
     
@@ -160,25 +185,53 @@ void AMatrixTriggerBox::HandleWaveStart()
     }
 }
 
-void AMatrixTriggerBox::HandleDoorOpen()
-{
-    // 문 열기 시스템은 향후 구현 예정
-    UE_LOG(LogTemp, Log, TEXT("Door Open triggered: %s"), *TriggerInfo.CustomEventName);
-}
-
 void AMatrixTriggerBox::HandleCustom()
 {
     UE_LOG(LogTemp, Log, TEXT("Custom trigger executed: %s"), *TriggerInfo.CustomEventName);
 }
 
+void AMatrixTriggerBox::HandleDoorControl()
+{
+    if (!EnsureDoorReference())
+    {
+        return;
+    }
+
+    PlayDoorTimeline();
+}
+
+void AMatrixTriggerBox::HandleDoorControlOverlap(AActor* OtherActor)
+{
+    if (IsEnemyAI(OtherActor) && TriggerInfo.bOpenOnEnter)
+    {
+        ActivateTrigger();
+        StartValidationTimer();
+    }
+}
+
 bool AMatrixTriggerBox::CanActivate() const
 {
+    if (TriggerInfo.TriggerType == EMatrixTriggerType::DoorControl)
+    {
+        return true;
+    }
+    
     return !bIsUsed || !TriggerInfo.bOneTimeUse;
+}
+
+bool AMatrixTriggerBox::IsValidActor(AActor* Actor) const
+{
+    return IsPlayer(Actor) || IsEnemyAI(Actor);
 }
 
 bool AMatrixTriggerBox::IsPlayer(AActor* Actor) const
 {
     return Cast<AMainPlayerCharacter>(Actor) != nullptr;
+}
+
+bool AMatrixTriggerBox::IsEnemyAI(AActor* Actor) const
+{
+    return Cast<AEnemyCharacter>(Actor) != nullptr;
 }
 
 void AMatrixTriggerBox::LogTriggerInfo(const FString& Action) const
@@ -188,4 +241,179 @@ void AMatrixTriggerBox::LogTriggerInfo(const FString& Action) const
         *UEnum::GetValueAsString(TriggerInfo.TriggerType),
         *UEnum::GetValueAsString(TriggerInfo.TriggerCondition),
         *TriggerInfo.TargetLevel.ToString());
+}
+
+bool AMatrixTriggerBox::EnsureDoorReference()
+{
+    if (!TriggerInfo.TargetDoor)
+    {
+        TriggerInfo.TargetDoor = FindDoorActor();
+    }
+    return TriggerInfo.TargetDoor != nullptr;
+}
+
+AActor* AMatrixTriggerBox::FindDoorActor() const
+{
+    if (TriggerInfo.TargetDoor)
+    {
+        return TriggerInfo.TargetDoor;
+    }
+    
+    // 이름으로 검색
+    if (!DoorActorName.IsNone())
+    {
+        AActor* FoundDoor = FindDoorByName(DoorActorName.ToString());
+        if (FoundDoor)
+        {
+            return FoundDoor;
+        }
+    }
+    
+    // 자동 검색
+    if (bAutoFindDoor)
+    {
+        return FindClosestDoor();
+    }
+    
+    return nullptr;
+}
+
+AActor* AMatrixTriggerBox::FindDoorByName(const FString& DoorName) const
+{
+    TArray<AActor*> AllActors;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), AllActors);
+    
+    for (AActor* Actor : AllActors)
+    {
+        if (Actor && Actor->GetName().Contains(DoorName))
+        {
+            return Actor;
+        }
+    }
+    
+    return nullptr;
+}
+
+AActor* AMatrixTriggerBox::FindClosestDoor() const
+{
+    TArray<AActor*> AllActors;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), AllActors);
+    
+    AActor* ClosestDoor = nullptr;
+    float ClosestDistance = MatrixTriggerBoxConstants::DOOR_SEARCH_RADIUS;
+    
+    for (AActor* Actor : AllActors)
+    {
+        if (Actor && Actor->GetName().Contains(TEXT("Door")))
+        {
+            float Distance = FVector::Dist(GetActorLocation(), Actor->GetActorLocation());
+            
+            if (Distance < ClosestDistance)
+            {
+                ClosestDoor = Actor;
+                ClosestDistance = Distance;
+            }
+        }
+    }
+    
+    return ClosestDoor;
+}
+
+void AMatrixTriggerBox::InitializeDoorReference()
+{
+    if (!TriggerInfo.TargetDoor)
+    {
+        TriggerInfo.TargetDoor = FindDoorActor();
+    }
+}
+
+void AMatrixTriggerBox::StartValidationTimer()
+{
+    if (TriggerInfo.TriggerType == EMatrixTriggerType::DoorControl)
+    {
+        if (GetWorld()->GetTimerManager().IsTimerActive(ValidationTimerHandle))
+        {
+            StopValidationTimer();
+        }
+        
+        GetWorld()->GetTimerManager().SetTimer(ValidationTimerHandle, this, &AMatrixTriggerBox::ValidateActorsInTrigger, 
+            MatrixTriggerBoxConstants::VALIDATION_TIMER_INTERVAL, true);
+    }
+}
+
+void AMatrixTriggerBox::StopValidationTimer()
+{
+    GetWorld()->GetTimerManager().ClearTimer(ValidationTimerHandle);
+}
+
+void AMatrixTriggerBox::ValidateActorsInTrigger()
+{
+    if (TriggerInfo.TriggerType != EMatrixTriggerType::DoorControl) 
+    {
+        return;
+    }
+    
+    int32 ActualActorCount = CountValidActorsInTrigger();
+    
+    if (ActualActorCount == 0 && TriggerInfo.bCloseOnExit)
+    {
+        CloseDoor();
+        StopValidationTimer();
+    }
+}
+
+int32 AMatrixTriggerBox::CountValidActorsInTrigger() const
+{
+    int32 Count = 0;
+    
+    TArray<AActor*> OverlappingActors;
+    GetOverlappingActors(OverlappingActors);
+    
+    for (AActor* Actor : OverlappingActors)
+    {
+        if (Actor && Actor->IsValidLowLevel() && IsEnemyAI(Actor))
+        {
+            Count++;
+        }
+    }
+    
+    return Count;
+}
+
+void AMatrixTriggerBox::PlayDoorTimeline()
+{
+    if (!TriggerInfo.TargetDoor)
+    {
+        return;
+    }
+    
+    TArray<UTimelineComponent*> TimelineComponents;
+    TriggerInfo.TargetDoor->GetComponents<UTimelineComponent>(TimelineComponents);
+    
+    for (UTimelineComponent* Timeline : TimelineComponents)
+    {
+        if (Timeline && Timeline->IsValidLowLevel())
+        {
+            Timeline->Play();
+        }
+    }
+}
+
+void AMatrixTriggerBox::CloseDoor()
+{
+    if (!TriggerInfo.TargetDoor)
+    {
+        return;
+    }
+    
+    TArray<UTimelineComponent*> TimelineComponents;
+    TriggerInfo.TargetDoor->GetComponents<UTimelineComponent>(TimelineComponents);
+    
+    for (UTimelineComponent* Timeline : TimelineComponents)
+    {
+        if (Timeline && Timeline->IsValidLowLevel())
+        {
+            Timeline->Reverse();
+        }
+    }
 }

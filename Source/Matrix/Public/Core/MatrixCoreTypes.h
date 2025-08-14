@@ -45,7 +45,7 @@ enum class EMatrixTriggerType : uint8
     SubLevelLoad,       // 서브레벨 로드
     SubLevelUnload,     // 서브레벨 언로드
     WaveStart,          // 웨이브 시작
-    DoorOpen,           // 문 열기
+    DoorControl,        // 문 제어
     Custom              // 커스텀 액션
 };
 
@@ -123,6 +123,16 @@ struct FTriggerInfo
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger Info")
     FString CustomEventName;
 
+    // === Door Control Settings ===
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Control")
+    AActor* TargetDoor;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Control")
+    bool bOpenOnEnter = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Control")
+    bool bCloseOnExit = true;
+
     FTriggerInfo()
     {
         TriggerType = EMatrixTriggerType::Custom;
@@ -133,5 +143,8 @@ struct FTriggerInfo
         Delay = 0.0f;
         bOneTimeUse = true;
         CustomEventName = TEXT("");
+        TargetDoor = nullptr;
+        bOpenOnEnter = true;
+        bCloseOnExit = true;
     }
 };

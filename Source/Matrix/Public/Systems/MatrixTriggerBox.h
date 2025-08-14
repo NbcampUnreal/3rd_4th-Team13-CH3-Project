@@ -19,56 +19,69 @@ public:
 protected:
     virtual void BeginPlay() override;
 
-    // === 트리거 설정 ===
-    
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger Settings")
     FTriggerInfo TriggerInfo;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger Settings")
     bool bShowDebug = false;
 
-    // === 이벤트 델리게이트 ===
-    
     UPROPERTY(BlueprintAssignable, Category = "Events")
     FOnTriggerActivated OnTriggerActivated;
 
     UPROPERTY(BlueprintAssignable, Category = "Events")
     FOnTriggerDeactivated OnTriggerDeactivated;
 
-private:
-    // === 내부 상태 ===
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Control")
+    FName DoorActorName;
     
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Control")
+    bool bAutoFindDoor = true;
+
+private:
     bool bIsActivated = false;
     bool bIsUsed = false;
     FTimerHandle DelayTimerHandle;
+    FTimerHandle ValidationTimerHandle;
 
-    // === 오버랩 이벤트 핸들러 ===
-    
     UFUNCTION()
     void OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
     UFUNCTION()
     void OnEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
-    // === 트리거 처리 함수들 ===
-    
     void ActivateTrigger();
     void DeactivateTrigger();
     void ExecuteTriggerAction();
     void ExecuteDelayedAction();
 
-    // === 트리거 타입별 처리 함수들 ===
-    
     void HandleLevelTransition();
     void HandleSubLevelLoad();
     void HandleSubLevelUnload();
     void HandleWaveStart();
-    void HandleDoorOpen();
+    void HandleDoorControl();
     void HandleCustom();
 
-    // === 유틸리티 함수들 ===
-    
     bool CanActivate() const;
+    bool IsValidActor(AActor* Actor) const;
     bool IsPlayer(AActor* Actor) const;
+    bool IsEnemyAI(AActor* Actor) const;
     void LogTriggerInfo(const FString& Action) const;
+    
+    // 문 관련 함수들
+    bool EnsureDoorReference();
+    AActor* FindDoorActor() const;
+    AActor* FindDoorByName(const FString& DoorName) const;
+    AActor* FindClosestDoor() const;
+    void InitializeDoorReference();
+    void PlayDoorTimeline();
+    void CloseDoor();
+    
+    // Door Control 전용 함수들
+    void HandleDoorControlOverlap(AActor* OtherActor);
+    
+    // Timer 관련 함수들
+    void StartValidationTimer();
+    void StopValidationTimer();
+    void ValidateActorsInTrigger();
+    int32 CountValidActorsInTrigger() const;
 };

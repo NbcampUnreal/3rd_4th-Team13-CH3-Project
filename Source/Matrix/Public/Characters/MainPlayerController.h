@@ -49,7 +49,7 @@ public:
 
 	virtual void SetupInputComponent() override;
 
-	// �Ͻ�����  UI On/Off �Լ�
+	// 일시정지 UI On/Off 함수
 	void HandlePauseMenu();
 
 	UFUNCTION(BlueprintCallable, Category = "HUD")
@@ -110,7 +110,7 @@ protected:
 	void OnGameStateChanged(EGameState NewState);
 
 private:
-	// ���� ������ Pause �������� Ȯ���ϴ� ����
+	// 일시정지 상태를 Pause 확인하는 변수
 	bool bIsPaused = false;
 
 	UPROPERTY(EditAnywhere, Category = "Menu")

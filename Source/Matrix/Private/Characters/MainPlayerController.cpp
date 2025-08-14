@@ -6,6 +6,8 @@
 #include "GameFramework/MatrixGameState.h"
 #include "GameFramework/MatrixLevelManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Characters/MainPlayerCharacter.h"
+#include "Engine/Engine.h"
 
 AMainPlayerController::AMainPlayerController()
 	: InputMappingContext(nullptr), 
