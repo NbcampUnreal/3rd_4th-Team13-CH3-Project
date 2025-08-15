@@ -32,6 +32,7 @@ AMainPlayerCharacter::AMainPlayerCharacter()
 	MoveSpeed = 500.f;
 	bIsInput = false;
 	bIsLook = false;
+	bIsSlow = false;
 	bCanHit = true;
 	bCanShoot = true;
 	CurrentWeapon = nullptr;
@@ -191,6 +192,26 @@ void AMainPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 					&AMainPlayerCharacter::QuickSlot3
 				);
 			}
+			//시간조종(0.35)
+			if (PlayerController->SlowTimeAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->SlowTimeAction,
+					ETriggerEvent::Triggered,
+					this,
+					&AMainPlayerCharacter::StartSlow
+				);
+			}
+			//시간조종 종료
+			if (PlayerController->SlowTimeAction)
+			{
+				EnhancedInput->BindAction(
+					PlayerController->SlowTimeAction,
+					ETriggerEvent::Completed,
+					this,
+					&AMainPlayerCharacter::EndSlow
+				);
+			}
 		}
 	}
 }
@@ -245,7 +266,9 @@ void AMainPlayerCharacter::SlowWorld()
 {
 	float Dilation = 0.001f;
 
-	if (bIsInput)
+	if (bIsSlow)
+		Dilation = 0.35f; 
+	else if (bIsInput)
 		Dilation = 1.f; 
 	else if (bIsLook)
 		Dilation = 0.3f; 

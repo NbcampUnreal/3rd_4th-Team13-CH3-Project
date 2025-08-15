@@ -22,7 +22,8 @@ AMainPlayerController::AMainPlayerController()
 	MainHUDWidgetInstance(nullptr),
 	QuickSlot1Action((nullptr)),
 	QuickSlot2Action((nullptr)),
-	QuickSlot3Action((nullptr))
+	QuickSlot3Action((nullptr)),
+	SlowTimeAction((nullptr))
 {
 	
 }

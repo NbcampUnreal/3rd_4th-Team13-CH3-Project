@@ -79,9 +79,12 @@ protected:
 	void SlowWorld(); //시간 제어 함수
 	void EndInput() {bIsInput = false;};
 	void EndLook() {bIsLook = false;};
+	void StartSlow() {bIsSlow = true;};
+	void EndSlow() {bIsSlow = false;};
 	
 private:
 	float MoveSpeed;
 	bool bIsInput;
 	bool bIsLook;
+	bool bIsSlow;
 };

@@ -36,6 +36,8 @@ public:
 	UInputAction* QuickSlot2Action;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* QuickSlot3Action;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UInputAction* SlowTimeAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UMainMenuWidget> MainMenuWidgetClass;
