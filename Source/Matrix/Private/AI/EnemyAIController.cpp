@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
+#include "AI/Services/PlayerLocationSharingService.h"
 #include "Perception/AISense.h"
 
 // Define the actual variables for the blackboard keys
@@ -57,10 +58,15 @@ void AEnemyAIController::OnPossess(APawn* InPawn)
     {
         BlackboardComp->InitializeBlackboard(*(BehaviorTreeAsset->BlackboardAsset));
         RunBehaviorTree(BehaviorTreeAsset);
+
+        // Set initial player location for immediate pursuit
+        APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+        if (PlayerPawn)
+        {
+            BlackboardComp->SetValueAsVector(BlackboardKeys::LastKnownPlayerLocationKey, PlayerPawn->GetActorLocation());
+        }
     }
 }
-
-#include "AI/Services/PlayerLocationSharingService.h"
 
 void AEnemyAIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
@@ -76,6 +82,7 @@ void AEnemyAIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus
             BlackboardComp->SetValueAsObject(BlackboardKeys::TargetActorKey, Actor);
             BlackboardComp->SetValueAsBool(BlackboardKeys::HasLineOfSightKey, true);
             BlackboardComp->SetValueAsVector(BlackboardKeys::LastKnownPlayerLocationKey, Actor->GetActorLocation());
+            SetFocus(Actor);
 
             // --- NEW --- Update the global location sharing service
             if (UPlayerLocationSharingService* LocationService = UPlayerLocationSharingService::GetInstance())
@@ -86,6 +93,7 @@ void AEnemyAIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus
         else
         {
             BlackboardComp->SetValueAsBool(BlackboardKeys::HasLineOfSightKey, false);
+            ClearFocus(EAIFocusPriority::Gameplay);
         }
     }
 }

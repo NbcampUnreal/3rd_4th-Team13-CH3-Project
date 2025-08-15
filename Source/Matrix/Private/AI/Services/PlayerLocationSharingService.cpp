@@ -20,9 +20,14 @@ void UPlayerLocationSharingService::UpdatePlayerLocation(const FVector& NewLocat
 	bIsLocationSet = true;
 }
 
-FVector UPlayerLocationSharingService::GetLastKnownPlayerLocation() const
+bool UPlayerLocationSharingService::GetLastKnownPlayerLocation(FVector& OutLocation)
 {
-	return LastKnownPlayerPosition;
+	if (bIsLocationSet)
+	{
+		OutLocation = LastKnownPlayerPosition;
+		return true;
+	}
+	return false;
 }
 
 bool UPlayerLocationSharingService::HasValidLocation() const

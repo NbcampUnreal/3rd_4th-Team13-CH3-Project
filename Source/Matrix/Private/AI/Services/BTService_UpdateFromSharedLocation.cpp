@@ -31,8 +31,10 @@ void UBTService_UpdateFromSharedLocation::TickNode(UBehaviorTreeComponent& Owner
 	UPlayerLocationSharingService* LocationService = UPlayerLocationSharingService::GetInstance();
 	if (LocationService && LocationService->HasValidLocation())
 	{
-		// Get the shared location and update this AI's blackboard
-		FVector SharedLocation = LocationService->GetLastKnownPlayerLocation();
-		BlackboardComp->SetValueAsVector(LastKnownPlayerLocationKey.SelectedKeyName, SharedLocation);
+		FVector SharedLocation;
+		if (LocationService->GetLastKnownPlayerLocation(SharedLocation))
+		{
+			BlackboardComp->SetValueAsVector(LastKnownPlayerLocationKey.SelectedKeyName, SharedLocation);
+		}
 	}
 }

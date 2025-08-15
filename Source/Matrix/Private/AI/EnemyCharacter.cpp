@@ -18,7 +18,8 @@ AEnemyCharacter::AEnemyCharacter()
 
 	UCharacterMovementComponent* Movement = GetCharacterMovement();
 	Movement->MaxWalkSpeed = WalkSpeed;
-	Movement->bOrientRotationToMovement = true;
+	Movement->bOrientRotationToMovement = false;
+	bUseControllerRotationYaw = true;
 	Movement->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
 	Movement->AirControl = 0.2f;
 

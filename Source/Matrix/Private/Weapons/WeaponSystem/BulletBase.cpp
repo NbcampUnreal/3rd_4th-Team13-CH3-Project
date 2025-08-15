@@ -105,8 +105,13 @@ void ABulletBase::ActivateBullet(FVector Location, FRotator Rotation, APawn* New
 	SetActorLocation(Location);
 	SetActorRotation(Rotation);
 	SetActorHiddenInGame(false);
-	SetActorEnableCollision(true);
 	SetActorTickEnabled(true);
+
+	bIsActive = true;
+	OwnerPawn = NewOwner;
+	OwnerWeapon = NewWeapon;
+
+	SetActorEnableCollision(true); // Enable collision AFTER owner is set
 	
 	if (ProjectileMovementComp)
 	{
@@ -114,10 +119,6 @@ void ABulletBase::ActivateBullet(FVector Location, FRotator Rotation, APawn* New
 		FVector FireDirection = GetActorForwardVector();
 		ProjectileMovementComp->Velocity = FireDirection * BulletSpeed;
 	}
-
-	bIsActive = true;
-	OwnerPawn = NewOwner;
-	OwnerWeapon = NewWeapon;
 
 	if (TrailEffectComp && TrailEffectComp->GetAsset())
 	{

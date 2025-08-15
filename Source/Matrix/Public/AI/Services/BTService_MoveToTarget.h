@@ -29,4 +29,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MovementSpeed = 600.0f; // Speed to move towards target
+
+	UPROPERTY(EditAnywhere, Category = "Avoidance")
+	float AvoidanceRadius = 200.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Avoidance")
+	float AvoidanceStrength = 0.5f;
 };

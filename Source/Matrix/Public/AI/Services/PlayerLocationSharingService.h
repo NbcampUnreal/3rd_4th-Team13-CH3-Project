@@ -17,7 +17,10 @@ public:
 	void UpdatePlayerLocation(const FVector& NewLocation);
 
 	// Call this to get the player's last known position
-	FVector GetLastKnownPlayerLocation() const;
+	    UFUNCTION(BlueprintCallable, Category = "AI")
+    bool GetLastKnownPlayerLocation(FVector& OutLocation);
+
+    void InvalidatePlayerLocation();
 
 	// Is there a valid location known?
 	bool HasValidLocation() const;

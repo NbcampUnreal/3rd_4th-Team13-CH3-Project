@@ -4,6 +4,7 @@
 #include "AI/EnemyAIController.h"
 #include "AI/EnemyCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h" // Added for GetAllActorsOfClass
 
 UBTService_MoveToTarget::UBTService_MoveToTarget()
 {
@@ -15,6 +16,9 @@ UBTService_MoveToTarget::UBTService_MoveToTarget()
 
 	// Default blackboard key for target actor
 	TargetActorKey.SelectedKeyName = BlackboardKeys::TargetActorKey;
+
+	AvoidanceRadius = 200.0f;
+	AvoidanceStrength = 0.0f;
 }
 
 void UBTService_MoveToTarget::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
@@ -52,6 +56,8 @@ void UBTService_MoveToTarget::TickNode(UBehaviorTreeComponent& OwnerComp, uint8*
 	FVector CurrentLocation = AIChar->GetActorLocation();
 	FVector TargetLocation = TargetActor->GetActorLocation();
 
+	// --- RVO Avoidance is now handled by the Crowd Manager ---
+
 	float Distance = FVector::Dist(CurrentLocation, TargetLocation);
 
 	// Set movement speed
@@ -60,7 +66,7 @@ void UBTService_MoveToTarget::TickNode(UBehaviorTreeComponent& OwnerComp, uint8*
 	// If outside max distance, move towards target
 	if (Distance > MaxDistance)
 	{
-		AIController->MoveToActor(TargetActor, AcceptanceRadius);
+		AIController->MoveToLocation(TargetLocation, AcceptanceRadius); // Use MoveToLocation with modified target
 	}
 	// If inside min distance, move away from target (simple evasion/kiting)
 	else if (Distance < MinDistance)
@@ -75,3 +81,4 @@ void UBTService_MoveToTarget::TickNode(UBehaviorTreeComponent& OwnerComp, uint8*
 		AIChar->GetCharacterMovement()->StopMovementImmediately();
 	}
 }
+

@@ -13,24 +13,25 @@ UBTTask_InvalidateAndSearch::UBTTask_InvalidateAndSearch()
 
 EBTNodeResult::Type UBTTask_InvalidateAndSearch::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent();
-	if (!BlackboardComp)
-	{
-		return EBTNodeResult::Failed;
-	}
+    Super::ExecuteTask(OwnerComp, NodeMemory);
 
-	UPlayerLocationSharingService* LocationService = UPlayerLocationSharingService::GetInstance();
-	if (LocationService)
-	{
-		// Get the location from our blackboard
-		const FVector LocationToInvalidate = BlackboardComp->GetValueAsVector(LastKnownPlayerLocationKey.SelectedKeyName);
+    UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent();
+    if (!BlackboardComp)
+    {
+        return EBTNodeResult::Failed;
+    }
 
-		// Tell the service that this location is stale
-		LocationService->InvalidateLocation(LocationToInvalidate);
-	}
+    // Get the location to invalidate
+    const FVector OldLocation = BlackboardComp->GetValueAsVector(LastKnownPlayerLocationKey.SelectedKeyName);
 
-	// Clear our own blackboard key so we don't try to go there again
-	BlackboardComp->ClearValue(LastKnownPlayerLocationKey.SelectedKeyName);
+    // Invalidate the shared location
+    if (UPlayerLocationSharingService* LocationService = UPlayerLocationSharingService::GetInstance())
+    {
+        LocationService->InvalidateLocation(OldLocation);
+    }
 
-	return EBTNodeResult::Succeeded;
+    // Clear the LastKnownPlayerLocationKey
+    BlackboardComp->ClearValue(LastKnownPlayerLocationKey.SelectedKeyName);
+
+    return EBTNodeResult::Succeeded;
 }
