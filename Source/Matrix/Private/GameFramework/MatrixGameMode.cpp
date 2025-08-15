@@ -35,22 +35,15 @@ void AMatrixGameMode::BeginPlay()
 
     if (MatrixGameState && MatrixGameState->CurrentGameState == EGameState::Playing)   
     {
-        UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance());
-        if (GameInstance && LevelDataTable)
+        if (WaveDataTable)
         {
-            FString ContextString;
-            FLevelData* CurrentLevelData = LevelDataTable->FindRow<FLevelData>(FName(*FString::FromInt(GameInstance->CurrentLevel)), ContextString);
-        
-            if (CurrentLevelData)
-            {
-                UE_LOG(LogTemp, Warning, TEXT("Level %d"), GameInstance->CurrentLevel);
-                CurrentWaveDataTable = CurrentLevelData->WaveDataTable;
-                if (CurrentWaveDataTable)
-                {
-                    UE_LOG(LogTemp, Warning, TEXT("Level %d has %d waves."), GameInstance->CurrentLevel, CurrentWaveDataTable->GetRowNames().Num());
-                    StartWave();
-                }
-            }
+            CurrentWaveDataTable = WaveDataTable;
+            UE_LOG(LogTemp, Warning, TEXT("Wave data loaded. Total waves: %d"), CurrentWaveDataTable->GetRowNames().Num());
+            StartWave();
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("WaveDataTable is not set!"));
         }
     }
 }
@@ -131,8 +124,8 @@ void AMatrixGameMode::EndWave()
 
     if (MatrixGameState->CurrentWave >= CurrentWaveDataTable->GetRowNames().Num())
     {
-        UE_LOG(LogTemp, Warning, TEXT("Level Cleared! Proceeding to next level."));
-        PrepareNextLevel();
+        // 모든 웨이브 클리어 - 보스 스테이지로 진행 또는 게임 클리어
+        CheckBossStageOrGameClear();
     }
     else
     {
@@ -140,32 +133,30 @@ void AMatrixGameMode::EndWave()
     }
 }
 
-void AMatrixGameMode::PrepareNextLevel()
+void AMatrixGameMode::CheckBossStageOrGameClear()
 {
-    UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance());
-    if (GameInstance)
+    // 보스 스테이지가 있는지 확인
+    if (bHasBossStage)
     {
-        GameInstance->AdvanceToNextLevel();
-        CheckGameClearCondition();
+        UE_LOG(LogTemp, Warning, TEXT("All waves cleared! Proceeding to Boss Stage!"));
+        // TODO: 보스 스테이지로 전환
+        // UGameplayStatics::OpenLevel(this, BossStageLevelName);
+        // 또는 보스 스테이지 시작 로직
+        StartBossStage();
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("All waves cleared! Game Clear!"));
+        MatrixGameState->SetGameState(EGameState::GameClear);
     }
 }
 
-void AMatrixGameMode::CheckGameClearCondition()
+void AMatrixGameMode::StartBossStage()
 {
-    UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance());
-    if (GameInstance && MatrixGameState)
-    {
-        if (GameInstance->CurrentLevel > GameInstance->MaxLevel)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("모든 레벨 클리어! Game Clear!"))
-            MatrixGameState->SetGameState(EGameState::GameClear);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Proceeding to Level %d"), GameInstance->CurrentLevel);
-            // 새 레벨의 웨이브 데이터 테이블 로드는 향후 구현 예정
-        }
-    }
+    // 보스 스테이지 시작 로직
+    UE_LOG(LogTemp, Warning, TEXT("Boss Stage Started!"));
+    // TODO: 보스 스테이지 관련 로직 구현
+    // 예: 보스 스폰, 보스 전용 UI, 보스 전용 게임 규칙 등
 }
 
 void AMatrixGameMode::PlayerDied()

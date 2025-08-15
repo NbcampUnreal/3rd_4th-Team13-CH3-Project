@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "Core/MatrixCoreTypes.h"
 #include "Core/MatrixWaveTypes.h"
 #include "MatrixGameMode.generated.h"
 
@@ -35,7 +36,8 @@ protected:
 	virtual void BeginPlay() override;
 	void StartWave();
 	void EndWave();
-	void PrepareNextLevel();
+	void CheckBossStageOrGameClear();
+	void StartBossStage();
 
 private:
 	FTimerHandle TimerHandle_NextWaveStart;
@@ -44,12 +46,17 @@ private:
 	AMatrixGameState* MatrixGameState;
 
 	UPROPERTY(EditAnywhere, Category = "Game System")
-	UDataTable* LevelDataTable;
+	UDataTable* WaveDataTable;
 
 	UDataTable* CurrentWaveDataTable;
 
 	UPROPERTY()
 	class AMatrixSpawnManager* SpawnManager;
 
-	void CheckGameClearCondition();
+	// 보스 스테이지 관련 설정
+	UPROPERTY(EditAnywhere, Category = "Boss Stage")
+	bool bHasBossStage = false;
+
+	UPROPERTY(EditAnywhere, Category = "Boss Stage")
+	FName BossStageLevelName = TEXT("S_Boss");
 };
