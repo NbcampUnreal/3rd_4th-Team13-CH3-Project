@@ -8,6 +8,8 @@
 #include "Perception/AISenseConfig_Damage.h" // Added for damage sense
 #include "Perception/AISense_Damage.h" // Added for UAISense_Damage
 #include "Perception/AISense.h" // Added for UAISense::GetSenseID
+#include "Weapons/WeaponSystem/BulletBase.h"
+#include "TimerManager.h"
 
 AEnemyAIController::AEnemyAIController()
 {
@@ -60,65 +62,66 @@ void AEnemyAIController::BeginPlay()
 void AEnemyAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+    UE_LOG(LogTemp, Warning, TEXT("OnPossess CALLED for %s."), *InPawn->GetName());
 
-	if (InPawn)
+    if (!BehaviorTreeAsset)
+    {
+        UE_LOG(LogTemp, Error, TEXT("OnPossess: BehaviorTreeAsset is NULL!"));
+        return;
+    }
+
+    if (!BehaviorTreeAsset->BlackboardAsset)
+    {
+        UE_LOG(LogTemp, Error, TEXT("OnPossess: BehaviorTreeAsset->BlackboardAsset is NULL! Assign a Blackboard asset to the Behavior Tree."));
+        return;
+    }
+
+    // This is the key check
+    bool bSuccess = UseBlackboard(BehaviorTreeAsset->BlackboardAsset, BlackboardComp);
+    if (bSuccess && BlackboardComp)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("OnPossess: UseBlackboard SUCCEEDED. BlackboardComp is now VALID."));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("OnPossess: UseBlackboard FAILED or BlackboardComp is NULL!"));
+        return;
+    }
+    
+	RunBehaviorTree(BehaviorTreeAsset);
+
+	if (BrainComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Sparta] AI Controller is controlling %s."), *InPawn->GetName());
-		if (BlackboardComp)
-		{
-			APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-			if (PlayerPawn)
-			{
-				BlackboardComp->SetValueAsObject(TEXT("TargetActor"), PlayerPawn);
-				BlackboardComp->SetValueAsVector(TEXT("TargetLastKnownLocation"), PlayerPawn->GetActorLocation());
-				BlackboardComp->SetValueAsBool(TEXT("CanSeeTarget"), true); // Assume seen if known
-			}
-		}
-		if (BehaviorTreeAsset)
-		{
-			RunBehaviorTree(BehaviorTreeAsset);
-		}
+		BrainComponent->StopLogic("Waiting for player to move");
 	}
 }
 
 void AEnemyAIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
-	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-	if (Actor != PlayerPawn) return;
-
-	if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
-	{
-		if (Stimulus.WasSuccessfullySensed())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[Sparta] Saw target: %s"), *Actor->GetName());
-			BlackboardComp->SetValueAsObject(TEXT("TargetActor"), Actor);
-			BlackboardComp->SetValueAsBool(TEXT("CanSeeTarget"), true);
-			BlackboardComp->SetValueAsVector(TEXT("TargetLastKnownLocation"), Actor->GetActorLocation());
-			BlackboardComp->SetValueAsBool(TEXT("IsInvestigating"), false);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[Sparta] Lost target: %s"), *Actor->GetName());
-			BlackboardComp->SetValueAsBool(TEXT("CanSeeTarget"), false);
-			BlackboardComp->SetValueAsBool(TEXT("IsInvestigating"), true);
-		}
-	}
-	else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>())
-	{
-		if (Stimulus.WasSuccessfullySensed()) // Damage sense always successfully sensed if triggered
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[Sparta] Received damage from: %s"), *Actor->GetName());
-			BlackboardComp->SetValueAsBool(TEXT("PlayerAttacked"), true); // Set Blackboard key
-			// You might want to clear this key after a short delay or after evade/cover
-		}
-	}
+    if (Stimulus.WasSuccessfullySensed())
+    {
+        if (Cast<ABulletBase>(Actor))
+        {
+            OnProjectileDetected();
+        }
+        else if (Actor == UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
+        {
+            OnPlayerSeen(Actor);
+        }
+    }
+    else // Stimulus was lost
+    {
+        if (Actor == UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
+        {
+            OnPlayerLost();
+        }
+    }
 }
 
-void AEnemyAIController::PerformAttack()
+void AEnemyAIController::ExecuteTurn(float PlayerMovementDistance)
 {
-	AEnemyCharacter* AIChar = Cast<AEnemyCharacter>(GetPawn());
-	if (AIChar)
-	{
-		AIChar->FireProjectile();
-	}
+    if (BrainComponent && BrainComponent->IsPaused())
+    { 
+        BrainComponent->StartLogic();
+    }
 }

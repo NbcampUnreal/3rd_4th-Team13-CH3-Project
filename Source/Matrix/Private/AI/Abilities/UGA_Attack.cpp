@@ -61,7 +61,6 @@ void UUGA_Attack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 	if (!TargetLocation.IsZero())
 	{
 		EquippedWeapon->SetTargetLocation(TargetLocation);
-		UE_LOG(LogTemp, Warning, TEXT("UGA_Attack: Set Weapon TargetLocation to %s"), *TargetLocation.ToString());
 	}
 	else
 	{
@@ -129,7 +128,6 @@ void UUGA_Attack::OnFireBulletEvent(FGameplayEventData Payload)
 	AEnemyCharacter* EnemyCharacter = Cast<AEnemyCharacter>(GetAvatarActorFromActorInfo());
 	if (EnemyCharacter)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UGA_Attack: EnemyCharacter is valid. Calling FireProjectile()."));
 		EnemyCharacter->FireProjectile();
 	}
 	else
@@ -148,37 +146,13 @@ void UUGA_Attack::OnAttackHit(const FGameplayEventData& Payload)
 void UUGA_Attack::OnAbilityEnd(const FGameplayEventData& Payload)
 {
 	// 어빌리티 종료 로직
-	UE_LOG(LogTemp, Warning, TEXT("Ability End Event Received!"));
 	EndAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), false, false);
 }
 
 void UUGA_Attack::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-
 	
-
-	// Remove temporary debug listener
-	if (GenericEventHandle.IsValid())
-	{
-		UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get();
-		if (ASC)
-		{
-			if (ASC->GenericGameplayEventCallbacks.Contains(FGameplayTag::EmptyTag))
-			{
-				ASC->GenericGameplayEventCallbacks.FindRef(FGameplayTag::EmptyTag).Remove(GenericEventHandle);
-			}
-			
-		}
-	}
-
-	// Gameplay Event 리스너 해제 (중요!)
-	UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get();
-	if (ASC)
-	{
-	}
-
-	// Example: Resetting the boolean variable in ABP when ability ends
 	AEnemyCharacter* EnemyChar = Cast<AEnemyCharacter>(ActorInfo->AvatarActor.Get());
 	if (EnemyChar && EnemyChar->GetMesh() && EnemyChar->GetMesh()->GetAnimInstance())
 	{

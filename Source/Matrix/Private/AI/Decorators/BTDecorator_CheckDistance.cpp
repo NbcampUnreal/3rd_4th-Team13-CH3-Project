@@ -51,30 +51,14 @@ bool UBTDecorator_CheckDistance::CalculateRawConditionValue(UBehaviorTreeCompone
         }
         else if (TargetActor->GetRootComponent()) // ACharacter가 아니거나 캡슐 컴포넌트가 없는 경우
         {
-            TargetHalfHeight = TargetActor->GetRootComponent()->Bounds.BoxExtent.Z; // RootComponent의 바운드 높이 사용
+            TargetHalfHeight = TargetActor->GetRootComponent()->Bounds.BoxExtent.Z;
         }
     }
     TargetLocation.Z -= TargetHalfHeight;
-    // --- IMPORTANT FIX: Force TargetLocation Z to be at the same level as AI's feet ---
-    // This bypasses any issues with TargetActor's GetCapsuleComponent or RootComponent bounds.
-    TargetLocation.Z = AILocation.Z; // Set TargetLocation's Z to AI's feet Z
+    TargetLocation.Z = AILocation.Z;
     // --- Z축 조정 끝 ---
     
     float Distance = FVector::Dist(AILocation, TargetLocation);
-    
-    // --- 디버그 메시지 ---
-    if (bCheckWithinRange)
-    {
-        const FString DebugMsg = FString::Printf(
-            TEXT("AI Loc (Feet): %s | Target Loc (Feet): %s | Distance: %.2f"),
-            *AILocation.ToString(),
-            *TargetLocation.ToString(),
-            Distance
-        );
-        
-        GEngine->AddOnScreenDebugMessage(98765, 5.0f, FColor::Yellow, DebugMsg);
-    }
-    // --- 디버그 메시지 끝 ---
 
     // 조건 반환
     if (bCheckWithinRange)

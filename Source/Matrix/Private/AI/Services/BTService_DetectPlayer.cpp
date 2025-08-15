@@ -49,15 +49,4 @@ void UBTService_DetectPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8*
 		OwnerComp.GetBlackboardComponent()->ClearValue(TargetLocationKey.SelectedKeyName);
 		OwnerComp.GetBlackboardComponent()->SetValueAsBool(TEXT("CanSeeTarget"), false);
 	}
-	
-	APawn* AIPawn = AIController->GetPawn();
-	DrawDebugSphere(
-		GetWorld(),
-		AIPawn->GetActorLocation(),
-		800.0f,
-		12,
-		FColor::Red,
-		false,
-		0.1f
-	);
 }

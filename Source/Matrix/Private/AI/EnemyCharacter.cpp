@@ -33,8 +33,6 @@ AEnemyCharacter::AEnemyCharacter()
 
 void AEnemyCharacter::BeginPlay()
 {
-	UE_LOG(LogTemp, Error, TEXT("========== %s's BeginPlay HAS BEEN CALLED! =========="), *GetName());
-
 	Super::BeginPlay();
 
 	// --- 무기 장착 ---
@@ -55,7 +53,6 @@ void AEnemyCharacter::BeginPlay()
 	if (AbilitySystemComponent)
 	{
 		AbilitySystemComponent->InitAbilityActorInfo(this, this);
-		UE_LOG(LogTemp, Warning, TEXT("%s: ASC Initialized with ActorInfo."), *GetName());
 	}
 
 	// --- 어빌리티 부여 로직 ---
@@ -65,15 +62,6 @@ void AEnemyCharacter::BeginPlay()
 		if (DeathAbilityClass)
 		{
 			FGameplayAbilitySpecHandle AbilityHandle = AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(DeathAbilityClass, 1, 0, this));
-			
-			if (AbilityHandle.IsValid())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("%s was successfully given the Death Ability! Handle: %s. DeathAbilityClass: %s"), *GetName(), *AbilityHandle.ToString(), *DeathAbilityClass->GetName()); 
-			}
-			else
-			{
-				UE_LOG(LogTemp, Error, TEXT("%s: Failed to give Death Ability! Handle is invalid."), *GetName());
-			}
 		}
 		else
 		{
@@ -84,15 +72,6 @@ void AEnemyCharacter::BeginPlay()
 		if (AttackAbilityClass)
 		{
 			FGameplayAbilitySpecHandle AttackAbilityHandle = AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AttackAbilityClass, 1, 0, this));
-
-			if (AttackAbilityHandle.IsValid())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("%s was successfully given the Attack Ability! Handle: %s. AttackAbilityClass: %s"), *GetName(), *AttackAbilityHandle.ToString(), *AttackAbilityClass->GetName());
-			}
-			else
-			{
-				UE_LOG(LogTemp, Error, TEXT("%s: Failed to give Attack Ability! Handle is invalid."), *GetName());
-			}
 		}
 		else
 		{
@@ -133,14 +112,8 @@ UItemDropComponent* AEnemyCharacter::GetItemDropComp() const
 
 void AEnemyCharacter::FireProjectile()
 {
-	UE_LOG(LogTemp, Warning, TEXT("EnemyCharacter: FireProjectile() called."));
 	if (EquippedWeapon)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("EnemyCharacter: EquippedWeapon is VALID. Calling Shoot()."));
 		EquippedWeapon->Shoot();
-	}
-	else
-	{
-		
 	}
 }

@@ -16,6 +16,9 @@ class MATRIX_API AEnemyAIController : public AAIController
 public:
 	AEnemyAIController();
 
+	// This function will be called from the player or game mode to progress the AI's logic
+	void ExecuteTurn(float PlayerMovementDistance);
+
 	FORCEINLINE UBlackboardComponent* GetBlackboardComp() const { return BlackboardComp; }
 
 protected:
@@ -37,6 +40,18 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 
 	void PerformAttack();
+
+protected:
+	// Called in Blueprint when the player is seen or lost
+	UFUNCTION(BlueprintImplementableEvent, Category = "AI")
+	void OnPlayerSeen(AActor* PlayerActor);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "AI")
+	void OnPlayerLost();
+
+	// Called in Blueprint when a projectile is detected
+	UFUNCTION(BlueprintImplementableEvent, Category = "AI")
+	void OnProjectileDetected();
 
 private:
 	UPROPERTY(EditAnywhere, Category = "AI")
