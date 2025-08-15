@@ -37,7 +37,6 @@ bool UGA_Death::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 
 	if (!bCanActivate)
 	{
-		UE_LOG(LogTemp, Error, TEXT("GA_AiDeath: CanActivateAbility returned FALSE for %s. Reason: Super::CanActivateAbility failed."), *GetNameSafe(ActorInfo->AvatarActor.Get()));
 		return false;
 	}
 
@@ -45,12 +44,10 @@ bool UGA_Death::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	{
 		if (ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Status.Death.Dead"))))
 		{
-			UE_LOG(LogTemp, Error, TEXT("GA_AiDeath: CanActivateAbility returned FALSE for %s. Reason: Already Dead Tag present."), *GetNameSafe(ActorInfo->AvatarActor.Get()));
 			return false;
 		}
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("GA_AiDeath: CanActivateAbility returned TRUE for %s. Attempting to activate."), *GetNameSafe(ActorInfo->AvatarActor.Get()));
+	
 	return true;
 }
 
@@ -62,14 +59,12 @@ void UGA_Death::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const F
 	if (!OwnerActor)
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-		UE_LOG(LogTemp, Error, TEXT("OwnerActor is NULL - GA_AiDeath!"));
 		return;
 	}
 
 	if (UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
 	{
 		ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Status.Death.Dead")));
-		UE_LOG(LogTemp, Warning, TEXT("%s: Added Status.Death.Dead tag."), *GetNameSafe(ActorInfo->AvatarActor.Get()));
 	}
 
 	if (AMainPlayerCharacter* Player = Cast<AMainPlayerCharacter>(OwnerActor))
@@ -103,12 +98,6 @@ void UGA_Death::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const F
 
 void UGA_Death::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	//if (UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
-	//{
-	//	ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Status.Death.Dead")));
-	//	UE_LOG(LogTemp, Warning, TEXT("%s: Removed Status.Death.Dead tag."), *GetNameSafe(ActorInfo->AvatarActor.Get()));
-	//}
-
 	if (AActor* AvatarActor = GetAvatarActorFromActorInfo())
 	{
 		AvatarActor->Destroy();
@@ -137,7 +126,6 @@ void UGA_Death::HandlePlayerDeath(AMainPlayerCharacter* Player)
 		if (AMatrixGameMode* MatrixGameMode = Cast<AMatrixGameMode>(GM))
 		{
 			MatrixGameMode->PlayerDied();
-			UE_LOG(LogTemp, Log, TEXT("Player Death: Notified GameMode of player death."));
 		}
 	}
 }
@@ -162,7 +150,6 @@ void UGA_Death::HandleAIDeath(AEnemyCharacter* Enemy)
 		if (AMatrixGameMode* MatrixGameMode = Cast<AMatrixGameMode>(GM))
 		{
 			MatrixGameMode->EnemyKilled();
-			UE_LOG(LogTemp, Log, TEXT("GA_Death: Notified GameMode of enemy death."));
 		}
 	}
 }
@@ -201,7 +188,6 @@ void UGA_Death::SpawnChaosDestruction(AActor* OwnerActor, const FGameplayEventDa
 					HitLocation = HitData->ImpactPoint;
 
 					GeometryCollection->AddImpulseAtLocation(HitData->Impulse, HitLocation);
-					UE_LOG(LogTemp, Warning, TEXT("GA_AiDeath: Added Impulse at %s."), *HitLocation.ToString());
 				}
 			}
 

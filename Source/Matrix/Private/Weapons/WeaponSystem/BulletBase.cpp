@@ -6,6 +6,10 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 
 #include "Weapons/WeaponSystem/WeaponBase.h"
+#include "AI/EnemyAIController.h"
+#include "AI/EnemyCharacter.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "AI/AIBlackboardKeys.h"
 
 ABulletBase::ABulletBase()
 {
@@ -15,7 +19,7 @@ ABulletBase::ABulletBase()
 	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel1);
 	CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
-	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetupAttachment(CollisionComp);
@@ -58,8 +62,6 @@ void ABulletBase::OnBulletHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 		return;
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("ABulletBase OnBulletHit called. Hit Actor: %s"), OtherActor ? *OtherActor->GetName() : TEXT("None")); // Added log
-
 	DeactivateBullet();
 }
 
@@ -71,7 +73,21 @@ void ABulletBase::OnBulletOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("ABulletBase OnBulletOverlap called. Hit Actor: %s"), OtherActor ? *OtherActor->GetName() : TEXT("None")); // Added log
+	// --- AI Evasion Logic ---
+	AEnemyCharacter* AIChar = Cast<AEnemyCharacter>(OtherActor);
+	if (AIChar)
+	{
+		AEnemyAIController* AIController = Cast<AEnemyAIController>(AIChar->GetController());
+		if (AIController)
+		{
+			UBlackboardComponent* BlackboardComp = AIController->GetBlackboardComp();
+			if (BlackboardComp)
+			{
+				BlackboardComp->SetValueAsBool(BlackboardKeys::IsUnderAttackKey, true);
+			}
+		}
+	}
+	// --- End of AI Evasion Logic ---
 	
 	ECollisionChannel HitChannel = OtherComp ? OtherComp->GetCollisionObjectType() : OtherActor->GetRootComponent()->GetCollisionObjectType();
 

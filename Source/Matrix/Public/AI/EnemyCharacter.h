@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
+#include "GenericTeamAgentInterface.h" // Required for Team ID
 #include "EnemyCharacter.generated.h"
 
 class UItemDropComponent;
@@ -12,12 +13,16 @@ class UGameplayAbility;
 class AWeaponBase;
 
 UCLASS()
-class MATRIX_API AEnemyCharacter : public ACharacter, public IAbilitySystemInterface
+class MATRIX_API AEnemyCharacter : public ACharacter, public IAbilitySystemInterface, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
 public:
 	AEnemyCharacter();
+
+	//~ IGenericTeamAgentInterface
+	virtual FGenericTeamId GetGenericTeamId() const override;
+	//~ End IGenericTeamAgentInterface
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float WalkSpeed = 300.0f;
@@ -42,8 +47,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Item")
 	UItemDropComponent* GetItemDropComp() const;
+
+	FORCEINLINE TSubclassOf<UGameplayAbility> GetAttackAbilityClass() const { return AttackAbilityClass; }
 	
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI")
+	FGenericTeamId TeamID;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	TSubclassOf<AWeaponBase> DefaultWeaponClass;
 
@@ -62,7 +72,10 @@ protected:
 	TSubclassOf<UGameplayAbility> DeathAbilityClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ability")
-	TSubclassOf<UGameplayAbility> AttackAbilityClass; // <--- ADDED THIS LINE
+	TSubclassOf<UGameplayAbility> AttackAbilityClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Ability")
+	TSubclassOf<UGameplayAbility> EvadeAbilityClass;
 	
 	virtual void BeginPlay() override;
 };

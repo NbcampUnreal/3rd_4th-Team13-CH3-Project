@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
+#include "GenericTeamAgentInterface.h" // Required for Team ID
 #include "MainPlayerCharacter.generated.h"
 
 class UInventoryComponent;
@@ -15,14 +16,20 @@ class UWidgetComponent;
 struct FInputActionValue;
 
 UCLASS()
-class MATRIX_API AMainPlayerCharacter : public ACharacter, public IAbilitySystemInterface
+class MATRIX_API AMainPlayerCharacter : public ACharacter, public IAbilitySystemInterface, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
 public:
 	AMainPlayerCharacter();
 
+	//~ IAbilitySystemInterface
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	//~ End IAbilitySystemInterface
+
+	//~ IGenericTeamAgentInterface
+	virtual FGenericTeamId GetGenericTeamId() const override;
+	//~ End IGenericTeamAgentInterface
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	USpringArmComponent* SpringArmComp;
@@ -36,6 +43,9 @@ public:
 	AWeaponBase* GetCurrentWeapon() {return CurrentWeapon;};
 	
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI")
+	FGenericTeamId TeamID;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	AWeaponBase* CurrentWeapon;
 

@@ -1,127 +1,100 @@
 #include "AI/EnemyAIController.h"
 #include "AI/EnemyCharacter.h"
+#include "AI/AIBlackboardKeys.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
-#include "Perception/AISenseConfig_Damage.h" // Added for damage sense
-#include "Perception/AISense_Damage.h" // Added for UAISense_Damage
-#include "Perception/AISense.h" // Added for UAISense::GetSenseID
-#include "Weapons/WeaponSystem/BulletBase.h"
-#include "TimerManager.h"
+#include "Perception/AISense.h"
+
+// Define the actual variables for the blackboard keys
+namespace BlackboardKeys
+{
+    const FName TargetActorKey = TEXT("TargetActor");
+    const FName LastKnownPlayerLocationKey = TEXT("LastKnownPlayerLocation");
+    const FName HasLineOfSightKey = TEXT("HasLineOfSight");
+    const FName IsUnderAttackKey = TEXT("IsUnderAttack");
+}
 
 AEnemyAIController::AEnemyAIController()
 {
-	AIPerception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerception"));
-	SetPerceptionComponent(*AIPerception);
+    AIPerception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerception"));
+    SetPerceptionComponent(*AIPerception);
 
-	SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
-	SightConfig->SightRadius = 1500.0f;
-	SightConfig->LoseSightRadius = 2000.0f;
-	SightConfig->PeripheralVisionAngleDegrees = 90.0f;
-	SightConfig->SetMaxAge(1.0f);
+    SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
+    SightConfig->SightRadius = 2000.0f;
+    SightConfig->LoseSightRadius = 2500.0f;
+    SightConfig->PeripheralVisionAngleDegrees = 90.0f;
+    SightConfig->SetMaxAge(5.0f);
+    SightConfig->DetectionByAffiliation.bDetectEnemies = true;
+    SightConfig->DetectionByAffiliation.bDetectNeutrals = false;
+    SightConfig->DetectionByAffiliation.bDetectFriendlies = false;
 
-	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
-	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
-	SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
+    AIPerception->ConfigureSense(*SightConfig);
+    AIPerception->SetDominantSense(SightConfig->GetSenseImplementation());
 
-	AIPerception->ConfigureSense(*SightConfig);
-	AIPerception->SetDominantSense(SightConfig->GetSenseImplementation());
+    BlackboardComp = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackBoard"));
 
-	// Configure Damage Sense
-	DamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("DamageConfig"));
-	AIPerception->ConfigureSense(*DamageConfig);
-
-	BlackboardComp = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackBoard"));
-
-	AttackRange = 800.0f;
-	MoveRadius = 1000.0f;
+    AttackRange = 800.0f;
+    MoveRadius = 1000.0f;
 }
 
 void AEnemyAIController::BeginPlay()
 {
-	Super::BeginPlay();
-
-	if (BlackboardComp)
-	{
-		BlackboardComp->SetValueAsBool(TEXT("CanSeeTarget"), false);
-		BlackboardComp->SetValueAsBool(TEXT("IsInvestigating"), false);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Blackboard Component not found"));
-	}
-	
-	if (AIPerception)
-	{
-		AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyAIController::OnPerceptionUpdated);
-	}
+    Super::BeginPlay();
+    if (AIPerception)
+    {
+        AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyAIController::OnPerceptionUpdated);
+    }
 }
 
 void AEnemyAIController::OnPossess(APawn* InPawn)
 {
-	Super::OnPossess(InPawn);
-    UE_LOG(LogTemp, Warning, TEXT("OnPossess CALLED for %s."), *InPawn->GetName());
+    Super::OnPossess(InPawn);
 
-    if (!BehaviorTreeAsset)
+    if (InPawn != nullptr && BehaviorTreeAsset != nullptr)
     {
-        UE_LOG(LogTemp, Error, TEXT("OnPossess: BehaviorTreeAsset is NULL!"));
-        return;
+        BlackboardComp->InitializeBlackboard(*(BehaviorTreeAsset->BlackboardAsset));
+        RunBehaviorTree(BehaviorTreeAsset);
     }
-
-    if (!BehaviorTreeAsset->BlackboardAsset)
-    {
-        UE_LOG(LogTemp, Error, TEXT("OnPossess: BehaviorTreeAsset->BlackboardAsset is NULL! Assign a Blackboard asset to the Behavior Tree."));
-        return;
-    }
-
-    // This is the key check
-    bool bSuccess = UseBlackboard(BehaviorTreeAsset->BlackboardAsset, BlackboardComp);
-    if (bSuccess && BlackboardComp)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("OnPossess: UseBlackboard SUCCEEDED. BlackboardComp is now VALID."));
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("OnPossess: UseBlackboard FAILED or BlackboardComp is NULL!"));
-        return;
-    }
-    
-	RunBehaviorTree(BehaviorTreeAsset);
-
-	if (BrainComponent)
-	{
-		BrainComponent->StopLogic("Waiting for player to move");
-	}
 }
+
+#include "AI/Services/PlayerLocationSharingService.h"
 
 void AEnemyAIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
-    if (Stimulus.WasSuccessfullySensed())
+    if (Actor->IsA(AEnemyCharacter::StaticClass()))
     {
-        if (Cast<ABulletBase>(Actor))
-        {
-            OnProjectileDetected();
-        }
-        else if (Actor == UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
-        {
-            OnPlayerSeen(Actor);
-        }
+        return;
     }
-    else // Stimulus was lost
+
+    if (Stimulus.Type == SightConfig->GetSenseID())
     {
-        if (Actor == UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
+        if (Stimulus.WasSuccessfullySensed())
         {
-            OnPlayerLost();
+            BlackboardComp->SetValueAsObject(BlackboardKeys::TargetActorKey, Actor);
+            BlackboardComp->SetValueAsBool(BlackboardKeys::HasLineOfSightKey, true);
+            BlackboardComp->SetValueAsVector(BlackboardKeys::LastKnownPlayerLocationKey, Actor->GetActorLocation());
+
+            // --- NEW --- Update the global location sharing service
+            if (UPlayerLocationSharingService* LocationService = UPlayerLocationSharingService::GetInstance())
+            {
+                LocationService->UpdatePlayerLocation(Actor->GetActorLocation());
+            }
+        }
+        else
+        {
+            BlackboardComp->SetValueAsBool(BlackboardKeys::HasLineOfSightKey, false);
         }
     }
 }
 
-void AEnemyAIController::ExecuteTurn(float PlayerMovementDistance)
+void AEnemyAIController::PerformAttack()
 {
-    if (BrainComponent && BrainComponent->IsPaused())
-    { 
-        BrainComponent->StartLogic();
+    AEnemyCharacter* AIChar = Cast<AEnemyCharacter>(GetPawn());
+    if (AIChar)
+    {
+        AIChar->FireProjectile();
     }
 }

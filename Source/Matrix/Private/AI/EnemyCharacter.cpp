@@ -13,6 +13,9 @@ AEnemyCharacter::AEnemyCharacter()
 	AIControllerClass = AEnemyAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
+	// Set the team ID for this AI character
+	TeamID = FGenericTeamId(10);
+
 	UCharacterMovementComponent* Movement = GetCharacterMovement();
 	Movement->MaxWalkSpeed = WalkSpeed;
 	Movement->bOrientRotationToMovement = true;
@@ -29,6 +32,11 @@ AEnemyCharacter::AEnemyCharacter()
 	AttributeSet = CreateDefaultSubobject<UMatrixAttributeSet>(TEXT("AttributeSet"));
 
 	ItemDropComp = CreateDefaultSubobject<UItemDropComponent>(TEXT("ItemDropComp"));
+}
+
+FGenericTeamId AEnemyCharacter::GetGenericTeamId() const
+{
+	return TeamID;
 }
 
 void AEnemyCharacter::BeginPlay()
@@ -63,19 +71,11 @@ void AEnemyCharacter::BeginPlay()
 		{
 			FGameplayAbilitySpecHandle AbilityHandle = AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(DeathAbilityClass, 1, 0, this));
 		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("%s: DeathAbilityClass is NOT set! (GiveAbility failed)"), *GetName());
-		}
 
 		// Attack Ability 부여
 		if (AttackAbilityClass)
 		{
 			FGameplayAbilitySpecHandle AttackAbilityHandle = AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AttackAbilityClass, 1, 0, this));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("%s: AttackAbilityClass is NOT set! (GiveAbility failed)"), *GetName());
 		}
 	}
 	else

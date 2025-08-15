@@ -18,6 +18,9 @@ AMainPlayerCharacter::AMainPlayerCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	// Set the team ID for the player
+	TeamID = FGenericTeamId(5);
+
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArmComp->SetupAttachment(RootComponent);
 	SpringArmComp->bUsePawnControlRotation = true;
@@ -45,6 +48,11 @@ AMainPlayerCharacter::AMainPlayerCharacter()
 	AttributeSet = CreateDefaultSubobject<UMatrixAttributeSet>(TEXT("AttributeSet"));
 }
 
+FGenericTeamId AMainPlayerCharacter::GetGenericTeamId() const
+{
+	return TeamID;
+}
+
 UAbilitySystemComponent* AMainPlayerCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
@@ -57,7 +65,6 @@ void AMainPlayerCharacter::BeginPlay()
 	if (AbilitySystemComponent)
 	{
 		AbilitySystemComponent->InitAbilityActorInfo(this, this);
-		UE_LOG(LogTemp, Warning, TEXT("%s: ASC Initialized with ActorInfo."), *GetName());
 	}
 
 	if (AbilitySystemComponent && DeathAbilityClass)
@@ -418,23 +425,23 @@ void AMainPlayerCharacter::Interact(const FInputActionValue& Value)
 	
 
 	DrawDebugBox(
-	GetWorld(),
-	(Start + End) * 0.5f,
-	HalfSize,
-	Orientation.Quaternion(),
-	bHit ? FColor::Green : FColor::Red,
-	false,
-	2.0f
-);
+		GetWorld(),
+		(Start + End) * 0.5f,
+		HalfSize,
+		Orientation.Quaternion(),
+		bHit ? FColor::Green : FColor::Red,
+		false,
+		2.0f
+	);
 	DrawDebugLine(
-	GetWorld(),
-	Start,
-	End,
-	FColor::Cyan,
-	false,
-	2.0f,
-	0,
-	2.0f
-);
+		GetWorld(),
+		Start,
+		End,
+		FColor::Cyan,
+		false,
+		2.0f,
+		0,
+		2.0f
+	);
 }
 

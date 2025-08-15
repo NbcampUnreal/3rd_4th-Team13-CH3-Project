@@ -32,7 +32,6 @@ void UUGA_Attack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 	AWeaponBase* EquippedWeapon = EnemyCharacter->GetEquippedWeapon();
 	if (!EquippedWeapon)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UGA_Attack: Enemy has no equipped weapon!"));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
@@ -62,17 +61,12 @@ void UUGA_Attack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 	{
 		EquippedWeapon->SetTargetLocation(TargetLocation);
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UGA_Attack: Could not determine valid TargetLocation for weapon."));
-	}
 
 	EWeaponType CurrentWeaponType = EquippedWeapon->GetWeaponType();
 	UAnimMontage* SelectedMontage = GetAttackMontageForWeapon(CurrentWeaponType);
 
 	if (!SelectedMontage)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UGA_Attack: No montage found for weapon type %s!"), *UEnum::GetValueAsString(CurrentWeaponType));
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
@@ -124,35 +118,24 @@ void UUGA_Attack::OnMontageEnded()
 
 void UUGA_Attack::OnFireBulletEvent(FGameplayEventData Payload)
 {
-	UE_LOG(LogTemp, Warning, TEXT("UGA_Attack: OnFireBulletEvent called."));
 	AEnemyCharacter* EnemyCharacter = Cast<AEnemyCharacter>(GetAvatarActorFromActorInfo());
 	if (EnemyCharacter)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("UGA_Attack: EnemyCharacter is valid. Calling FireProjectile()."));
 		EnemyCharacter->FireProjectile();
 	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("UGA_Attack: OnFireBulletEvent: EnemyCharacter is NULL. Cannot fire projectile."));
-	}
-}
-
-// Gameplay Event 콜백 함수 구현
-void UUGA_Attack::OnAttackHit(const FGameplayEventData& Payload)
-{
-	// 공격 히트 로직 (데미지 적용 등)
-	// ...
 }
 
 void UUGA_Attack::OnAbilityEnd(const FGameplayEventData& Payload)
 {
-	// 어빌리티 종료 로직
 	EndAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), false, false);
 }
 
 void UUGA_Attack::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-	
+
+	// Example: Resetting the boolean variable in ABP when ability ends
 	AEnemyCharacter* EnemyChar = Cast<AEnemyCharacter>(ActorInfo->AvatarActor.Get());
 	if (EnemyChar && EnemyChar->GetMesh() && EnemyChar->GetMesh()->GetAnimInstance())
 	{
