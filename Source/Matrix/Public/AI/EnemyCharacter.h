@@ -5,6 +5,7 @@
 #include "AbilitySystemInterface.h"
 #include "EnemyCharacter.generated.h"
 
+class UItemDropComponent;
 class UMatrixAttributeSet;
 class UAbilitySystemComponent;
 class UGameplayAbility;
@@ -38,6 +39,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	AWeaponBase* GetEquippedWeapon() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Item")
+	UItemDropComponent* GetItemDropComp() const;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
@@ -48,6 +52,9 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ability")
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item")
+	TObjectPtr<UItemDropComponent> ItemDropComp;
 
 	UPROPERTY()
 	TObjectPtr<UMatrixAttributeSet> AttributeSet;

@@ -4,6 +4,7 @@
 #include "Animation/AnimInstance.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/MatrixAttributeSet.h"
+#include "Items/ItemSystem/ItemDropComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Weapons/WeaponSystem/WeaponBase.h"
 
@@ -26,6 +27,8 @@ AEnemyCharacter::AEnemyCharacter()
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 	AttributeSet = CreateDefaultSubobject<UMatrixAttributeSet>(TEXT("AttributeSet"));
+
+	ItemDropComp = CreateDefaultSubobject<UItemDropComponent>(TEXT("ItemDropComp"));
 }
 
 void AEnemyCharacter::BeginPlay()
@@ -121,6 +124,11 @@ UAbilitySystemComponent* AEnemyCharacter::GetAbilitySystemComponent() const
 AWeaponBase* AEnemyCharacter::GetEquippedWeapon() const
 {
 	return EquippedWeapon;
+}
+
+UItemDropComponent* AEnemyCharacter::GetItemDropComp() const
+{
+	return ItemDropComp;
 }
 
 void AEnemyCharacter::FireProjectile()

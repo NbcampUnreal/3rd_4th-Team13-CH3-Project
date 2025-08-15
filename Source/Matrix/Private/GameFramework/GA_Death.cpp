@@ -13,6 +13,7 @@
 #include "AI/EnemyCharacter.h"
 #include "GameFramework/MatrixGameMode.h"
 #include "Characters/MainPlayerCharacter.h"
+#include "Items/ItemSystem/ItemDropComponent.h"
 #include "Weapons/WeaponSystem/BulletBase.h"
 #include "Weapons/WeaponSystem/WeaponBase.h"
 
@@ -149,6 +150,11 @@ void UGA_Death::HandleAIDeath(AEnemyCharacter* Enemy)
 	{
 		EquippedWeapon->ResetWeaponOwner();
 		EquippedWeapon->DetachFromOwner();
+	}
+	
+	if (UItemDropComponent* ItemDropComponent = Enemy->GetItemDropComp())
+	{
+		ItemDropComponent->DropRandomItem(Enemy->GetActorLocation());
 	}
 	
 	if (AGameModeBase* GM = UGameplayStatics::GetGameMode(GetWorld()))
