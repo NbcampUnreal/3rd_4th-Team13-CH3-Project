@@ -128,7 +128,7 @@ bool AWeaponBase::FireBullet()
 
 FVector AWeaponBase::GetFireDirection() const
 {
-	if (!TargetLocation.IsZero())
+	if (!TargetLocation.IsNearlyZero())
 	{
 		return (TargetLocation - MuzzlePoint->GetComponentLocation()).GetSafeNormal();
 	}

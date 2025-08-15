@@ -111,7 +111,7 @@ void UGA_Death::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGamep
 
 	if (AActor* AvatarActor = GetAvatarActorFromActorInfo())
 	{
-		AvatarActor->SetLifeSpan(2.0f);
+		AvatarActor->Destroy();
 	}
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
