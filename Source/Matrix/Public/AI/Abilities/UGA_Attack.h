@@ -39,10 +39,6 @@ protected:
 	UFUNCTION()
 	void OnFireBulletEvent(FGameplayEventData Payload); // Added for handling bullet firing event
 
-	// Gameplay Event 콜백 함수
-	UFUNCTION()
-	void OnAttackHit(const FGameplayEventData& Payload);
-
 	UFUNCTION()
 	void OnAbilityEnd(const FGameplayEventData& Payload);
 
