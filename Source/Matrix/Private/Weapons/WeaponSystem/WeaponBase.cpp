@@ -228,6 +228,7 @@ void AWeaponBase::DetachFromOwner()
 	}
 	
 	AttachmentComp->DetachFromOwner(this, MeshComp);
+	SetTargetLocation(FVector::ZeroVector);
 }
 
 void AWeaponBase::ApplyBulletDamage(AActor* TargetActor, const FHitResult& HitResult)

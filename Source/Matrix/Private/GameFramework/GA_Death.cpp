@@ -14,6 +14,7 @@
 #include "GameFramework/MatrixGameMode.h"
 #include "Characters/MainPlayerCharacter.h"
 #include "Weapons/WeaponSystem/BulletBase.h"
+#include "Weapons/WeaponSystem/WeaponBase.h"
 
 UGA_Death::UGA_Death()
 	: ChaosActorLifeSpan(3.0f)
@@ -123,18 +124,39 @@ void UGA_Death::HandlePlayerDeath(AMainPlayerCharacter* Player)
 	{
 		PC->DisableInput(PC);
 	}
+
+	if (AWeaponBase* EquippedWeapon = Player->GetCurrentWeapon())
+	{
+		EquippedWeapon->ResetWeaponOwner();
+		EquippedWeapon->DetachFromOwner();
+	}
+
+	if (AGameModeBase* GM = UGameplayStatics::GetGameMode(GetWorld()))
+	{
+		if (AMatrixGameMode* MatrixGameMode = Cast<AMatrixGameMode>(GM))
+		{
+			MatrixGameMode->PlayerDied();
+			UE_LOG(LogTemp, Log, TEXT("Player Death: Notified GameMode of player death."));
+		}
+	}
 }
 
 void UGA_Death::HandleAIDeath(AEnemyCharacter* Enemy)
 {
 	if (!Enemy) return;
 
+	if (AWeaponBase* EquippedWeapon = Enemy->GetEquippedWeapon())
+	{
+		EquippedWeapon->ResetWeaponOwner();
+		EquippedWeapon->DetachFromOwner();
+	}
+	
 	if (AGameModeBase* GM = UGameplayStatics::GetGameMode(GetWorld()))
 	{
 		if (AMatrixGameMode* MatrixGameMode = Cast<AMatrixGameMode>(GM))
 		{
 			MatrixGameMode->EnemyKilled();
-			UE_LOG(LogTemp, Log, TEXT("GA_AiDeath: Notified GameMode of enemy death."));
+			UE_LOG(LogTemp, Log, TEXT("GA_Death: Notified GameMode of enemy death."));
 		}
 	}
 }

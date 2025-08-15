@@ -57,7 +57,7 @@ void ABulletBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ABulletBase::OnBulletHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                               FVector NormalImpulse, const FHitResult& Hit)
 {
-	if ((OtherActor == nullptr) && (OtherActor == this) && (OtherActor == OwnerPawn))
+	if ((OtherActor == nullptr) || (OtherActor == this) || (OtherActor == OwnerPawn))
 	{
 		return;
 	}
@@ -70,7 +70,7 @@ void ABulletBase::OnBulletHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 void ABulletBase::OnBulletOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if ((OtherActor == nullptr) && (OtherActor == this) && (OtherActor == OwnerPawn))
+	if ((OtherActor == nullptr) || (OtherActor == this) || (OtherActor == OwnerPawn))
 	{
 		return;
 	}
