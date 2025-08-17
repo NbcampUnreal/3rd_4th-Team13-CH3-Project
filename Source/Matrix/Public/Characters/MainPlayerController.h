@@ -61,8 +61,6 @@ public:
 	void NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-	TSubclassOf<UGameOverWidget> GameOverWidgetClass;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UPauseMenuWidget> PauseMenuWidgetClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UGameOverWidget> GameOverWidgetClass;
