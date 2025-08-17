@@ -4,6 +4,7 @@
 #include "Items/BaseItem.h"
 #include "ShieldItem.generated.h"
 
+class UGameplayEffect;
 class AMainPlayerCharacter;
 
 UCLASS()
@@ -17,15 +18,17 @@ public:
 protected:
 	virtual void UseItem() override;
 
-	//쉴드 종료
-	void EndShield();
-
 	//지속시간
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shield")
 	float ShieldDuration;
 
+	// 아이템 사용 시 발생하는 GameplayEffect
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
+	TSubclassOf<UGameplayEffect> GE_ShieldEffect;
+
 	//지속시간 타이머
 	FTimerHandle ShieldTimerHandle;
-	
+
+	UPROPERTY()
 	AMainPlayerCharacter* OwnerCharacter;
 };
