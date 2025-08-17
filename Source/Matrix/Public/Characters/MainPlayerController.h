@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "UI/Widget/MainMenuWidget.h"
+#include "UI/Widget/PauseMenuWidget.h"
 #include "UI/Widget/GameOverWidget.h"
 #include "UI/Widget/GameClearWidget.h"
 #include "UI/Widget/MainHUDWidget.h"
@@ -62,6 +63,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UGameOverWidget> GameOverWidgetClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UPauseMenuWidget> PauseMenuWidgetClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UGameOverWidget> GameOverWidgetClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UGameClearWidget> GameClearWidgetClass;
 	
 	// === 게임 흐름 관리 함수들 (간소화) ===
@@ -117,11 +122,12 @@ private:
 	// 일시정지 상태를 Pause 확인하는 변수
 	bool bIsPaused = false;
 
-	UPROPERTY(EditAnywhere, Category = "Menu")
+/*	UPROPERTY(EditAnywhere, Category = "Menu")
 	TSubclassOf<UUserWidget> PauseMenuClass;
 
 	UPROPERTY()
 	UUserWidget* PauseMenuInstance;
+*/
 
 	UPROPERTY()
 	UUserWidget* CurrentScreenWidget; // Pause, GameOver, GameClear 등 기존 화면에 덮는 위젯 변수입니다!

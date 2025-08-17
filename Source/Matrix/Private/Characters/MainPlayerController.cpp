@@ -18,6 +18,7 @@ AMainPlayerController::AMainPlayerController()
 	InteractAction(nullptr),
 	MainMenuWidgetClass(nullptr),
 	MainMenuWidgetInstance(nullptr),
+	PauseMenuWidgetClass(nullptr),
 	GameOverWidgetClass(nullptr),
 	GameClearWidgetClass(nullptr),
 	MainHUDWidgetClass(nullptr),
@@ -134,12 +135,19 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 		break;
 
 	case EGameState::Paused:
-		if (PauseMenuClass)
+		if (PauseMenuWidgetClass)
 		{
-			CurrentScreenWidget = CreateWidget<UUserWidget>(this, PauseMenuClass);
+			CurrentScreenWidget = CreateWidget<UPauseMenuWidget>(this, PauseMenuWidgetClass);
 			CurrentScreenWidget->AddToViewport();
 			SetShowMouseCursor(true);
-			SetInputMode(FInputModeGameAndUI()); // 게임은 멈춰있지만 UI와 상호작용
+
+			CurrentScreenWidget->SetIsFocusable(true);
+			CurrentScreenWidget->SetKeyboardFocus();
+
+			FInputModeUIOnly IM;
+			IM.SetWidgetToFocus(CurrentScreenWidget->TakeWidget());
+			IM.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+			SetInputMode(IM);
 		}
 		break;
 
