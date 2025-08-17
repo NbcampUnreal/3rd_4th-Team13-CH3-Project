@@ -18,6 +18,8 @@ AMainPlayerController::AMainPlayerController()
 	InteractAction(nullptr),
 	MainMenuWidgetClass(nullptr),
 	MainMenuWidgetInstance(nullptr),
+	GameOverWidgetClass(nullptr),
+	GameClearWidgetClass(nullptr),
 	MainHUDWidgetClass(nullptr),
 	MainHUDWidgetInstance(nullptr),
 	QuickSlot1Action((nullptr)),
@@ -144,20 +146,30 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 	case EGameState::GameOver:
 		if (GameOverWidgetClass)
 		{
-			CurrentScreenWidget = CreateWidget<UUserWidget>(this, GameOverWidgetClass);
-			CurrentScreenWidget->AddToViewport();
-			SetShowMouseCursor(true);
-			SetInputMode(FInputModeUIOnly());
+			CurrentScreenWidget = CreateWidget<UGameOverWidget>(this, GameOverWidgetClass);
+			
+			if (CurrentScreenWidget)
+			{
+				CurrentScreenWidget->AddToViewport();
+
+				SetShowMouseCursor(true);
+				SetInputMode(FInputModeUIOnly());
+			}
 		}
 		break;
 
 	case EGameState::GameClear:
 		if (GameClearWidgetClass)
 		{
-			CurrentScreenWidget = CreateWidget<UUserWidget>(this, GameClearWidgetClass);
-			CurrentScreenWidget->AddToViewport();
-			SetShowMouseCursor(true);
-			SetInputMode(FInputModeUIOnly());
+			CurrentScreenWidget = CreateWidget<UGameClearWidget>(this, GameClearWidgetClass);
+
+			if (CurrentScreenWidget)
+			{
+				CurrentScreenWidget->AddToViewport();
+
+				SetShowMouseCursor(true);
+				SetInputMode(FInputModeUIOnly());
+			}
 		}
 		break;
         

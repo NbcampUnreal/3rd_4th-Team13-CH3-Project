@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "UI/Widget/MainMenuWidget.h"
+#include "UI/Widget/GameOverWidget.h"
+#include "UI/Widget/GameClearWidget.h"
 #include "UI/Widget/MainHUDWidget.h"
 #include "UI/Widget/WeaponHUDWidget.h"
 #include "MainPlayerController.generated.h"
@@ -58,9 +60,9 @@ public:
 	void NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-	TSubclassOf<UUserWidget> GameOverWidgetClass;
+	TSubclassOf<UGameOverWidget> GameOverWidgetClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-	TSubclassOf<UUserWidget> GameClearWidgetClass;
+	TSubclassOf<UGameClearWidget> GameClearWidgetClass;
 	
 	// === 게임 흐름 관리 함수들 (간소화) ===
 	
