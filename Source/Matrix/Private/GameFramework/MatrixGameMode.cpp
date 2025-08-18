@@ -142,6 +142,16 @@ void AMatrixGameMode::EnemyKilled()
     if (!MatrixGameState) return;
 
     MatrixGameState->EnemiesRemaining--;
+	MatrixGameState->KillCount++; // 적 처치 시 킬 카운트 증가
+	
+    if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+    {
+        if (AMainPlayerController* MPC = Cast<AMainPlayerController>(PC))
+        {
+            MPC->NotifyKillCountChanged(MatrixGameState->KillCount);
+        }
+	}
+
     UE_LOG(LogTemp, Warning, TEXT("Enemy killed! %d enemies remaining."), MatrixGameState->EnemiesRemaining);
 
     if (MatrixGameState->EnemiesRemaining <= 0)

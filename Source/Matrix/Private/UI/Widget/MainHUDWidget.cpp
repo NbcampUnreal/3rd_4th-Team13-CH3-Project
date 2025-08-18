@@ -25,3 +25,11 @@ void UMainHUDWidget::UpdateQuickSlots(const TArray<ABaseItem*>& Items)
 		SlotHUDWidget->UpdateQuickSlots(Items);
 	}
 }
+
+void UMainHUDWidget::UpdateKillCount(int32 KillCount)
+{
+	if (MissionHUDWidget)
+	{
+		MissionHUDWidget->UpdateKillCount(KillCount);
+	}
+}

@@ -73,6 +73,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo);
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void NotifyKillCountChanged(int32 KillCount);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void HandleInventoryUpdated();

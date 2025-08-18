@@ -215,6 +215,14 @@ void AMainPlayerController::NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo)
 	}
 }
 
+void AMainPlayerController::NotifyKillCountChanged(int32 KillCount)
+{
+	if (MainHUDWidgetInstance)
+	{
+		MainHUDWidgetInstance->UpdateKillCount(KillCount);
+	}
+}
+
 void AMainPlayerController::HandleInventoryUpdated()
 {
 	if (MainHUDWidgetInstance)

@@ -21,6 +21,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Replicated, Category="Game State")
 	int32 EnemiesRemaining = 0;
 
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = "Game State")
+	int32 KillCount = 0; // Kill Count ¿ë º¯¼ö
+
 	void SetGameState(EGameState NewState);
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_GameState, Category="Game State")
