@@ -35,6 +35,36 @@ void AMatrixGameMode::BeginPlay()
 
     if (MatrixGameState && MatrixGameState->CurrentGameState == EGameState::Playing)   
     {
+        if (bApplyWhiteMaterialOnStart)
+        {
+            UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance());
+            if (GameInstance)
+            {
+                GameInstance->ApplyWhiteMaterialToAllMeshes();
+                GameInstance->ApplyWhiteMaterialWithDelay(3.0f);
+                GameInstance->StartRepeatingMaterialApplication(5.0f, 8);
+                
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("BP_Room"));
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("BP_Spline_Chairs"));
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("SM_Rect_Desk"));
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("BP_Item"));
+                
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("Column"));
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("Pillar"));
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("Wall"));
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("Building"));
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("Floor"));
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("Ceiling"));
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("Foundation"));
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("Structure"));
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("Architecture"));
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("SM_"));
+                GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("BP_"));
+                
+                GameInstance->DebugPrintAllActors();
+            }
+        }
+
         if (WaveDataTable)
         {
             CurrentWaveDataTable = WaveDataTable;

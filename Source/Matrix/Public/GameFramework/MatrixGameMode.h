@@ -59,4 +59,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Boss Stage")
 	FName BossStageLevelName = TEXT("S_Boss");
+
+	// 머티리얼 오버라이드 설정
+	UPROPERTY(EditAnywhere, Category = "Material Override")
+	bool bApplyWhiteMaterialOnStart = true; // 게임 시작 시 하얀색 머티리얼 적용 여부
 };
