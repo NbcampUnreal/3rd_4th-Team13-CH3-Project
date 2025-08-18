@@ -6,10 +6,11 @@
 #include "FileMediaSource.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Core/MatrixCoreTypes.h"
 #include "MainMenuWidget.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMenuStartRequested);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMenuOptionsRequested);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMenuOptionsRequested, EGameState, FromState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMenuExitRequested);
 
 UCLASS()

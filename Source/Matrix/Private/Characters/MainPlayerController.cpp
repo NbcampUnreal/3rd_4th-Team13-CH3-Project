@@ -10,19 +10,22 @@
 #include "Engine/Engine.h"
 
 AMainPlayerController::AMainPlayerController()
-	: InputMappingContext(nullptr), 
-	MoveAction(nullptr), 
+	: InputMappingContext(nullptr),
+	MoveAction(nullptr),
 	JumpAction(nullptr),
-	LookAction(nullptr), 
-	ShootAction(nullptr), 
+	LookAction(nullptr),
+	ShootAction(nullptr),
 	InteractAction(nullptr),
 	MainMenuWidgetClass(nullptr),
 	MainMenuWidgetInstance(nullptr),
-	PauseMenuWidgetClass(nullptr),
-	GameOverWidgetClass(nullptr),
-	GameClearWidgetClass(nullptr),
+	OptionsMenuWidgetClass(nullptr),
+	OptionsMenuWidgetInstance(nullptr),
 	MainHUDWidgetClass(nullptr),
 	MainHUDWidgetInstance(nullptr),
+	PauseMenuWidgetClass(nullptr),
+	PauseMenuWidgetInstance(nullptr),
+	GameOverWidgetClass(nullptr),
+	GameClearWidgetClass(nullptr),
 	QuickSlot1Action((nullptr)),
 	QuickSlot2Action((nullptr)),
 	QuickSlot3Action((nullptr)),
@@ -137,19 +140,21 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 	case EGameState::Paused:
 		if (PauseMenuWidgetClass)
 		{
-			CurrentScreenWidget = CreateWidget<UPauseMenuWidget>(this, PauseMenuWidgetClass);
-			CurrentScreenWidget->AddToViewport();
+			PauseMenuWidgetInstance = CreateWidget<UPauseMenuWidget>(this, PauseMenuWidgetClass);
+			PauseMenuWidgetInstance->AddToViewport();
 			SetShowMouseCursor(true);
 
-			CurrentScreenWidget->SetIsFocusable(true);
-			CurrentScreenWidget->SetKeyboardFocus();
+			PauseMenuWidgetInstance->SetIsFocusable(true);
+			PauseMenuWidgetInstance->SetKeyboardFocus();
 
 			FInputModeUIOnly IM;
-			IM.SetWidgetToFocus(CurrentScreenWidget->TakeWidget());
+			IM.SetWidgetToFocus(PauseMenuWidgetInstance->TakeWidget());
 			IM.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 			SetInputMode(IM);
+
+			CurrentScreenWidget = PauseMenuWidgetInstance;
 		}
-		break;
+		break;;
 
 	case EGameState::GameOver:
 		if (GameOverWidgetClass)
@@ -223,9 +228,89 @@ void AMainPlayerController::StartGame()
 	}
 }
 
-void AMainPlayerController::OpenOptions()
+void AMainPlayerController::OpenOptions(EGameState FromState)
 {
-	
+	if (OptionsMenuWidgetInstance)
+	{
+		OptionsMenuWidgetInstance->SetVisibility(ESlateVisibility::Visible);
+		OptionsMenuWidgetInstance->SetIsFocusable(true);                     // 포커스 가능
+		SetShowMouseCursor(true);
+
+		FInputModeUIOnly IM;
+		IM.SetWidgetToFocus(OptionsMenuWidgetInstance->TakeWidget());
+		IM.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		SetInputMode(IM);
+
+		return;
+	}
+
+	PreviousState = FromState; // 돌아갈 상태 저장
+
+	if (OptionsMenuWidgetClass && !OptionsMenuWidgetInstance)
+	{
+		OptionsMenuWidgetInstance = CreateWidget<UOptionsMenuWidget>(this, OptionsMenuWidgetClass);
+		if (OptionsMenuWidgetInstance)
+		{
+			OptionsMenuWidgetInstance->AddToViewport(100);
+			OptionsMenuWidgetInstance->SetIsFocusable(true);
+			// 중복 바인딩 방지
+			OptionsMenuWidgetInstance->OnBackPressed.RemoveDynamic(this, &AMainPlayerController::CloseOptions);
+			OptionsMenuWidgetInstance->OnBackPressed.AddDynamic(this, &AMainPlayerController::CloseOptions);
+
+			OptionsMenuWidgetInstance->SetVisibility(ESlateVisibility::Visible); // ★ 생성 즉시 Visible
+			SetShowMouseCursor(true);
+
+			FInputModeUIOnly IM;
+			IM.SetWidgetToFocus(OptionsMenuWidgetInstance->TakeWidget());
+			IM.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+			SetInputMode(IM);
+		}	
+	}
+}
+
+void AMainPlayerController::CloseOptions()
+{
+	if (OptionsMenuWidgetInstance)
+	{
+		OptionsMenuWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	switch (PreviousState)
+	{
+		case EGameState::MainMenu:
+		{
+			if (MainMenuWidgetInstance)
+			{
+				SetShowMouseCursor(true);
+
+				FInputModeUIOnly IM;
+				IM.SetWidgetToFocus(MainMenuWidgetInstance->TakeWidget());
+				IM.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+				SetInputMode(IM);
+			}
+			break;
+		}
+		case EGameState::Paused:
+		{
+			if (CurrentScreenWidget)
+			{
+				SetShowMouseCursor(true);
+
+				FInputModeUIOnly IM;
+				IM.SetWidgetToFocus(CurrentScreenWidget->TakeWidget());
+				IM.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+				SetInputMode(IM);
+			}
+			break;
+		}
+		default:
+		{
+			SetShowMouseCursor(false);
+			SetInputMode(FInputModeGameOnly());
+			break;
+		}
+	}
+
 }
 
 void AMainPlayerController::EndGame(const FString& EndReason)
@@ -299,6 +384,17 @@ void AMainPlayerController::TestNextLevel()
 	UE_LOG(LogTemp, Log, TEXT("Testing Next Level"));
 	RequestLevelTransition("S_Floor1");
 }
+
+void AMainPlayerController::AddYawInput(float Val)
+{
+	Super::AddYawInput(Val * MouseSensitivity);
+} 
+
+void AMainPlayerController::AddPitchInput(float Val)
+{
+	Super::AddPitchInput(Val * MouseSensitivity);
+}
+
 
 /* 게임 모드에서 Pause를 관리할 수 있도록 구조를 좀 바꿨습니다. 혹시 몰라 주석처리해놓습니다.
 void AMainPlayerController::HandlePauseMenu()

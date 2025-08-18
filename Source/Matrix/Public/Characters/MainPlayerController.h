@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "UI/Widget/MainMenuWidget.h"
+#include "UI/Widget/OptionsMenuWidget.h"
 #include "UI/Widget/PauseMenuWidget.h"
 #include "UI/Widget/GameOverWidget.h"
 #include "UI/Widget/GameClearWidget.h"
@@ -42,17 +43,29 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputAction* SlowTimeAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Options|Input")
+	float MouseSensitivity = 1.0f; // 마우스 감도
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UMainMenuWidget> MainMenuWidgetClass;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	UMainMenuWidget* MainMenuWidgetInstance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UOptionsMenuWidget> OptionsMenuWidgetClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UOptionsMenuWidget* OptionsMenuWidgetInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
 	TSubclassOf<UMainHUDWidget> MainHUDWidgetClass;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD")
 	UMainHUDWidget* MainHUDWidgetInstance;
+	
+
+
 
 	virtual void SetupInputComponent() override;
+	virtual void AddYawInput(float Val) override;	 // Yaw 입력 처리: 기본 값에 민감도를 곱해서 부모에 전달
+	virtual void AddPitchInput(float Val) override;	 // Pitch 입력 처리: 기본 값에 민감도를 곱해서 부모에 전달
 
 	// 일시정지 UI On/Off 함수
 	void HandlePauseMenu();
@@ -62,6 +75,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UPauseMenuWidget> PauseMenuWidgetClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UPauseMenuWidget* PauseMenuWidgetInstance;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UGameOverWidget> GameOverWidgetClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
@@ -108,7 +123,10 @@ public:
 	void TestNextLevel();
 
 	UFUNCTION(BlueprintCallable, Category = "Options")
-	void OpenOptions();
+	void OpenOptions(EGameState FromState);
+	UFUNCTION(BlueprintCallable, Category = "Options")
+	void CloseOptions();
+	EGameState DetectForegroundState() const;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -129,6 +147,7 @@ private:
 
 	UPROPERTY()
 	UUserWidget* CurrentScreenWidget; // Pause, GameOver, GameClear 등 기존 화면에 덮는 위젯 변수입니다!
-
+	UPROPERTY()
+	EGameState PreviousState; // 이전 상태를 저장하는 변수(설정에서 뒤로가기 용도)
 
 };

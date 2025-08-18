@@ -11,7 +11,7 @@ class MATRIX_API UPauseMenuWidget : public UUserWidget
 	
 protected:
 	virtual void NativeConstruct() override;
-	virtual  FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
+	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
 	UFUNCTION()
 	void RequestResume();

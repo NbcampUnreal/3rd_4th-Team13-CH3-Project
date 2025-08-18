@@ -1,5 +1,6 @@
 #include "UI/Widget/MainMenuWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "Core/MatrixCoreTypes.h"
 
 void UMainMenuWidget::NativeConstruct()
 {
@@ -37,7 +38,7 @@ void UMainMenuWidget::HandleStartClicked()
 
 void UMainMenuWidget::HandleOptionsClicked()
 {
-	OnOptionsRequested.Broadcast();
+	OnOptionsRequested.Broadcast(EGameState::MainMenu);
 }
 
 void UMainMenuWidget::HandleExitClicked()
