@@ -151,6 +151,10 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 		{
 			PauseMenuWidgetInstance = CreateWidget<UPauseMenuWidget>(this, PauseMenuWidgetClass);
 			PauseMenuWidgetInstance->AddToViewport();
+
+			PauseMenuWidgetInstance->OnPauseMenuOptions.AddDynamic(this, &AMainPlayerController::OpenOptions);
+			PauseMenuWidgetInstance->OnPauseMenuMainMenu.AddDynamic(this, &AMainPlayerController::GoToMainMenu);
+
 			SetShowMouseCursor(true);
 
 			PauseMenuWidgetInstance->SetIsFocusable(true);

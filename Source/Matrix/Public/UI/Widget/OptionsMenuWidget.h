@@ -7,6 +7,7 @@
 class UButton;
 class USlider;
 class USoundClass;
+class USoundMix;
 class UMainPlayerController;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBackPressed);
@@ -32,8 +33,8 @@ protected:
 	USlider* Slider_Sensitivity;
 	UPROPERTY(meta = (BindWidget))
 	USlider* Slider_Brightness;
-	UPROPERTY(meta = (BindWidget))
-	USlider* Slider_Volume;
+//	UPROPERTY(meta = (BindWidget))
+//	USlider* Slider_Volume;
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* Button_Apply;
@@ -44,17 +45,19 @@ protected:
 	void OnSliderSensitivityChanged(float Value);
 	UFUNCTION()
 	void OnSliderBrightnessChanged(float Value);
-	UFUNCTION()
-	void OnSliderVolumeChanged(float Value);
+//	UFUNCTION()
+//	void OnSliderVolumeChanged(float Value);
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Options")
 	float CurrentSensitivity = 0.5f;
 	UPROPERTY(EditAnywhere, Category = "Options")
 	float CurrentBrightness = 0.5f;
-	UPROPERTY(EditAnywhere, Category = "Options")
-	float CurrentVolume = 0.5f;
+//	UPROPERTY(EditAnywhere, Category = "Options")
+//	float CurrentVolume = 0.5f;
 
-	UPROPERTY(EditAnywhere, Category = "Options|Audio")
+/*	UPROPERTY(EditAnywhere, Category = "Options|Audio")
 	USoundClass* MasterSoundClass = nullptr;
+	UPROPERTY(EditDefaultsOnly, Category = "Options|Audio")
+	USoundMix* OptionsSoundMix = nullptr;*/
 };

@@ -1,6 +1,7 @@
 #include "UI/Widget/OptionsMenuWidget.h"
 #include "Components/Slider.h"
 #include "Components/Button.h"
+#include "Sound/SoundMix.h"
 #include "Sound/SoundClass.h"
 #include "Kismet/GameplayStatics.h"
 #include "Characters/MainPlayerController.h"
@@ -26,12 +27,12 @@ void UOptionsMenuWidget::NativeConstruct()
 		Slider_Brightness->SetValue(CurrentBrightness);
 	}
 
-	if (Slider_Volume) 
+/*	if (Slider_Volume)
 	{ 
 		Slider_Volume->OnValueChanged.AddDynamic(this, &UOptionsMenuWidget::OnSliderVolumeChanged); 
 		Slider_Volume->SetValue(CurrentVolume);
 	}
-	
+*/	
 	if (Button_Apply) { Button_Apply->OnClicked.AddDynamic(this, &UOptionsMenuWidget::ApplySettings); }
 	if (Button_Cancel) { Button_Cancel->OnClicked.AddDynamic(this, &UOptionsMenuWidget::OnCancelClicked); }
 
@@ -39,12 +40,13 @@ void UOptionsMenuWidget::NativeConstruct()
 
 void UOptionsMenuWidget::OnSliderSensitivityChanged(float Value) { CurrentSensitivity = Value; }
 void UOptionsMenuWidget::OnSliderBrightnessChanged(float Value) { CurrentBrightness = Value; }
-void UOptionsMenuWidget::OnSliderVolumeChanged(float Value) { CurrentVolume = Value; }
+//void UOptionsMenuWidget::OnSliderVolumeChanged(float Value) {	const float Perceived = FMath::Pow(CurrentVolume, 2.2f);
+
 
 void UOptionsMenuWidget::ApplySettings()
 {
 	// 마스터 볼륨 적용
-	if (MasterSoundClass)
+/*	if (MasterSoundClass)
 	{
 		MasterSoundClass->Properties.Volume = CurrentVolume;
 	}
@@ -67,7 +69,7 @@ void UOptionsMenuWidget::ApplySettings()
 			}
 		}
 	}
-
+*/
 	// 민감도 적용 (PlayerController 전달)
 	if (APlayerController* PC = GetOwningPlayer())
 	{
