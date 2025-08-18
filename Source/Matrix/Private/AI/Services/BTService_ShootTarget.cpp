@@ -29,10 +29,11 @@ void UBTService_ShootTarget::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* 
 		return;
 	}
 
-	// Only shoot if we have a line of sight
+	// Only shoot if we have a line of sight and player is not dead
 	bool bHasLineOfSight = BlackboardComp->GetValueAsBool(HasLineOfSightKey.SelectedKeyName);
+	bool bIsPlayerDead = BlackboardComp->GetValueAsBool(BlackboardKeys::IsPlayerDeadKey);
 
-	if (bHasLineOfSight)
+	if (bHasLineOfSight && !bIsPlayerDead)
 	{
 		AEnemyCharacter* AIChar = Cast<AEnemyCharacter>(AIController->GetPawn());
 		if (AIChar)

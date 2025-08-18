@@ -42,6 +42,10 @@ public:
 	void SetCanHit(bool NewCanHit) {bCanHit = NewCanHit;};
 	AWeaponBase* GetCurrentWeapon() {return CurrentWeapon;};
 	
+public: // Re-adding OnPlayerDeath delegate
+	DECLARE_MULTICAST_DELEGATE(FOnPlayerDeathDelegate);
+	FOnPlayerDeathDelegate OnPlayerDeath;
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI")
 	FGenericTeamId TeamID;

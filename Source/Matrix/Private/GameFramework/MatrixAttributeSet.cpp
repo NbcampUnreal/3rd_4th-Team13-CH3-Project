@@ -3,6 +3,7 @@
 #include "AbilitySystemComponent.h"
 #include "GameplayTagContainer.h"
 #include "Net/UnrealNetwork.h"
+#include "Characters/MainPlayerCharacter.h" // Added for OnPlayerDeath delegate
 
 FGameplayAttribute UMatrixAttributeSet::GetHealthAttribute()
 {
@@ -78,21 +79,31 @@ void UMatrixAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 		// 현재 체력 값 로그 추가
 		UE_LOG(LogTemp, Warning, TEXT("%s's Health changed to: %f"), *GetOwningActor()->GetName(), GetHealth()); // 추가
 		
-		//if (GetHealth() <= 0.0f)
-		//{
-		//	UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
-		//	if (ASC)
-		//	{
-		//		FGameplayEventData Payload;
-		//		Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("GameplayEvent.Death"));
-		//		Payload.Instigator = Data.EffectSpec.GetEffectContext().GetInstigator();
-		//		Payload.Target = GetOwningActor();
-		//		Payload.ContextHandle = Data.EffectSpec.GetEffectContext();
-		//		Payload.OptionalObject = Data.EffectSpec.GetEffectContext().GetSourceObject();
-		//		Payload.EventMagnitude = Data.EvaluatedData.Magnitude;
-		//		UE_LOG(LogTemp, Error, TEXT("Character %s is out of health. Sending GameplayEvent.Death!"), *GetOwningActor()->GetName());
-		//		ASC->HandleGameplayEvent(Payload.EventTag, &Payload);
-		//	}
-		//}
+		if (GetHealth() <= 0.0f)
+		{
+			// Get the owning actor and cast to AMainPlayerCharacter
+			AMainPlayerCharacter* OwningPlayer = Cast<AMainPlayerCharacter>(GetOwningActor());
+			if (OwningPlayer)
+			{
+				// Broadcast the OnPlayerDeath delegate
+				OwningPlayer->OnPlayerDeath.Broadcast();
+				UE_LOG(LogTemp, Warning, TEXT("%s has died! Broadcasting OnPlayerDeath."), *OwningPlayer->GetName());
+			}
+			// The commented-out code below is for sending a GameplayEvent.Death tag,
+			// which can be useful for GAS-driven death abilities.
+			// UAbilitySystemComponent* ASC = GetOwningAbilitySystemComponent();
+			// if (ASC)
+			// {
+			// 	FGameplayEventData Payload;
+			// 	Payload.EventTag = FGameplayTag::RequestGameplayTag(FName("GameplayEvent.Death"));
+			// 	Payload.Instigator = Data.EffectSpec.GetEffectContext().GetInstigator();
+			// 	Payload.Target = GetOwningActor();
+			// 	Payload.ContextHandle = Data.EffectSpec.GetEffectContext();
+			// 	Payload.OptionalObject = Data.EffectSpec.GetEffectContext().GetSourceObject();
+			// 	Payload.EventMagnitude = Data.EvaluatedData.Magnitude;
+			// 	UE_LOG(LogTemp, Error, TEXT("Character %s is out of health. Sending GameplayEvent.Death!"), *GetOwningActor()->GetName());
+			// 	ASC->HandleGameplayEvent(Payload.EventTag, &Payload);
+			// }
+		}
 	}
 }

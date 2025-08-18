@@ -18,9 +18,14 @@ AEnemyCharacter::AEnemyCharacter()
 
 	UCharacterMovementComponent* Movement = GetCharacterMovement();
 	Movement->MaxWalkSpeed = WalkSpeed;
-	Movement->bOrientRotationToMovement = false;
-	bUseControllerRotationYaw = true;
-	Movement->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
+	Movement->bOrientRotationToMovement = false; // Keep this as false if you want controller to dictate facing
+	bUseControllerRotationYaw = false; // Disable direct controller yaw rotation
+	bUseControllerRotationPitch = false; // Ensure pitch is also not directly controlled
+	bUseControllerRotationRoll = false; // Ensure roll is also not directly controlled
+
+	// Allow CharacterMovementComponent to smoothly rotate towards controller's desired rotation
+	Movement->bUseControllerDesiredRotation = true;
+	Movement->RotationRate = FRotator(0.0f, 360.0f, 0.0f); // Set a turning speed (e.g., 360 degrees per second)
 	Movement->AirControl = 0.2f;
 
 	MaxHealth = 100.0f;

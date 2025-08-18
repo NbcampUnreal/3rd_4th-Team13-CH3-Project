@@ -41,6 +41,9 @@ protected:
 
 	void PerformAttack();
 
+	UFUNCTION()
+	void OnPlayerDied(); // New function to handle player death
+
 protected:
 	// Called in Blueprint when the player is seen or lost
 	UFUNCTION(BlueprintImplementableEvent, Category = "AI")
