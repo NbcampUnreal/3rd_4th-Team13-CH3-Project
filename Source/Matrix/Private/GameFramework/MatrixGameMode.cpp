@@ -6,10 +6,14 @@
 #include "Engine/TargetPoint.h"
 #include "GameFramework/MatrixGameInstance.h"
 #include "Kismet/GameplayStatics.h"
+#include "Characters/MainPlayerController.h"
+#include "Characters/MainPlayerCharacter.h"
 
 AMatrixGameMode::AMatrixGameMode()
 {
     GameStateClass = AMatrixGameState::StaticClass();
+    PlayerControllerClass = AMainPlayerController::StaticClass();
+    DefaultPawnClass = AMainPlayerCharacter::StaticClass();
 }
 
 void AMatrixGameMode::BeginPlay()

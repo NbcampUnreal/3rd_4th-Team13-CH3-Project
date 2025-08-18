@@ -29,12 +29,13 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 	}
 
 	UWorld* World = GetWorld();
-	if (!World)
+	if (!World || !IsValid(World))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("World is not available!"));
 		return;
 	}
 
+	// 원래 머티리얼 복원 전에 안전성 검사
 	if (!OriginalMaterials.IsEmpty() || !OriginalSkeletalMaterials.IsEmpty())
 	{
 		RestoreOriginalMaterials();
@@ -51,7 +52,7 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 
 	for (AActor* Actor : AllActors)
 	{
-		if (!Actor) continue;
+		if (!Actor || !IsValid(Actor)) continue;
 
 		if (ShouldExcludeActor(Actor))
 		{
@@ -64,7 +65,7 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 
 		for (UStaticMeshComponent* MeshComponent : StaticMeshComponents)
 		{
-			if (MeshComponent && MeshComponent->GetStaticMesh() && IsValid(MeshComponent))
+			if (MeshComponent && IsValid(MeshComponent) && MeshComponent->GetStaticMesh())
 			{
 				int32 MaterialSlots = MeshComponent->GetNumMaterials();
 
@@ -103,7 +104,7 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 
 			for (USkeletalMeshComponent* MeshComponent : SkeletalMeshComponents)
 			{
-				if (MeshComponent && MeshComponent->GetSkeletalMeshAsset() && IsValid(MeshComponent))
+				if (MeshComponent && IsValid(MeshComponent) && MeshComponent->GetSkeletalMeshAsset())
 				{
 					int32 MaterialSlots = MeshComponent->GetNumMaterials();
 
@@ -145,7 +146,10 @@ void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 {
 	int32 RestoredStaticCount = 0;
 	TArray<UStaticMeshComponent*> InvalidComponents;
+	TArray<UStaticMeshComponent*> ValidComponents;
+	TArray<UMaterialInterface*> ValidMaterials;
 
+	// 먼저 유효한 컴포넌트들을 수집
 	for (const auto& Pair : OriginalMaterials)
 	{
 		UStaticMeshComponent* MeshComponent = Pair.Key;
@@ -153,8 +157,8 @@ void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 		
 		if (IsValid(MeshComponent) && IsValid(OriginalMaterial))
 		{
-			MeshComponent->SetMaterial(0, OriginalMaterial);
-			RestoredStaticCount++;
+			ValidComponents.Add(MeshComponent);
+			ValidMaterials.Add(OriginalMaterial);
 		}
 		else
 		{
@@ -162,6 +166,17 @@ void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 		}
 	}
 
+	// 유효한 컴포넌트들에 대해서만 머티리얼 복원
+	for (int32 i = 0; i < ValidComponents.Num(); ++i)
+	{
+		if (IsValid(ValidComponents[i]) && IsValid(ValidMaterials[i]))
+		{
+			ValidComponents[i]->SetMaterial(0, ValidMaterials[i]);
+			RestoredStaticCount++;
+		}
+	}
+
+	// 유효하지 않은 컴포넌트들을 맵에서 제거
 	for (UStaticMeshComponent* InvalidComponent : InvalidComponents)
 	{
 		OriginalMaterials.Remove(InvalidComponent);
@@ -169,7 +184,10 @@ void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 
 	int32 RestoredSkeletalCount = 0;
 	TArray<USkeletalMeshComponent*> InvalidSkeletalComponents;
+	TArray<USkeletalMeshComponent*> ValidSkeletalComponents;
+	TArray<UMaterialInterface*> ValidSkeletalMaterials;
 
+	// 스켈레탈 메시 컴포넌트도 동일하게 처리
 	for (const auto& Pair : OriginalSkeletalMaterials)
 	{
 		USkeletalMeshComponent* MeshComponent = Pair.Key;
@@ -177,8 +195,8 @@ void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 		
 		if (IsValid(MeshComponent) && IsValid(OriginalMaterial))
 		{
-			MeshComponent->SetMaterial(0, OriginalMaterial);
-			RestoredSkeletalCount++;
+			ValidSkeletalComponents.Add(MeshComponent);
+			ValidSkeletalMaterials.Add(OriginalMaterial);
 		}
 		else
 		{
@@ -186,6 +204,17 @@ void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 		}
 	}
 
+	// 유효한 스켈레탈 컴포넌트들에 대해서만 머티리얼 복원
+	for (int32 i = 0; i < ValidSkeletalComponents.Num(); ++i)
+	{
+		if (IsValid(ValidSkeletalComponents[i]) && IsValid(ValidSkeletalMaterials[i]))
+		{
+			ValidSkeletalComponents[i]->SetMaterial(0, ValidSkeletalMaterials[i]);
+			RestoredSkeletalCount++;
+		}
+	}
+
+	// 유효하지 않은 스켈레탈 컴포넌트들을 맵에서 제거
 	for (USkeletalMeshComponent* InvalidComponent : InvalidSkeletalComponents)
 	{
 		OriginalSkeletalMaterials.Remove(InvalidComponent);
