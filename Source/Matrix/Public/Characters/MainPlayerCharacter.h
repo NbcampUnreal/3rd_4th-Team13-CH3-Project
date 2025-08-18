@@ -85,6 +85,7 @@ protected:
 	void QuickSlot3(const FInputActionValue& Value);
 	
 	//void OnDeath();
+	UFUNCTION(BluePrintCallable)
 	void PickUpWeapon(AWeaponBase* NewWeapon);
 	void SlowWorld(); //시간 제어 함수
 	void EndInput() {bIsInput = false;};

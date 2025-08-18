@@ -99,8 +99,6 @@ protected:
 	virtual bool FireBullet();
 	
 private:
-	FTimerHandle ShootTriggerTimer;
-	
 	void SetShootAvailable();
 	void SetBulletPool();
 };

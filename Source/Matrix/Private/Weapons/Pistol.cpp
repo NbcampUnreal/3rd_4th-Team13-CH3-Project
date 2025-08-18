@@ -2,7 +2,7 @@
 
 APistol::APistol()
 {
-	TriggerTime = 1.0f;
+	TriggerTime = 0.3;
 	MaxBulletCount = 10;
 	CurrentBulletCount = MaxBulletCount;
 	WeaponType = EWeaponType::Pistol;

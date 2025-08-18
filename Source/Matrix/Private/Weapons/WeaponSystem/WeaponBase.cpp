@@ -65,27 +65,20 @@ void AWeaponBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void AWeaponBase::Shoot()
 {
 	if (bIsFiring || !BulletPoolManager) return;
-
-	// 발사 가능 상태를 TriggerTime 후에 복구하는 타이머 설정
-	GetWorld()->GetTimerManager().SetTimer(ShootTriggerTimer, this, &AWeaponBase::SetShootAvailable, TriggerTime, false);
 	
 	if (CurrentBulletCount <= 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("There's No Bullet In Weapon"));
 		return;
 	}
-
+	
 	bIsFiring = true;
-
+	UE_LOG(LogTemp, Error, TEXT("[Weapon] Shoot1."))
+	
 	if (!FireBullet())
 	{
-		// 발사에 실패하면 즉시 발사 가능 상태로 복귀
-		if (ShootTriggerTimer.IsValid())
-		{
-			GetWorld()->GetTimerManager().ClearTimer(ShootTriggerTimer);
-			ShootTriggerTimer.Invalidate();
-		}
-		bIsFiring = false;
+		//bIsFiring = false;
+		UE_LOG(LogTemp, Error, TEXT("[Weapon] Shoot3."))
 		return ;
 	}
 
