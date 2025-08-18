@@ -35,12 +35,6 @@ void UMatrixGameInstance::InitializeMaterialOverrideSystem()
 	if (!MaterialOverrideSystem)
 	{
 		MaterialOverrideSystem = NewObject<UMatrixMaterialOverrideSystem>(this);
-		
-		MaterialOverrideSystem->WhiteMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial"));
-		if (!MaterialOverrideSystem->WhiteMaterial)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Material Override System initialized but default white material not found"));
-		}
 	}
 }
 

@@ -14,8 +14,7 @@ class MATRIX_API UMatrixMaterialOverrideSystem : public UObject
 public:
 	UMatrixMaterialOverrideSystem();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material Override")
-	UMaterialInterface* WhiteMaterial;
+	// WhiteMaterial 변수 삭제됨 - BasicShapeMaterial 사용
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material Override")
 	UMaterialInterface* GlassMaterial;

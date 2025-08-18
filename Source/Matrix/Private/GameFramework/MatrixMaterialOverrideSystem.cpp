@@ -18,15 +18,7 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToWorld()
 
 void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 {
-	if (!WhiteMaterial)
-	{
-		WhiteMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial"));
-		if (!WhiteMaterial)
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to load default white material!"));
-			return;
-		}
-	}
+	// WhiteMaterial 로직 삭제됨 - BasicShapeMaterial 사용
 
 	UWorld* World = GetWorld();
 	if (!World || !IsValid(World))
@@ -77,7 +69,9 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 						FString MaterialName = CurrentMaterial->GetName();
 						
 						if (MaterialName.Contains(TEXT("Glass"), ESearchCase::IgnoreCase) ||
-							MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase))
+							MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase) ||
+							MaterialName.Contains(TEXT("M_Light"), ESearchCase::IgnoreCase) ||
+							MaterialName.Contains(TEXT("MI_Light"), ESearchCase::IgnoreCase))
 						{
 							GlassProtectedCount++;
 							continue;
@@ -88,8 +82,12 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 							OriginalMaterials.Add(MeshComponent, CurrentMaterial);
 						}
 
-						MeshComponent->SetMaterial(SlotIndex, WhiteMaterial);
-						TotalMaterialSlotsProcessed++;
+						UMaterialInterface* BasicShapeMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial"));
+						if (BasicShapeMaterial)
+						{
+							MeshComponent->SetMaterial(SlotIndex, BasicShapeMaterial);
+							TotalMaterialSlotsProcessed++;
+						}
 					}
 				}
 
@@ -116,7 +114,8 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 							FString MaterialName = CurrentMaterial->GetName();
 							
 							if (MaterialName.Contains(TEXT("Glass"), ESearchCase::IgnoreCase) ||
-								MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase))
+								MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase) ||
+								MaterialName.Contains(TEXT("M_Light"), ESearchCase::IgnoreCase))
 							{
 								GlassProtectedCount++;
 								continue;
@@ -127,8 +126,12 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 								OriginalSkeletalMaterials.Add(MeshComponent, CurrentMaterial);
 							}
 
-							MeshComponent->SetMaterial(SlotIndex, WhiteMaterial);
-							TotalMaterialSlotsProcessed++;
+							UMaterialInterface* BasicShapeMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial"));
+							if (BasicShapeMaterial)
+							{
+								MeshComponent->SetMaterial(SlotIndex, BasicShapeMaterial);
+								TotalMaterialSlotsProcessed++;
+							}
 						}
 					}
 
@@ -226,7 +229,7 @@ void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 
 void UMatrixMaterialOverrideSystem::ApplyMaterialToActor(AActor* Actor)
 {
-	if (!Actor || !WhiteMaterial)
+	if (!Actor)
 	{
 		return;
 	}
@@ -243,7 +246,11 @@ void UMatrixMaterialOverrideSystem::ApplyMaterialToActor(AActor* Actor)
 				OriginalMaterials.Add(MeshComponent, MeshComponent->GetMaterial(0));
 			}
 
-			ApplyMaterialToStaticMeshComponent(MeshComponent, WhiteMaterial);
+			UMaterialInterface* BasicShapeMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial"));
+			if (BasicShapeMaterial)
+			{
+				ApplyMaterialToStaticMeshComponent(MeshComponent, BasicShapeMaterial);
+			}
 		}
 	}
 
@@ -261,7 +268,11 @@ void UMatrixMaterialOverrideSystem::ApplyMaterialToActor(AActor* Actor)
 					OriginalSkeletalMaterials.Add(MeshComponent, MeshComponent->GetMaterial(0));
 				}
 
-				ApplyMaterialToSkeletalMeshComponent(MeshComponent, WhiteMaterial);
+				UMaterialInterface* BasicShapeMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial"));
+				if (BasicShapeMaterial)
+				{
+					ApplyMaterialToSkeletalMeshComponent(MeshComponent, BasicShapeMaterial);
+				}
 			}
 		}
 	}
@@ -365,15 +376,7 @@ void UMatrixMaterialOverrideSystem::DelayedApplyWhiteMaterial()
 
 void UMatrixMaterialOverrideSystem::ApplyMaterialToActorsByNamePattern(const FString& NamePattern)
 {
-	if (!WhiteMaterial)
-	{
-		WhiteMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial"));
-		if (!WhiteMaterial)
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to load default white material!"));
-			return;
-		}
-	}
+	// WhiteMaterial 로직 삭제됨 - BasicShapeMaterial 사용
 
 	UWorld* World = GetWorld();
 	if (!World)
@@ -419,7 +422,9 @@ void UMatrixMaterialOverrideSystem::ApplyMaterialToActorsByNamePattern(const FSt
 							FString MaterialName = CurrentMaterial->GetName();
 							
 							if (MaterialName.Contains(TEXT("Glass"), ESearchCase::IgnoreCase) ||
-								MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase))
+								MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase) ||
+								MaterialName.Contains(TEXT("M_Light"), ESearchCase::IgnoreCase) ||
+								MaterialName.Contains(TEXT("MI_Light"), ESearchCase::IgnoreCase))
 							{
 								continue;
 							}
@@ -429,8 +434,12 @@ void UMatrixMaterialOverrideSystem::ApplyMaterialToActorsByNamePattern(const FSt
 								OriginalMaterials.Add(MeshComponent, CurrentMaterial);
 							}
 
-							MeshComponent->SetMaterial(SlotIndex, WhiteMaterial);
-							TotalMaterialSlotsProcessed++;
+							UMaterialInterface* BasicShapeMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial"));
+							if (BasicShapeMaterial)
+							{
+								MeshComponent->SetMaterial(SlotIndex, BasicShapeMaterial);
+								TotalMaterialSlotsProcessed++;
+							}
 						}
 					}
 				}
@@ -454,7 +463,9 @@ void UMatrixMaterialOverrideSystem::ApplyMaterialToActorsByNamePattern(const FSt
 								FString MaterialName = CurrentMaterial->GetName();
 								
 								if (MaterialName.Contains(TEXT("Glass"), ESearchCase::IgnoreCase) ||
-									MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase))
+									MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase) ||
+									MaterialName.Contains(TEXT("M_Light"), ESearchCase::IgnoreCase) ||
+									MaterialName.Contains(TEXT("MI_Light"), ESearchCase::IgnoreCase))
 								{
 									continue;
 								}
@@ -464,8 +475,12 @@ void UMatrixMaterialOverrideSystem::ApplyMaterialToActorsByNamePattern(const FSt
 									OriginalSkeletalMaterials.Add(MeshComponent, CurrentMaterial);
 								}
 
-								MeshComponent->SetMaterial(SlotIndex, WhiteMaterial);
-								TotalMaterialSlotsProcessed++;
+								UMaterialInterface* BasicShapeMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial"));
+								if (BasicShapeMaterial)
+								{
+									MeshComponent->SetMaterial(SlotIndex, BasicShapeMaterial);
+									TotalMaterialSlotsProcessed++;
+								}
 							}
 						}
 					}
