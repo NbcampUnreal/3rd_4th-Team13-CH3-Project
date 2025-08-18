@@ -9,6 +9,7 @@
 #include "UI/Widget/GameClearWidget.h"
 #include "UI/Widget/MainHUDWidget.h"
 #include "UI/Widget/WeaponHUDWidget.h"
+#include "UI/Widget/SlotHUDWidget.h"
 #include "MainPlayerController.generated.h"
 
 class UInputMappingContext;
@@ -126,7 +127,6 @@ public:
 	void OpenOptions(EGameState FromState);
 	UFUNCTION(BlueprintCallable, Category = "Options")
 	void CloseOptions();
-	EGameState DetectForegroundState() const;
 	
 protected:
 	virtual void BeginPlay() override;
