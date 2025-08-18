@@ -290,7 +290,6 @@ void AMainPlayerCharacter::Shoot(const FInputActionValue& Value)
 	if (CurrentWeapon && bCanShoot)
 	{
 		CurrentWeapon->Shoot(); //총 발사
-		UE_LOG(LogTemp, Error, TEXT("[MainCharacter] Shoot."))
 	}
 }
 

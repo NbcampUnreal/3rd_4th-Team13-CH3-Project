@@ -10,6 +10,7 @@
 #include "Weapons/WeaponSystem/BulletPoolManager.h"
 #include "Weapons/WeaponSystem/BulletBase.h"
 #include "Characters/MainPlayerController.h"
+#include "Characters/MainPlayerCharacter.h"
 
 AWeaponBase::AWeaponBase()
 	: WeaponType(EWeaponType::None)
@@ -73,30 +74,31 @@ void AWeaponBase::Shoot()
 	}
 	
 	bIsFiring = true;
-	UE_LOG(LogTemp, Error, TEXT("[Weapon] Shoot1."))
 	
 	if (!FireBullet())
 	{
 		//bIsFiring = false;
-		UE_LOG(LogTemp, Error, TEXT("[Weapon] Shoot3."))
-		return ;
+		UE_LOG(LogTemp, Error, TEXT("Bullet Spawn Error!"));
+		return;
 	}
-
-	CurrentBulletCount--;
-	UE_LOG(LogTemp, Warning, TEXT("Weapon's Bullet Count : %d / %d"), CurrentBulletCount, MaxBulletCount);
 	
-
+	if (OwnerPawn->IsA(AMainPlayerCharacter::StaticClass()))
+	{
+		CurrentBulletCount--;
+		UE_LOG(LogTemp, Warning, TEXT("Weapon's Bullet Count : %d / %d"), CurrentBulletCount, MaxBulletCount);
+		
+		if (OwnerPC)
+		{
+			if (AMainPlayerController* PC = Cast<AMainPlayerController>(OwnerPC))
+			{
+				PC->NotifyAmmoChanged(CurrentBulletCount, MaxBulletCount);
+			}
+		}
+	}
+	
 	if (EffectComp)
 	{
 		EffectComp->PlayEffect(MuzzlePoint->GetComponentLocation(), MuzzlePoint->GetComponentRotation(), FVector(0.3f));
-	}
-	
-	if (OwnerPC)
-	{
-		if (AMainPlayerController* PC = Cast<AMainPlayerController>(OwnerPC))
-		{
-			PC->NotifyAmmoChanged(CurrentBulletCount, MaxBulletCount);
-		}
 	}
 }
 
