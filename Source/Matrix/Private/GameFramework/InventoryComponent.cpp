@@ -14,7 +14,7 @@ void UInventoryComponent::AddItem(ABaseItem* NewItem)
 	if (!NewItem) return;
 	
 	PlaySound();
-	
+
 	for (ABaseItem* CurrentItem : Items)
 	{
 		//현재 아이템 타입 = 주운 아이템 타입일 경우
@@ -22,6 +22,8 @@ void UInventoryComponent::AddItem(ABaseItem* NewItem)
 		{
 			CurrentItem->SetItemCount(CurrentItem->GetItemCount() + 1);
 			NewItem->Destroy();
+			UE_LOG(LogTemp, Warning, TEXT("Inventory is Added"));
+			OnInventoryUpdated.Broadcast();
 			return;
 		}
 	}
@@ -33,6 +35,8 @@ void UInventoryComponent::AddItem(ABaseItem* NewItem)
 		{
 			Items[i] = NewItem;
 			NewItem->PickedUpItem();
+			UE_LOG(LogTemp, Warning, TEXT("Inventory is Added"));
+			OnInventoryUpdated.Broadcast();
 			return;
 		}
 	}
@@ -49,6 +53,8 @@ void UInventoryComponent::RemoveItem(int32 Index)
 		if (Items[Index]->GetItemCount() <= 0)
 			Items[Index] = nullptr;
 	}
+	
+	OnInventoryUpdated.Broadcast();
 }
 
 void UInventoryComponent::PlaySound()

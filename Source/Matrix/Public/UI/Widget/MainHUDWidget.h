@@ -6,6 +6,9 @@
 #include "MainHUDWidget.generated.h"
 
 
+class ABaseItem;
+class USlotHUDWidget;
+
 UCLASS()
 class MATRIX_API UMainHUDWidget : public UUserWidget
 {
@@ -15,10 +18,15 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UWeaponHUDWidget* WeaponHUDWidget;
 
+	UPROPERTY(meta = (BindWidget))
+	USlotHUDWidget* SlotHUDWidget;
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo);
 	UFUNCTION()
 	void UpdateWeaponIcon(EWeaponType WeaponType);
+	UFUNCTION(BlueprintCallable)
+	void UpdateQuickSlots(const TArray<ABaseItem*>& Items);
 
 protected:
 

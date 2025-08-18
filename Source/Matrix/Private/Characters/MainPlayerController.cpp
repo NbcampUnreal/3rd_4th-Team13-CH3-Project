@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Characters/MainPlayerCharacter.h"
 #include "Engine/Engine.h"
+#include "GameFramework/InventoryComponent.h"
 
 AMainPlayerController::AMainPlayerController()
 	: InputMappingContext(nullptr),
@@ -60,6 +61,14 @@ void AMainPlayerController::BeginPlay()
 			OnGameStateChanged(MatrixGameState->CurrentGameState);
 		}
 	}, 0.1f, false);
+
+	if (AMainPlayerCharacter* PC = Cast<AMainPlayerCharacter>(GetPawn()))
+	{
+		if (UInventoryComponent* InventoryComp = PC->GetInventoryComp())
+		{
+			InventoryComp->OnInventoryUpdated.AddDynamic(this, &AMainPlayerController::HandleInventoryUpdated);
+		}
+	}
 	
 	/*	OnGameStateChanged 함수가 역할을 대신합니다! 혹시몰라 주석처리만 해놨어요!
 	if (MainHUDWidgetClass)
@@ -199,6 +208,20 @@ void AMainPlayerController::NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo)
 	if (MainHUDWidgetInstance)
 	{
 		MainHUDWidgetInstance->UpdateAmmo(CurrentAmmo, MaxAmmo);
+	}
+}
+
+void AMainPlayerController::HandleInventoryUpdated()
+{
+	if (MainHUDWidgetInstance)
+	{
+		if (AMainPlayerCharacter* PC = Cast<AMainPlayerCharacter>(GetPawn()))
+		{
+			if (UInventoryComponent* InventoryComp = PC->GetInventoryComp())
+			{
+				MainHUDWidgetInstance->SlotHUDWidget->UpdateQuickSlots(InventoryComp->GetAllItems());
+			}
+		}
 	}
 }
 

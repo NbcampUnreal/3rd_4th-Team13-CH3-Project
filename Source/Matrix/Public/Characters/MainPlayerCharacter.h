@@ -41,6 +41,7 @@ public:
 	void SetCanShoot(bool NewCanShoot) {bCanShoot = NewCanShoot;};
 	void SetCanHit(bool NewCanHit) {bCanHit = NewCanHit;};
 	AWeaponBase* GetCurrentWeapon() {return CurrentWeapon;};
+	UInventoryComponent* GetInventoryComp() { return InventoryComp; };
 	
 public: // Re-adding OnPlayerDeath delegate
 	DECLARE_MULTICAST_DELEGATE(FOnPlayerDeathDelegate);

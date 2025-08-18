@@ -74,6 +74,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo);
 
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void HandleInventoryUpdated();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UPauseMenuWidget> PauseMenuWidgetClass;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
