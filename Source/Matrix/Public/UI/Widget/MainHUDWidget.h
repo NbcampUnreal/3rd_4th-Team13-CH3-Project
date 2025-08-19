@@ -27,7 +27,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateAmmo(int32 CurrentAmmo, int32 MaxAmmo);
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void UpdateWeaponIcon(EWeaponType WeaponType);
 	UFUNCTION(BlueprintCallable)
 	void UpdateQuickSlots(const TArray<ABaseItem*>& Items);
