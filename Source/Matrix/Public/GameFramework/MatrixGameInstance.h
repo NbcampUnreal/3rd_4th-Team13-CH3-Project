@@ -21,6 +21,11 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Game Data")
 	int32 MaxLevel = 2;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Options")
+	float SavedSensitivity = 0.5f;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Options")
+	float SavedBrightness = 0.5f;
+
 	UFUNCTION(BlueprintCallable, Category = "Game Data")
 	void AddScore(int32 ScoreToAdd);
 

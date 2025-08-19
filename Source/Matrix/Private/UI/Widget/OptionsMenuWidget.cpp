@@ -5,6 +5,7 @@
 #include "Sound/SoundClass.h"
 #include "Kismet/GameplayStatics.h"
 #include "Characters/MainPlayerController.h"
+#include "GameFramework/MatrixGameInstance.h"
 
 static float MapBrightnessToAutoExposure(const float Brightness)
 {
@@ -14,6 +15,12 @@ static float MapBrightnessToAutoExposure(const float Brightness)
 void UOptionsMenuWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+	if (const UMatrixGameInstance* GameInstance = GetGameInstance<UMatrixGameInstance>())
+	{
+		CurrentSensitivity = GameInstance->SavedSensitivity;
+		CurrentBrightness = GameInstance->SavedBrightness;
+	}
 
 	if (Slider_Sensitivity) 
 	{ 
@@ -36,6 +43,7 @@ void UOptionsMenuWidget::NativeConstruct()
 	if (Button_Apply) { Button_Apply->OnClicked.AddDynamic(this, &UOptionsMenuWidget::ApplySettings); }
 	if (Button_Cancel) { Button_Cancel->OnClicked.AddDynamic(this, &UOptionsMenuWidget::OnCancelClicked); }
 
+	ApplySettings();
 }
 
 void UOptionsMenuWidget::OnSliderSensitivityChanged(float Value) { CurrentSensitivity = Value; }
@@ -45,6 +53,14 @@ void UOptionsMenuWidget::OnSliderBrightnessChanged(float Value) { CurrentBrightn
 
 void UOptionsMenuWidget::ApplySettings()
 {
+	if (UMatrixGameInstance* GameInstance = GetGameInstance<UMatrixGameInstance>())
+	{
+		GameInstance->SavedSensitivity = CurrentSensitivity;
+		GameInstance->SavedBrightness = CurrentBrightness;
+		//GameInstance->SavedVolume = CurrentVolume; // 볼륨은 현재 주석 처리
+	}
+
+
 	 //마스터 볼륨 적용
 /*	if (MasterSoundClass)
 	{
@@ -83,6 +99,22 @@ void UOptionsMenuWidget::ApplySettings()
 
 void UOptionsMenuWidget::OnCancelClicked()
 {
+	if (const UMatrixGameInstance* GameInstance = GetGameInstance<UMatrixGameInstance>())
+	{
+		CurrentSensitivity = GameInstance->SavedSensitivity;
+		CurrentBrightness = GameInstance->SavedBrightness;
+	}
+
+	if (Slider_Sensitivity)
+	{
+		Slider_Sensitivity->SetValue(CurrentSensitivity);
+	}
+
+	if (Slider_Brightness)
+	{
+		Slider_Brightness->SetValue(CurrentBrightness);
+	}
+
 	if(OnBackPressed.IsBound())
 	{
 		OnBackPressed.Broadcast();
