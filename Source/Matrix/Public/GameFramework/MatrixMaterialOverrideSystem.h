@@ -64,9 +64,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Material Override")
 	void DebugPrintActorMaterials(const FString& ActorName) const;
 
+	UFUNCTION(BlueprintCallable, Category = "Material Override")
+	void CleanupInvalidReferences();
+
 private:
-	TMap<UStaticMeshComponent*, UMaterialInterface*> OriginalMaterials;
-	TMap<USkeletalMeshComponent*, UMaterialInterface*> OriginalSkeletalMaterials;
+	UPROPERTY()
+	TMap<TObjectPtr<UStaticMeshComponent>, TObjectPtr<UMaterialInterface>> OriginalMaterials;
+
+	UPROPERTY()
+	TMap<TObjectPtr<USkeletalMeshComponent>, TObjectPtr<UMaterialInterface>> OriginalSkeletalMaterials;
 
 	void ApplyMaterialToStaticMeshComponent(UStaticMeshComponent* MeshComponent, UMaterialInterface* Material);
 	void ApplyMaterialToSkeletalMeshComponent(USkeletalMeshComponent* MeshComponent, UMaterialInterface* Material);

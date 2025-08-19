@@ -46,6 +46,8 @@ enum class EMatrixTriggerType : uint8
     SubLevelUnload,     // 서브레벨 언로드
     WaveStart,          // 웨이브 시작
     DoorControl,        // 문 제어
+    FloorTransition,    // 층별 전환
+    FloorWaveComplete,  // 층별 웨이브 완료
     Custom              // 커스텀 액션
 };
 
@@ -133,6 +135,13 @@ struct FTriggerInfo
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Control")
     bool bCloseOnExit = true;
 
+    // === Floor Transition Settings ===
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Floor Transition")
+    int32 TargetFloor = 1;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Floor Transition")
+    bool bCheckWaveCompletion = true;
+
     FTriggerInfo()
     {
         TriggerType = EMatrixTriggerType::Custom;
@@ -146,5 +155,7 @@ struct FTriggerInfo
         TargetDoor = nullptr;
         bOpenOnEnter = true;
         bCloseOnExit = true;
+        TargetFloor = 1;
+        bCheckWaveCompletion = true;
     }
 };

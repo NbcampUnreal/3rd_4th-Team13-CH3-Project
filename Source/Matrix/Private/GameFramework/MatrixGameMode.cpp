@@ -1,5 +1,6 @@
 #include "GameFramework/MatrixGameMode.h"
 #include "GameFramework/MatrixGameState.h"
+#include "GameFramework/MatrixLevelManager.h"
 #include "AI/EnemyCharacter.h"
 #include "Core/MatrixCoreTypes.h"
 #include "Systems/MatrixSpawnManager.h"
@@ -168,8 +169,8 @@ void AMatrixGameMode::EndWave()
 
     if (MatrixGameState->CurrentWave >= CurrentWaveDataTable->GetRowNames().Num())
     {
-        // 모든 웨이브 클리어 - 보스 스테이지로 진행 또는 게임 클리어
-        CheckBossStageOrGameClear();
+        // 모든 웨이브 클리어 - 층별 웨이브 완료 처리
+        HandleFloorWaveCompletion();
     }
     else
     {
@@ -303,4 +304,67 @@ void AMatrixGameMode::ForceStartWave()
     
     // 다음 웨이브 시작
     StartWave();
+}
+
+void AMatrixGameMode::InitializeLevelStreaming()
+{
+    UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>();
+    if (!LevelManager)
+    {
+        UE_LOG(LogTemp, Error, TEXT("LevelManager not found for level streaming initialization"));
+        return;
+    }
+    
+    // 모든 서브레벨(1층, 2층, Environment)이 이미 로드되어 있음
+    UE_LOG(LogTemp, Log, TEXT("All sublevels (Floor 1, Floor 2, Environment) are already loaded"));
+    UE_LOG(LogTemp, Log, TEXT("Floor 2 blocking volumes will be disabled when waves are completed"));
+}
+
+void AMatrixGameMode::HandleFloorWaveCompletion()
+{
+    // 레벨 매니저 가져오기
+    UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>();
+    if (!LevelManager)
+    {
+        UE_LOG(LogTemp, Error, TEXT("LevelManager not found!"));
+        return;
+    }
+    
+    int32 CurrentFloor = LevelManager->GetCurrentFloor();
+    UE_LOG(LogTemp, Log, TEXT("Floor %d waves completed!"), CurrentFloor);
+    
+    // 현재 층의 웨이브 완료 상태 설정
+    LevelManager->SetFloorWaveCompleted(CurrentFloor, true);
+    
+    // 2층이면 1층으로 진행
+    if (CurrentFloor == 2)
+    {
+        // 2층 웨이브 완료 - 1층으로 자동 진행
+        UE_LOG(LogTemp, Log, TEXT("Floor 2 (2층) waves completed. Automatically proceeding to Floor 1 (1층)."));
+        
+        // 2층 Blocking Volume 비활성화
+        LevelManager->DisableFloorBlockingVolumes(2);
+        UE_LOG(LogTemp, Log, TEXT("Disabled Floor 2 (2층) blocking volumes"));
+        
+        LevelManager->ProceedToNextFloor();
+        
+        // 1층 웨이브 시작
+        if (LevelManager->GetCurrentFloor() == 1)
+        {
+            UE_LOG(LogTemp, Log, TEXT("Starting Floor 1 (1층) waves..."));
+            // 웨이브 카운터 리셋
+            MatrixGameState->CurrentWave = 0;
+            StartWave(); // 1층 첫 웨이브 시작
+        }
+    }
+    // 1층(Floor 1)이면 게임 클리어
+    else if (CurrentFloor == 1)
+    {
+        // 1층 웨이브 완료 - 게임 클리어 조건 체크
+        if (LevelManager->CheckGameClearConditions())
+        {
+            UE_LOG(LogTemp, Log, TEXT("Game Clear conditions met!"));
+            CheckBossStageOrGameClear();
+        }
+    }
 }

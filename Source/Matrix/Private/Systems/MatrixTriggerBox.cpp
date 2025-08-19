@@ -134,6 +134,12 @@ void AMatrixTriggerBox::ExecuteTriggerAction()
     case EMatrixTriggerType::DoorControl:
         HandleDoorControl();
         break;
+    case EMatrixTriggerType::FloorTransition:
+        HandleFloorTransition();
+        break;
+    case EMatrixTriggerType::FloorWaveComplete:
+        HandleFloorWaveComplete();
+        break;
     case EMatrixTriggerType::Custom:
         HandleCustom();
         break;
@@ -416,4 +422,44 @@ void AMatrixTriggerBox::CloseDoor()
             Timeline->Reverse();
         }
     }
+}
+
+// === 층별 진행 처리 함수들 ===
+
+void AMatrixTriggerBox::HandleFloorTransition()
+{
+    UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>();
+    if (!LevelManager)
+    {
+        UE_LOG(LogTemp, Error, TEXT("LevelManager not found for floor transition"));
+        return;
+    }
+    
+    // 웨이브 완료 체크가 활성화되어 있으면 실제 웨이브 진행 상태 확인
+    if (TriggerInfo.bCheckWaveCompletion)
+    {
+        if (!LevelManager->CanProceedToNextFloorWithWaveCheck())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Cannot proceed to next floor. Current floor waves not completed or enemies still remaining."));
+            return;
+        }
+    }
+    
+    // 다음 층으로 진행
+    LevelManager->ProceedToNextFloor();
+    UE_LOG(LogTemp, Log, TEXT("Floor transition triggered. Moving to floor %d"), LevelManager->GetCurrentFloor());
+}
+
+void AMatrixTriggerBox::HandleFloorWaveComplete()
+{
+    UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>();
+    if (!LevelManager)
+    {
+        UE_LOG(LogTemp, Error, TEXT("LevelManager not found for floor wave complete"));
+        return;
+    }
+    
+    int32 CurrentFloor = LevelManager->GetCurrentFloor();
+    LevelManager->SetFloorWaveCompleted(CurrentFloor, true);
+    UE_LOG(LogTemp, Log, TEXT("Floor %d wave completion triggered"), CurrentFloor);
 }

@@ -32,6 +32,11 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 	{
 		RestoreOriginalMaterials();
 	}
+	else
+	{
+		// 맵이 비어있어도 무효한 참조가 있을 수 있으므로 정리
+		CleanupInvalidReferences();
+	}
 
 	TArray<AActor*> AllActors;
 	UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), AllActors);
@@ -79,7 +84,11 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 						
 						if (!OriginalMaterials.Contains(MeshComponent))
 						{
-							OriginalMaterials.Add(MeshComponent, CurrentMaterial);
+							// 추가 안전성 검사: 컴포넌트가 유효한지 확인
+							if (MeshComponent && IsValid(MeshComponent))
+							{
+								OriginalMaterials.Add(MeshComponent, CurrentMaterial);
+							}
 						}
 
 						UMaterialInterface* BasicShapeMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial"));
@@ -123,7 +132,11 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 							
 							if (!OriginalSkeletalMaterials.Contains(MeshComponent))
 							{
-								OriginalSkeletalMaterials.Add(MeshComponent, CurrentMaterial);
+								// 추가 안전성 검사: 컴포넌트가 유효한지 확인
+								if (MeshComponent && IsValid(MeshComponent))
+								{
+									OriginalSkeletalMaterials.Add(MeshComponent, CurrentMaterial);
+								}
 							}
 
 							UMaterialInterface* BasicShapeMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial"));
@@ -147,6 +160,16 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 
 void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 {
+	// 안전성 검사: 맵이 비어있으면 조기 반환
+	if (OriginalMaterials.IsEmpty() && OriginalSkeletalMaterials.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("RestoreOriginalMaterials: No materials to restore"));
+		return;
+	}
+
+	// 무효한 참조들을 미리 정리
+	CleanupInvalidReferences();
+
 	int32 RestoredStaticCount = 0;
 	TArray<UStaticMeshComponent*> InvalidComponents;
 	TArray<UStaticMeshComponent*> ValidComponents;
@@ -158,7 +181,9 @@ void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 		UStaticMeshComponent* MeshComponent = Pair.Key;
 		UMaterialInterface* OriginalMaterial = Pair.Value;
 		
-		if (IsValid(MeshComponent) && IsValid(OriginalMaterial))
+		// 더 엄격한 유효성 검사
+		if (MeshComponent && IsValid(MeshComponent) && 
+			OriginalMaterial && IsValid(OriginalMaterial))
 		{
 			ValidComponents.Add(MeshComponent);
 			ValidMaterials.Add(OriginalMaterial);
@@ -172,7 +197,8 @@ void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 	// 유효한 컴포넌트들에 대해서만 머티리얼 복원
 	for (int32 i = 0; i < ValidComponents.Num(); ++i)
 	{
-		if (IsValid(ValidComponents[i]) && IsValid(ValidMaterials[i]))
+		if (ValidComponents[i] && IsValid(ValidComponents[i]) && 
+			ValidMaterials[i] && IsValid(ValidMaterials[i]))
 		{
 			ValidComponents[i]->SetMaterial(0, ValidMaterials[i]);
 			RestoredStaticCount++;
@@ -182,7 +208,10 @@ void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 	// 유효하지 않은 컴포넌트들을 맵에서 제거
 	for (UStaticMeshComponent* InvalidComponent : InvalidComponents)
 	{
-		OriginalMaterials.Remove(InvalidComponent);
+		if (InvalidComponent)
+		{
+			OriginalMaterials.Remove(InvalidComponent);
+		}
 	}
 
 	int32 RestoredSkeletalCount = 0;
@@ -196,7 +225,9 @@ void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 		USkeletalMeshComponent* MeshComponent = Pair.Key;
 		UMaterialInterface* OriginalMaterial = Pair.Value;
 		
-		if (IsValid(MeshComponent) && IsValid(OriginalMaterial))
+		// 더 엄격한 유효성 검사
+		if (MeshComponent && IsValid(MeshComponent) && 
+			OriginalMaterial && IsValid(OriginalMaterial))
 		{
 			ValidSkeletalComponents.Add(MeshComponent);
 			ValidSkeletalMaterials.Add(OriginalMaterial);
@@ -210,7 +241,8 @@ void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 	// 유효한 스켈레탈 컴포넌트들에 대해서만 머티리얼 복원
 	for (int32 i = 0; i < ValidSkeletalComponents.Num(); ++i)
 	{
-		if (IsValid(ValidSkeletalComponents[i]) && IsValid(ValidSkeletalMaterials[i]))
+		if (ValidSkeletalComponents[i] && IsValid(ValidSkeletalComponents[i]) && 
+			ValidSkeletalMaterials[i] && IsValid(ValidSkeletalMaterials[i]))
 		{
 			ValidSkeletalComponents[i]->SetMaterial(0, ValidSkeletalMaterials[i]);
 			RestoredSkeletalCount++;
@@ -220,7 +252,10 @@ void UMatrixMaterialOverrideSystem::RestoreOriginalMaterials()
 	// 유효하지 않은 스켈레탈 컴포넌트들을 맵에서 제거
 	for (USkeletalMeshComponent* InvalidComponent : InvalidSkeletalComponents)
 	{
-		OriginalSkeletalMaterials.Remove(InvalidComponent);
+		if (InvalidComponent)
+		{
+			OriginalSkeletalMaterials.Remove(InvalidComponent);
+		}
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("Restored original materials for %d static components and %d skeletal components"), 
@@ -239,11 +274,19 @@ void UMatrixMaterialOverrideSystem::ApplyMaterialToActor(AActor* Actor)
 
 	for (UStaticMeshComponent* MeshComponent : StaticMeshComponents)
 	{
-		if (MeshComponent && MeshComponent->GetStaticMesh())
+		if (MeshComponent && IsValid(MeshComponent) && MeshComponent->GetStaticMesh())
 		{
 			if (!OriginalMaterials.Contains(MeshComponent))
 			{
-				OriginalMaterials.Add(MeshComponent, MeshComponent->GetMaterial(0));
+				// 추가 안전성 검사
+				if (MeshComponent && IsValid(MeshComponent))
+				{
+					UMaterialInterface* CurrentMaterial = MeshComponent->GetMaterial(0);
+					if (CurrentMaterial && IsValid(CurrentMaterial))
+					{
+						OriginalMaterials.Add(MeshComponent, CurrentMaterial);
+					}
+				}
 			}
 
 			UMaterialInterface* BasicShapeMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial"));
@@ -261,12 +304,20 @@ void UMatrixMaterialOverrideSystem::ApplyMaterialToActor(AActor* Actor)
 
 		for (USkeletalMeshComponent* MeshComponent : SkeletalMeshComponents)
 		{
-			if (MeshComponent && MeshComponent->GetSkeletalMeshAsset())
+					if (MeshComponent && IsValid(MeshComponent) && MeshComponent->GetSkeletalMeshAsset())
+		{
+			if (!OriginalSkeletalMaterials.Contains(MeshComponent))
 			{
-				if (!OriginalSkeletalMaterials.Contains(MeshComponent))
+				// 추가 안전성 검사
+				if (MeshComponent && IsValid(MeshComponent))
 				{
-					OriginalSkeletalMaterials.Add(MeshComponent, MeshComponent->GetMaterial(0));
+					UMaterialInterface* CurrentMaterial = MeshComponent->GetMaterial(0);
+					if (CurrentMaterial && IsValid(CurrentMaterial))
+					{
+						OriginalSkeletalMaterials.Add(MeshComponent, CurrentMaterial);
+					}
 				}
+			}
 
 				UMaterialInterface* BasicShapeMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial"));
 				if (BasicShapeMaterial)
@@ -651,4 +702,53 @@ void UMatrixMaterialOverrideSystem::DebugPrintActorMaterials(const FString& Acto
 		}
 	}
 
+}
+
+void UMatrixMaterialOverrideSystem::CleanupInvalidReferences()
+{
+	int32 RemovedStaticCount = 0;
+	int32 RemovedSkeletalCount = 0;
+
+	// 무효한 스태틱 메시 컴포넌트 참조 제거
+	TArray<UStaticMeshComponent*> InvalidStaticComponents;
+	for (const auto& Pair : OriginalMaterials)
+	{
+		UStaticMeshComponent* MeshComponent = Pair.Key;
+		if (!MeshComponent || !IsValid(MeshComponent))
+		{
+			InvalidStaticComponents.Add(MeshComponent);
+		}
+	}
+
+	for (UStaticMeshComponent* InvalidComponent : InvalidStaticComponents)
+	{
+		if (InvalidComponent)
+		{
+			OriginalMaterials.Remove(InvalidComponent);
+			RemovedStaticCount++;
+		}
+	}
+
+	// 무효한 스켈레탈 메시 컴포넌트 참조 제거
+	TArray<USkeletalMeshComponent*> InvalidSkeletalComponents;
+	for (const auto& Pair : OriginalSkeletalMaterials)
+	{
+		USkeletalMeshComponent* MeshComponent = Pair.Key;
+		if (!MeshComponent || !IsValid(MeshComponent))
+		{
+			InvalidSkeletalComponents.Add(MeshComponent);
+		}
+	}
+
+	for (USkeletalMeshComponent* InvalidComponent : InvalidSkeletalComponents)
+	{
+		if (InvalidComponent)
+		{
+			OriginalSkeletalMaterials.Remove(InvalidComponent);
+			RemovedSkeletalCount++;
+		}
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("CleanupInvalidReferences: Removed %d static and %d skeletal invalid references"), 
+		RemovedStaticCount, RemovedSkeletalCount);
 }

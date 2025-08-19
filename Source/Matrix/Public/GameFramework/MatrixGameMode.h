@@ -27,6 +27,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Wave Management")
 	void ForceStartWave();
+	
+	// 웨이브 데이터 테이블 반환
+	UFUNCTION(BlueprintCallable, Category = "Wave Management")
+	UDataTable* GetWaveDataTable() const { return CurrentWaveDataTable; }
 
 protected:
 	// 웨이브 사이의 대기 시간 
@@ -36,6 +40,8 @@ protected:
 	virtual void BeginPlay() override;
 	void StartWave();
 	void EndWave();
+	void HandleFloorWaveCompletion();
+	void InitializeLevelStreaming();
 	void CheckBossStageOrGameClear();
 	void StartBossStage();
 

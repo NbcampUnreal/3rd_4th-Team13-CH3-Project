@@ -59,6 +59,8 @@ private:
     void HandleSubLevelUnload();
     void HandleWaveStart();
     void HandleDoorControl();
+    void HandleFloorTransition();
+    void HandleFloorWaveComplete();
     void HandleCustom();
 
     bool CanActivate() const;

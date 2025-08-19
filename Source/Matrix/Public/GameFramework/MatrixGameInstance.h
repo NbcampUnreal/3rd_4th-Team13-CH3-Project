@@ -78,4 +78,8 @@ public:
 	// 원래 머티리얼로 복원
 	UFUNCTION(BlueprintCallable, Category = "Material Override")
 	void RestoreOriginalMaterials();
+
+	// 무효한 참조 정리
+	UFUNCTION(BlueprintCallable, Category = "Material Override")
+	void CleanupInvalidReferences();
 };

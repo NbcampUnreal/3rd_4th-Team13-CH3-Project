@@ -84,6 +84,50 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Level Management")
     bool CheckLevelCompletionConditions(const FName& LevelName) const;
     
+    // === 층별 진행 관리 ===
+    
+    // 현재 층 정보
+    UFUNCTION(BlueprintCallable, Category = "Floor Management")
+    int32 GetCurrentFloor() const;
+    
+    // 층별 웨이브 완료 상태 설정
+    UFUNCTION(BlueprintCallable, Category = "Floor Management")
+    void SetFloorWaveCompleted(int32 FloorNumber, bool bCompleted);
+    
+    // 층별 웨이브 완료 상태 확인
+    UFUNCTION(BlueprintCallable, Category = "Floor Management")
+    bool IsFloorWaveCompleted(int32 FloorNumber) const;
+    
+    // 다음 층으로 진행 가능한지 확인
+    UFUNCTION(BlueprintCallable, Category = "Floor Management")
+    bool CanProceedToNextFloor() const;
+    
+    // 실제 웨이브 진행 상태를 확인하여 다음 층 진행 가능 여부 판단
+    UFUNCTION(BlueprintCallable, Category = "Floor Management")
+    bool CanProceedToNextFloorWithWaveCheck() const;
+    
+    // 다음 층으로 진행
+    UFUNCTION(BlueprintCallable, Category = "Floor Management")
+    void ProceedToNextFloor();
+    
+    // 게임 클리어 조건 확인
+    UFUNCTION(BlueprintCallable, Category = "Floor Management")
+    bool CheckGameClearConditions() const;
+    
+    // === Blocking Volume 관리 ===
+    
+    // 층별 Blocking Volume 등록
+    UFUNCTION(BlueprintCallable, Category = "Blocking Volume Management")
+    void RegisterFloorBlockingVolume(int32 FloorNumber, AActor* BlockingVolume);
+    
+    // 층별 Blocking Volume 제거
+    UFUNCTION(BlueprintCallable, Category = "Blocking Volume Management")
+    void RemoveFloorBlockingVolumes(int32 FloorNumber);
+    
+    // 층별 Blocking Volume 비활성화
+    UFUNCTION(BlueprintCallable, Category = "Blocking Volume Management")
+    void DisableFloorBlockingVolumes(int32 FloorNumber);
+    
     // === 레벨 설정 ===
     
     // 레벨 정보 테이블 (에디터에서 설정)
@@ -148,6 +192,23 @@ private:
     // 게임 시작 시간
     UPROPERTY()
     float GameStartTime = 0.0f;
+    
+    // === 층별 진행 관리 ===
+    
+    // 현재 층 (3층에서 시작)
+    UPROPERTY()
+    int32 CurrentFloor = 3;
+    
+    // 층별 웨이브 완료 상태
+    UPROPERTY()
+    TMap<int32, bool> FloorWaveCompletionStatus;
+    
+    // 층별 서브레벨 이름
+    UPROPERTY(EditDefaultsOnly, Category = "Floor Settings")
+    TMap<int32, FName> FloorSubLevelNames;
+    
+    // 층별 Blocking Volume 관리 (UPROPERTY 제한으로 인해 일반 멤버 변수로 선언)
+    TMap<int32, TArray<AActor*>> FloorBlockingVolumes;
     
     // === 내부 함수들 ===
     

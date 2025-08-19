@@ -60,6 +60,9 @@ void UMatrixGameInstance::ApplyWhiteMaterialToAllMeshes()
 
 	if (MaterialOverrideSystem)
 	{
+		// 먼저 무효한 참조들을 정리
+		MaterialOverrideSystem->CleanupInvalidReferences();
+		// 그 다음 머티리얼 적용
 		MaterialOverrideSystem->ApplyWhiteMaterialToAllMeshes();
 	}
 }
@@ -98,6 +101,32 @@ void UMatrixGameInstance::StopRepeatingMaterialApplication()
 	}
 }
 
+void UMatrixGameInstance::RestoreOriginalMaterials()
+{
+	if (!MaterialOverrideSystem)
+	{
+		InitializeMaterialOverrideSystem();
+	}
+
+	if (MaterialOverrideSystem)
+	{
+		MaterialOverrideSystem->RestoreOriginalMaterials();
+	}
+}
+
+void UMatrixGameInstance::CleanupInvalidReferences()
+{
+	if (!MaterialOverrideSystem)
+	{
+		InitializeMaterialOverrideSystem();
+	}
+
+	if (MaterialOverrideSystem)
+	{
+		MaterialOverrideSystem->CleanupInvalidReferences();
+	}
+}
+
 void UMatrixGameInstance::ApplyMaterialToActorsByNamePattern(const FString& NamePattern)
 {
 	if (!MaterialOverrideSystem)
@@ -127,11 +156,5 @@ void UMatrixGameInstance::DebugPrintActorMaterials(const FString& ActorName) con
 	}
 }
 
-void UMatrixGameInstance::RestoreOriginalMaterials()
-{
-	if (MaterialOverrideSystem)
-	{
-		MaterialOverrideSystem->RestoreOriginalMaterials();
-	}
-}
+
 
