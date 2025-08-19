@@ -135,6 +135,9 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 		break;
 
 	case EGameState::Playing:
+		UGameplayStatics::SetGamePaused(this, false);
+		EnableInput(this);
+
 		if (!MainHUDWidgetInstance && MainHUDWidgetClass) 
 		{
 			MainHUDWidgetInstance = CreateWidget<UMainHUDWidget>(this, MainHUDWidgetClass);
@@ -170,6 +173,9 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 		break;;
 
 	case EGameState::GameOver:
+		UGameplayStatics::SetGamePaused(this, true);
+		DisableInput(this);
+
 		if (GameOverWidgetClass)
 		{
 			CurrentScreenWidget = CreateWidget<UGameOverWidget>(this, GameOverWidgetClass);
@@ -185,6 +191,9 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 		break;
 
 	case EGameState::GameClear:
+		UGameplayStatics::SetGamePaused(this, true);
+		DisableInput(this);
+
 		if (GameClearWidgetClass)
 		{
 			CurrentScreenWidget = CreateWidget<UGameClearWidget>(this, GameClearWidgetClass);
