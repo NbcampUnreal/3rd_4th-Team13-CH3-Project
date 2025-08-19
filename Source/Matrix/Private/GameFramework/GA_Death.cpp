@@ -21,6 +21,8 @@ UGA_Death::UGA_Death()
 	: ChaosActorLifeSpan(3.0f)
 	, ImpulseStrength(1000.0f)
 	, ImpulseRadius(100.0f)
+	, ChaosDestructionClass(nullptr)
+	, ChaosSound(nullptr)
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerInitiated;
@@ -197,5 +199,9 @@ void UGA_Death::SpawnChaosDestruction(AActor* OwnerActor, const FGameplayEventDa
 			});
 		}
 	}
-	
+
+	if (ChaosSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(ChaosActor, ChaosSound, SpawnLoc);
+	}
 }

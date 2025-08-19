@@ -27,6 +27,8 @@ protected:
 	float ImpulseStrength;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Death|Chaos")
 	float ImpulseRadius;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* ChaosSound;
 	
 private:
 	void HandlePlayerDeath(AMainPlayerCharacter* Player);
