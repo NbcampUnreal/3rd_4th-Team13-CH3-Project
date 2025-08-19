@@ -8,7 +8,7 @@
 
 static float MapBrightnessToAutoExposure(const float Brightness)
 {
-	return (Brightness * 2.0f) - 1.0f; // 0.0f ~ 1.0f -> -1.0f ~ 1.0f
+	return (Brightness * 4.0f) - 2.0f; // → -2.0f ~ 2.0f
 }
 
 void UOptionsMenuWidget::NativeConstruct()
@@ -45,12 +45,13 @@ void UOptionsMenuWidget::OnSliderBrightnessChanged(float Value) { CurrentBrightn
 
 void UOptionsMenuWidget::ApplySettings()
 {
-	// 마스터 볼륨 적용
+	 //마스터 볼륨 적용
 /*	if (MasterSoundClass)
 	{
 		MasterSoundClass->Properties.Volume = CurrentVolume;
 	}
-	
+*/
+
 	//밝기 적용 (PostProcessVolume -> AutoExposureBias)
 	UWorld* World = GetWorld();
 	if (World)
@@ -69,7 +70,7 @@ void UOptionsMenuWidget::ApplySettings()
 			}
 		}
 	}
-*/
+
 	// 민감도 적용 (PlayerController 전달)
 	if (APlayerController* PC = GetOwningPlayer())
 	{
