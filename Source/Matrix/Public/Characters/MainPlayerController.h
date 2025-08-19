@@ -136,6 +136,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+public:
 	UFUNCTION()
 	void OnGameStateChanged(EGameState NewState);
 

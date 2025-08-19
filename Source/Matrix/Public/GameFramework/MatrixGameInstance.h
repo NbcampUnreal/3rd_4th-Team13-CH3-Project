@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "Core/MatrixCoreTypes.h"
 #include "MatrixGameInstance.generated.h"
 
 class UMatrixMaterialOverrideSystem;
@@ -82,4 +83,33 @@ public:
 	// 무효한 참조 정리
 	UFUNCTION(BlueprintCallable, Category = "Material Override")
 	void CleanupInvalidReferences();
+
+	// 레벨 전환 시에도 유지되는 게임 상태
+	UPROPERTY(BlueprintReadOnly, Category = "Persistent State")
+	EGameState PersistentGameState = EGameState::MainMenu;
+	
+	// 게임 상태 변경 이벤트
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameStateChanged, EGameState, NewState);
+	UPROPERTY(BlueprintAssignable, Category = "Game State")
+	FOnGameStateChanged OnGameStateChanged;
+	
+	// 레벨 전환 관리
+	UFUNCTION(BlueprintCallable, Category = "Level Transition")
+	void TransitionToLevel(const FString& LevelName, EGameState TargetState);
+	
+	// 게임 상태 설정 (레벨 전환 시에도 유지)
+	UFUNCTION(BlueprintCallable, Category = "Game State")
+	void SetPersistentGameState(EGameState NewState);
+	
+	// 현재 게임 상태 가져오기
+	UFUNCTION(BlueprintCallable, Category = "Game State")
+	EGameState GetPersistentGameState() const { return PersistentGameState; }
+	
+	// 레벨 전환 완료 후 상태 복원
+	UFUNCTION(BlueprintCallable, Category = "Level Transition")
+	void RestoreGameStateAfterTransition();
+	
+protected:
+	// 레벨 전환 완료 콜백
+	void OnLevelTransitionComplete();
 };

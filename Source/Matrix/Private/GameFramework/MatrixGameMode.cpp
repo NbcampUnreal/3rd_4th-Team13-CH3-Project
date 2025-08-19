@@ -31,13 +31,27 @@ void AMatrixGameMode::BeginPlay()
 		FString CurrentLevelName = GetWorld()->GetMapName();
 		CurrentLevelName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
 
-        if(CurrentLevelName == TEXT("L_MainMenu"))
+        // GameInstance의 상태와 동기화
+        if (UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance()))
         {
-			MatrixGameState->SetGameState(EGameState::MainMenu);
+            UE_LOG(LogTemp, Warning, TEXT("MatrixGameMode: Synchronizing with GameInstance state: %d"), 
+                (int32)GameInstance->GetPersistentGameState());
+            
+            // GameInstance의 상태를 사용
+            MatrixGameState->SetGameState(GameInstance->GetPersistentGameState());
         }
         else
         {
-			MatrixGameState->SetGameState(EGameState::Playing);
+            // 백업: 기존 방식 사용
+            UE_LOG(LogTemp, Warning, TEXT("MatrixGameMode: GameInstance not found, using fallback method"));
+            if(CurrentLevelName == TEXT("L_MainMenu"))
+            {
+                MatrixGameState->SetGameState(EGameState::MainMenu);
+            }
+            else
+            {
+                MatrixGameState->SetGameState(EGameState::Playing);
+            }
         }
     }
 
@@ -275,6 +289,8 @@ void AMatrixGameMode::CheckGameClearConditions()
 
 void AMatrixGameMode::CheckBossStageOrGameClear()
 {
+    UE_LOG(LogTemp, Warning, TEXT("MatrixGameMode: CheckBossStageOrGameClear called"));
+    
     // 보스 스테이지가 있는지 확인
     if (bHasBossStage)
     {
@@ -284,7 +300,22 @@ void AMatrixGameMode::CheckBossStageOrGameClear()
     else
     {
         UE_LOG(LogTemp, Warning, TEXT("All waves cleared! Game Clear!"));
-        MatrixGameState->SetGameState(EGameState::GameClear);
+        
+        // GameInstance를 통한 게임 클리어 처리
+        if (UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance()))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("MatrixGameMode: Setting game clear state via GameInstance"));
+            GameInstance->SetPersistentGameState(EGameState::GameClear);
+        }
+        else
+        {
+            // 백업: 기존 방식 사용
+            UE_LOG(LogTemp, Warning, TEXT("MatrixGameMode: GameInstance not found, using fallback method"));
+            if (MatrixGameState)
+            {
+                MatrixGameState->SetGameState(EGameState::GameClear);
+            }
+        }
     }
 }
 
@@ -298,9 +329,22 @@ void AMatrixGameMode::StartBossStage()
 
 void AMatrixGameMode::PlayerDied()
 {
-    if (MatrixGameState)
+    UE_LOG(LogTemp, Warning, TEXT("MatrixGameMode: PlayerDied called"));
+    
+    // GameInstance를 통한 게임 오버 처리
+    if (UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance()))
     {
-        MatrixGameState->SetGameState(EGameState::GameOver);
+        UE_LOG(LogTemp, Warning, TEXT("MatrixGameMode: Setting game over state via GameInstance"));
+        GameInstance->SetPersistentGameState(EGameState::GameOver);
+    }
+    else
+    {
+        // 백업: 기존 방식 사용
+        UE_LOG(LogTemp, Warning, TEXT("MatrixGameMode: GameInstance not found, using fallback method"));
+        if (MatrixGameState)
+        {
+            MatrixGameState->SetGameState(EGameState::GameOver);
+        }
     }
 }
 

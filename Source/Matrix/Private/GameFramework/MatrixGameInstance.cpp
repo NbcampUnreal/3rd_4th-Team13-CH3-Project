@@ -1,7 +1,10 @@
 #include "GameFramework/MatrixGameInstance.h"
 #include "GameFramework/MatrixMaterialOverrideSystem.h"
+#include "GameFramework/MatrixGameState.h"
+#include "Characters/MainPlayerController.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Engine/Engine.h"
 
 void UMatrixGameInstance::AddScore(int32 ScoreToAdd)
 {
@@ -154,6 +157,105 @@ void UMatrixGameInstance::DebugPrintActorMaterials(const FString& ActorName) con
 	{
 		MaterialOverrideSystem->DebugPrintActorMaterials(ActorName);
 	}
+}
+
+void UMatrixGameInstance::SetPersistentGameState(EGameState NewState)
+{
+	UE_LOG(LogTemp, Warning, TEXT("MatrixGameInstance: SetPersistentGameState called - from %d to %d"), 
+		(int32)PersistentGameState, (int32)NewState);
+	
+	if (PersistentGameState != NewState)
+	{
+		PersistentGameState = NewState;
+		
+		// 이벤트 브로드캐스트
+		UE_LOG(LogTemp, Warning, TEXT("MatrixGameInstance: Broadcasting OnGameStateChanged event"));
+		OnGameStateChanged.Broadcast(NewState);
+		
+		// 현재 World의 GameState도 동기화
+		if (UWorld* World = GetWorld())
+		{
+			if (AMatrixGameState* MatrixGameState = World->GetGameState<AMatrixGameState>())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("MatrixGameInstance: Syncing with MatrixGameState"));
+				MatrixGameState->SetGameState(NewState);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("MatrixGameInstance: MatrixGameState not found in current world"));
+			}
+		}
+		else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MatrixGameInstance: GetWorld() returned null"));
+	}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MatrixGameInstance: State unchanged, skipping update"));
+	}
+}
+
+void UMatrixGameInstance::TransitionToLevel(const FString& LevelName, EGameState TargetState)
+{
+	UE_LOG(LogTemp, Warning, TEXT("MatrixGameInstance: Transitioning to level %s with state %d"), 
+		*LevelName, (int32)TargetState);
+	
+	// 게임 시작 시 게임 데이터 초기화
+	if (TargetState == EGameState::Playing)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MatrixGameInstance: Initializing game data for new game"));
+		ResetGameData();
+	}
+	
+	// 레벨 전환 전에 상태 저장
+	SetPersistentGameState(TargetState);
+	
+	// 레벨 전환
+	UGameplayStatics::OpenLevel(this, FName(*LevelName));
+	
+	// 레벨 전환 완료 후 상태 복원을 위한 타이머 설정
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+	{
+		OnLevelTransitionComplete();
+	}, 0.2f, false);
+}
+
+void UMatrixGameInstance::RestoreGameStateAfterTransition()
+{
+	UE_LOG(LogTemp, Warning, TEXT("MatrixGameInstance: Restoring game state after transition: %d"), 
+		(int32)PersistentGameState);
+	
+	// 현재 World의 GameState 동기화
+	if (UWorld* World = GetWorld())
+	{
+		if (AMatrixGameState* MatrixGameState = World->GetGameState<AMatrixGameState>())
+		{
+			MatrixGameState->SetGameState(PersistentGameState);
+		}
+	}
+	
+	// PlayerController들에게 상태 복원 알림
+	TArray<APlayerController*> PlayerControllers;
+	GetWorld()->GetPlayerControllerIterator();
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		if (APlayerController* PC = Iterator->Get())
+		{
+			if (AMainPlayerController* MPC = Cast<AMainPlayerController>(PC))
+			{
+				// PlayerController에게 현재 상태 알림
+				MPC->OnGameStateChanged(PersistentGameState);
+			}
+		}
+	}
+}
+
+void UMatrixGameInstance::OnLevelTransitionComplete()
+{
+	UE_LOG(LogTemp, Warning, TEXT("MatrixGameInstance: Level transition completed, restoring state"));
+	RestoreGameStateAfterTransition();
 }
 
 

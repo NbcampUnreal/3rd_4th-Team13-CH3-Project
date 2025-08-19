@@ -4,6 +4,7 @@
 #include "Core/MatrixCoreTypes.h"
 #include "GameFramework/MatrixGameMode.h"
 #include "GameFramework/MatrixGameState.h"
+#include "GameFramework/MatrixGameInstance.h"
 #include "GameFramework/MatrixLevelManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Characters/MainPlayerCharacter.h"
@@ -51,16 +52,34 @@ void AMainPlayerController::BeginPlay()
 		}
 	}
 
-	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this](){
-		AMatrixGameState* MatrixGameState = GetWorld()->GetGameState<AMatrixGameState>();
-		if (MatrixGameState)
-		{
-			MatrixGameState->OnGameStateChanged.AddDynamic(this, &AMainPlayerController::OnGameStateChanged);
-
-			OnGameStateChanged(MatrixGameState->CurrentGameState);
-		}
-	}, 0.1f, false);
+	// === Lyra 스타일 상태 관리 ===
+	// GameInstance에서 즉시 현재 상태 가져오기
+	if (UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance()))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: Getting persistent state from GameInstance: %d"), 
+			(int32)GameInstance->GetPersistentGameState());
+		
+		// 즉시 현재 상태 적용
+		OnGameStateChanged(GameInstance->GetPersistentGameState());
+		
+		// 향후 상태 변경 이벤트 구독
+		GameInstance->OnGameStateChanged.AddDynamic(this, &AMainPlayerController::OnGameStateChanged);
+	}
+	else
+	{
+		// GameInstance가 없는 경우 기존 방식 사용 (백업)
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: GameInstance not found, using fallback method"));
+		
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this](){
+			AMatrixGameState* MatrixGameState = GetWorld()->GetGameState<AMatrixGameState>();
+			if (MatrixGameState)
+			{
+				MatrixGameState->OnGameStateChanged.AddDynamic(this, &AMainPlayerController::OnGameStateChanged);
+				OnGameStateChanged(MatrixGameState->CurrentGameState);
+			}
+		}, 0.1f, false);
+	}
 
 	if (AMainPlayerCharacter* PC = Cast<AMainPlayerCharacter>(GetPawn()))
 	{
@@ -94,11 +113,12 @@ void AMainPlayerController::BeginPlay()
 
 void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 {
-
-	UE_LOG(LogTemp, Warning, TEXT("[PC] State Changed -> %d"), (int32)NewState);
+	UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: OnGameStateChanged called with state %d"), (int32)NewState);
+	
 	// 화면을 덮는 위젯이 있다면 일단 제거
 	if (CurrentScreenWidget)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: Removing current screen widget"));
 		CurrentScreenWidget->RemoveFromParent();
 		CurrentScreenWidget = nullptr;
 	}
@@ -112,6 +132,7 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 	switch (NewState)
 	{
 	case EGameState::MainMenu:
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: Handling MainMenu state"));
 		if (!MainMenuWidgetInstance && MainMenuWidgetClass)
 		{
 			MainMenuWidgetInstance = CreateWidget<UMainMenuWidget>(this, MainMenuWidgetClass);
@@ -135,6 +156,7 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 		break;
 
 	case EGameState::Playing:
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: Handling Playing state"));
 		UGameplayStatics::SetGamePaused(this, false);
 		EnableInput(this);
 
@@ -150,6 +172,7 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 		break;
 
 	case EGameState::Paused:
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: Handling Paused state"));
 		if (PauseMenuWidgetClass)
 		{
 			PauseMenuWidgetInstance = CreateWidget<UPauseMenuWidget>(this, PauseMenuWidgetClass);
@@ -170,45 +193,68 @@ void AMainPlayerController::OnGameStateChanged(EGameState NewState)
 
 			CurrentScreenWidget = PauseMenuWidgetInstance;
 		}
-		break;;
+		break;
 
 	case EGameState::GameOver:
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: Handling GameOver state"));
 		UGameplayStatics::SetGamePaused(this, true);
 		DisableInput(this);
 
 		if (GameOverWidgetClass)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: Creating GameOver widget"));
 			CurrentScreenWidget = CreateWidget<UGameOverWidget>(this, GameOverWidgetClass);
 			
 			if (CurrentScreenWidget)
 			{
 				CurrentScreenWidget->AddToViewport();
+				UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: GameOver widget added to viewport"));
 
 				SetShowMouseCursor(true);
 				SetInputMode(FInputModeUIOnly());
 			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("MainPlayerController: Failed to create GameOver widget"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("MainPlayerController: GameOverWidgetClass is null"));
 		}
 		break;
 
 	case EGameState::GameClear:
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: Handling GameClear state"));
 		UGameplayStatics::SetGamePaused(this, true);
 		DisableInput(this);
 
 		if (GameClearWidgetClass)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: Creating GameClear widget"));
 			CurrentScreenWidget = CreateWidget<UGameClearWidget>(this, GameClearWidgetClass);
 
 			if (CurrentScreenWidget)
 			{
 				CurrentScreenWidget->AddToViewport();
+				UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: GameClear widget added to viewport"));
 
 				SetShowMouseCursor(true);
 				SetInputMode(FInputModeUIOnly());
 			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("MainPlayerController: Failed to create GameClear widget"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("MainPlayerController: GameClearWidgetClass is null"));
 		}
 		break;
         
 	default:
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: Handling default state"));
 		SetShowMouseCursor(false);
 		SetInputMode(FInputModeGameOnly());
 		break;
@@ -266,9 +312,21 @@ void AMainPlayerController::HandlePauseMenu()
 
 void AMainPlayerController::StartGame()
 {
-	if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+	UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: StartGame called - using Lyra style transition"));
+	
+	if (UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance()))
 	{
-		LevelManager->StartGame();
+		// 게임 상태를 Playing으로 설정하고 첫 번째 레벨로 전환
+		GameInstance->TransitionToLevel(TEXT("P_MainMap"), EGameState::Playing);
+	}
+	else
+	{
+		// 백업: 기존 방식 사용
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: GameInstance not found, using fallback method"));
+		if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+		{
+			LevelManager->StartGame();
+		}
 	}
 }
 
@@ -359,25 +417,73 @@ void AMainPlayerController::CloseOptions()
 
 void AMainPlayerController::EndGame(const FString& EndReason)
 {
-	if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+	UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: EndGame called with reason: %s"), *EndReason);
+	
+	// GameInstance를 통한 게임 종료 처리
+	if (UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance()))
 	{
-		LevelManager->EndGame(EndReason);
+		// 게임 오버인지 게임 클리어인지 판단
+		EGameState EndState = EGameState::GameOver;
+		if (EndReason.Contains(TEXT("Clear")) || EndReason.Contains(TEXT("Win")))
+		{
+			EndState = EGameState::GameClear;
+		}
+		
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: Setting game state to %d"), (int32)EndState);
+		
+		// GameInstance의 상태를 직접 변경
+		GameInstance->SetPersistentGameState(EndState);
+	}
+	else
+	{
+		// 백업: 기존 방식 사용
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: GameInstance not found, using fallback method"));
+		if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+		{
+			LevelManager->EndGame(EndReason);
+		}
 	}
 }
 
 void AMainPlayerController::GoToMainMenu()
 {
-	if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+	UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: GoToMainMenu called"));
+	
+	// GameInstance를 통한 레벨 전환
+	if (UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance()))
 	{
-		LevelManager->GoToMainMenu();
+		GameInstance->TransitionToLevel(TEXT("L_MainMenu"), EGameState::MainMenu);
+	}
+	else
+	{
+		// 백업: 기존 방식 사용
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: GameInstance not found, using fallback method"));
+		if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+		{
+			LevelManager->GoToMainMenu();
+		}
 	}
 }
 
 void AMainPlayerController::RestartGame()
 {
-	if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+	UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: RestartGame called"));
+	
+	// GameInstance를 통한 게임 재시작
+	if (UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance()))
 	{
-		LevelManager->RestartGame();
+		// 게임 데이터 초기화 후 첫 번째 레벨로 전환
+		GameInstance->ResetGameData();
+		GameInstance->TransitionToLevel(TEXT("P_MainMap"), EGameState::Playing);
+	}
+	else
+	{
+		// 백업: 기존 방식 사용
+		UE_LOG(LogTemp, Warning, TEXT("MainPlayerController: GameInstance not found, using fallback method"));
+		if (UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>())
+		{
+			LevelManager->RestartGame();
+		}
 	}
 }
 
