@@ -2,12 +2,16 @@
 #include "GameFramework/MatrixGameState.h"
 #include "AI/EnemyCharacter.h"
 #include "Core/MatrixCoreTypes.h"
+#include "Core/MatrixWaveTypes.h"
 #include "Systems/MatrixSpawnManager.h"
+#include "Systems/MatrixSpawnPoint.h"
 #include "Engine/TargetPoint.h"
 #include "GameFramework/MatrixGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Characters/MainPlayerController.h"
 #include "Characters/MainPlayerCharacter.h"
+#include "GameplayTagAssetInterface.h"
+#include "Weapons/WeaponSystem/WeaponBase.h"
 
 AMatrixGameMode::AMatrixGameMode()
 {
@@ -80,7 +84,8 @@ void AMatrixGameMode::BeginPlay()
         {
             CurrentWaveDataTable = WaveDataTable;
             UE_LOG(LogTemp, Warning, TEXT("Wave data loaded. Total waves: %d"), CurrentWaveDataTable->GetRowNames().Num());
-            StartWave();
+            // 자동 웨이브 시작 제거 - 트리거 박스를 통해서만 웨이브 시작
+            // StartWave();
         }
         else
         {
@@ -91,7 +96,18 @@ void AMatrixGameMode::BeginPlay()
 
 void AMatrixGameMode::StartWave()
 {
-    if (!MatrixGameState || !CurrentWaveDataTable || !SpawnManager) return;
+    if (!MatrixGameState || !CurrentWaveDataTable || !SpawnManager) 
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Cannot start wave: Missing required components"));
+        return;
+    }
+    
+    // 게임이 플레이 중 상태가 아니면 웨이브 시작하지 않음
+    if (MatrixGameState->CurrentGameState != EGameState::Playing)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Cannot start wave: Game is not in Playing state"));
+        return;
+    }
 
     MatrixGameState->CurrentWave++;
     MatrixGameState->EnemiesRemaining = 0; // 웨이브 시작 시 스폰할 적 수를 0으로 초기화
@@ -132,7 +148,40 @@ void AMatrixGameMode::StartWave()
 
             FActorSpawnParameters SpawnParams;
             SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-            GetWorld()->SpawnActor<AEnemyCharacter>(SpawnInfo.EnemyClass, SpawnPoint->GetActorTransform(), SpawnParams);
+            AEnemyCharacter* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacter>(SpawnInfo.EnemyClass, SpawnPoint->GetActorTransform(), SpawnParams);
+            
+            // 스폰된 적에게 무기 유형 지정
+            if (SpawnedEnemy)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Enemy spawned successfully: %s"), *SpawnedEnemy->GetName());
+                UE_LOG(LogTemp, Warning, TEXT("WeaponType from SpawnInfo: %d"), (int32)SpawnInfo.WeaponType);
+                
+                if (SpawnInfo.WeaponType != EWeaponType::None)
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("Attempting to change weapon to type: %d"), (int32)SpawnInfo.WeaponType);
+                    SpawnedEnemy->ChangeWeapon(SpawnInfo.WeaponType);
+                    
+                    // 무기 변경 후 확인
+                    AWeaponBase* EquippedWeapon = SpawnedEnemy->GetEquippedWeapon();
+                    if (EquippedWeapon)
+                    {
+                        UE_LOG(LogTemp, Warning, TEXT("Weapon changed successfully: %s (Type: %d)"), 
+                            *EquippedWeapon->GetName(), (int32)EquippedWeapon->GetWeaponType());
+                    }
+                    else
+                    {
+                        UE_LOG(LogTemp, Warning, TEXT("Weapon change failed - no weapon equipped"));
+                    }
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("WeaponType is None, using default weapon"));
+                }
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("Failed to spawn enemy!"));
+            }
         }
     }
 
@@ -331,7 +380,40 @@ void AMatrixGameMode::StartSpecificWave(int32 WaveNumber)
             
             FActorSpawnParameters SpawnParams;
             SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-            GetWorld()->SpawnActor<AEnemyCharacter>(SpawnInfo.EnemyClass, SpawnPoint->GetActorTransform(), SpawnParams);
+            AEnemyCharacter* SpawnedEnemy = GetWorld()->SpawnActor<AEnemyCharacter>(SpawnInfo.EnemyClass, SpawnPoint->GetActorTransform(), SpawnParams);
+            
+            // 스폰된 적에게 무기 유형 지정
+            if (SpawnedEnemy)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Enemy spawned successfully: %s"), *SpawnedEnemy->GetName());
+                UE_LOG(LogTemp, Warning, TEXT("WeaponType from SpawnInfo: %d"), (int32)SpawnInfo.WeaponType);
+                
+                if (SpawnInfo.WeaponType != EWeaponType::None)
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("Attempting to change weapon to type: %d"), (int32)SpawnInfo.WeaponType);
+                    SpawnedEnemy->ChangeWeapon(SpawnInfo.WeaponType);
+                    
+                    // 무기 변경 후 확인
+                    AWeaponBase* EquippedWeapon = SpawnedEnemy->GetEquippedWeapon();
+                    if (EquippedWeapon)
+                    {
+                        UE_LOG(LogTemp, Warning, TEXT("Weapon changed successfully: %s (Type: %d)"), 
+                            *EquippedWeapon->GetName(), (int32)EquippedWeapon->GetWeaponType());
+                    }
+                    else
+                    {
+                        UE_LOG(LogTemp, Warning, TEXT("Weapon change failed - no weapon equipped"));
+                    }
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("WeaponType is None, using default weapon"));
+                }
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("Failed to spawn enemy!"));
+            }
         }
     }
     

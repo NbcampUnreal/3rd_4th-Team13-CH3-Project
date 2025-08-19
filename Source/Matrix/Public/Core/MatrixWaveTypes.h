@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
 #include "GameplayTagContainer.h"
+#include "Weapons/WeaponSystem/WeaponBase.h"
 #include "MatrixWaveTypes.generated.h"
 
 class AEnemyCharacter;
@@ -23,11 +24,15 @@ struct FEnemySpawnInfo
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Info")
     int32 SpawnCount = 1;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Info")
+    EWeaponType WeaponType = EWeaponType::None;
+
     FEnemySpawnInfo()
     {
         EnemyClass = nullptr;
         SpawnPointTag = FGameplayTag::EmptyTag;
         SpawnCount = 1;
+        WeaponType = EWeaponType::None;
     }
 };
 

@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
 #include "GenericTeamAgentInterface.h" // Required for Team ID
+#include "Weapons/WeaponSystem/WeaponBase.h"
 #include "EnemyCharacter.generated.h"
 
 class UItemDropComponent;
@@ -49,6 +50,10 @@ public:
 	UItemDropComponent* GetItemDropComp() const;
 
 	FORCEINLINE TSubclassOf<UGameplayAbility> GetAttackAbilityClass() const { return AttackAbilityClass; }
+
+	// 무기 변경 함수
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void ChangeWeapon(EWeaponType NewWeaponType);
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI")
@@ -76,6 +81,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ability")
 	TSubclassOf<UGameplayAbility> EvadeAbilityClass;
+
+	// 무기 클래스 매핑
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TMap<EWeaponType, TSubclassOf<AWeaponBase>> WeaponClassMap;
 	
 	virtual void BeginPlay() override;
 };

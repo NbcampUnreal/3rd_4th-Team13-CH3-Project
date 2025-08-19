@@ -38,6 +38,9 @@ AEnemyCharacter::AEnemyCharacter()
 	AttributeSet = CreateDefaultSubobject<UMatrixAttributeSet>(TEXT("AttributeSet"));
 
 	ItemDropComp = CreateDefaultSubobject<UItemDropComponent>(TEXT("ItemDropComp"));
+
+	// 무기 클래스 매핑 초기화 (블루프린트에서 설정 가능)
+	// 이 부분은 블루프린트에서 각 무기 유형에 해당하는 무기 클래스를 설정해야 합니다
 }
 
 FGenericTeamId AEnemyCharacter::GetGenericTeamId() const
@@ -121,5 +124,73 @@ void AEnemyCharacter::FireProjectile()
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->Shoot();
+	}
+}
+
+void AEnemyCharacter::ChangeWeapon(EWeaponType NewWeaponType)
+{
+	UE_LOG(LogTemp, Warning, TEXT("ChangeWeapon called for %s with weapon type: %d"), *GetName(), (int32)NewWeaponType);
+	UE_LOG(LogTemp, Warning, TEXT("WeaponClassMap has %d entries"), WeaponClassMap.Num());
+	
+	// WeaponClassMap 내용 출력
+	for (const auto& Pair : WeaponClassMap)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("  WeaponType %d -> Class: %s"), 
+			(int32)Pair.Key, 
+			Pair.Value ? *Pair.Value->GetName() : TEXT("None"));
+	}
+
+	// 기존 무기 제거
+	if (EquippedWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Removing existing weapon: %s"), *EquippedWeapon->GetName());
+		EquippedWeapon->DetachFromOwner();
+		EquippedWeapon->Destroy();
+		EquippedWeapon = nullptr;
+	}
+
+	// 새로운 무기 클래스 찾기
+	TSubclassOf<AWeaponBase> NewWeaponClass = nullptr;
+	
+	if (WeaponClassMap.Contains(NewWeaponType))
+	{
+		NewWeaponClass = WeaponClassMap[NewWeaponType];
+		UE_LOG(LogTemp, Warning, TEXT("Found weapon class in map: %s"), 
+			NewWeaponClass ? *NewWeaponClass->GetName() : TEXT("None"));
+	}
+	else if (NewWeaponType == EWeaponType::None && DefaultWeaponClass)
+	{
+		// None인 경우 기본 무기 사용
+		NewWeaponClass = DefaultWeaponClass;
+		UE_LOG(LogTemp, Warning, TEXT("Using default weapon class: %s"), 
+			NewWeaponClass ? *NewWeaponClass->GetName() : TEXT("None"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("WeaponType %d not found in WeaponClassMap and not using default"), (int32)NewWeaponType);
+	}
+
+	// 새 무기 스폰 및 장착
+	if (NewWeaponClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Spawning new weapon: %s"), *NewWeaponClass->GetName());
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
+		EquippedWeapon = GetWorld()->SpawnActor<AWeaponBase>(NewWeaponClass, GetActorLocation(), GetActorRotation(), SpawnParams);
+		if (EquippedWeapon)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Weapon spawned successfully: %s"), *EquippedWeapon->GetName());
+			EquippedWeapon->SetWeaponOwner(this);
+			EquippedWeapon->AttachToOwner(GetMesh());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to spawn weapon!"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("No weapon class available for type: %d"), (int32)NewWeaponType);
 	}
 }
