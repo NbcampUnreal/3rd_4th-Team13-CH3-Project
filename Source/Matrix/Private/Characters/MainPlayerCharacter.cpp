@@ -424,24 +424,24 @@ void AMainPlayerCharacter::Interact(const FInputActionValue& Value)
 	}
 	
 
-	DrawDebugBox(
-		GetWorld(),
-		(Start + End) * 0.5f,
-		HalfSize,
-		Orientation.Quaternion(),
-		bHit ? FColor::Green : FColor::Red,
-		false,
-		2.0f
-	);
-	DrawDebugLine(
-		GetWorld(),
-		Start,
-		End,
-		FColor::Cyan,
-		false,
-		2.0f,
-		0,
-		2.0f
-	);
+	//DrawDebugBox(
+	//	GetWorld(),
+	//	(Start + End) * 0.5f,
+	//	HalfSize,
+	//	Orientation.Quaternion(),
+	//	bHit ? FColor::Green : FColor::Red,
+	//	false,
+	//	2.0f
+	//);
+	//DrawDebugLine(
+	//	GetWorld(),
+	//	Start,
+	//	End,
+	//	FColor::Cyan,
+	//	false,
+	//	2.0f,
+	//	0,
+	//	2.0f
+	//);
 }
 
