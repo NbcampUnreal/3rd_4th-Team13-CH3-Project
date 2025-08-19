@@ -1,6 +1,5 @@
 #include "GameFramework/MatrixGameMode.h"
 #include "GameFramework/MatrixGameState.h"
-#include "GameFramework/MatrixLevelManager.h"
 #include "AI/EnemyCharacter.h"
 #include "Core/MatrixCoreTypes.h"
 #include "Systems/MatrixSpawnManager.h"
@@ -45,10 +44,14 @@ void AMatrixGameMode::BeginPlay()
             UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance());
             if (GameInstance)
             {
+                // 맵 로드 시 한 번만 머티리얼 적용
                 GameInstance->ApplyWhiteMaterialToAllMeshes();
-                GameInstance->ApplyWhiteMaterialWithDelay(3.0f);
-                GameInstance->StartRepeatingMaterialApplication(5.0f, 8);
                 
+                // 반복 실행 제거 - 한 번만 실행
+                // GameInstance->ApplyWhiteMaterialWithDelay(3.0f);
+                // GameInstance->StartRepeatingMaterialApplication(5.0f, 8);
+                
+                // 특정 액터들에 대해서도 한 번만 적용
                 GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("BP_Room"));
                 GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("BP_Spline_Chairs"));
                 GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("SM_Rect_Desk"));
@@ -66,7 +69,10 @@ void AMatrixGameMode::BeginPlay()
                 GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("SM_"));
                 GameInstance->ApplyMaterialToActorsByNamePattern(TEXT("BP_"));
                 
+                // 디버그 출력도 한 번만
                 GameInstance->DebugPrintAllActors();
+                
+                UE_LOG(LogTemp, Warning, TEXT("White material applied once on map load"));
             }
         }
 
@@ -155,11 +161,11 @@ void AMatrixGameMode::EnemyKilled()
 
     UE_LOG(LogTemp, Warning, TEXT("Enemy killed! %d enemies remaining."), MatrixGameState->EnemiesRemaining);
 
-    // 자동 웨이브 시작 로직 제거 - 트리거 박스를 통해 수동으로 웨이브 시작
-    // if (MatrixGameState->EnemiesRemaining <= 0)
-    // {
-    //     EndWave();
-    // }
+    // 모든 적을 처치했을 때 게임 클리어 조건 체크
+    if (MatrixGameState->EnemiesRemaining <= 0)
+    {
+        CheckGameClearConditions();
+    }
 }
 
 void AMatrixGameMode::EndWave()
@@ -180,15 +186,50 @@ void AMatrixGameMode::EndWave()
     // }
 }
 
+void AMatrixGameMode::CheckGameClearConditions()
+{
+    if (!MatrixGameState || !CurrentWaveDataTable) return;
+
+    // 웨이브 데이터에서 총 스폰할 적 수 계산
+    int32 TotalEnemiesToSpawn = 0;
+    FString ContextString;
+    
+    for (const FName& RowName : CurrentWaveDataTable->GetRowNames())
+    {
+        FWaveData* WaveData = CurrentWaveDataTable->FindRow<FWaveData>(RowName, ContextString);
+        if (WaveData)
+        {
+            for (const FEnemySpawnInfo& SpawnInfo : WaveData->SpawnInfos)
+            {
+                TotalEnemiesToSpawn += SpawnInfo.SpawnCount;
+            }
+        }
+    }
+    
+    UE_LOG(LogTemp, Warning, TEXT("Kill Count: %d, Total Enemies to Spawn: %d"), MatrixGameState->KillCount, TotalEnemiesToSpawn);
+    
+    // 킬 카운트가 총 스폰할 적 수와 같거나 크면 게임 클리어
+    if (MatrixGameState->KillCount >= TotalEnemiesToSpawn)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("All enemies defeated! Checking for game clear..."));
+        
+        // 새로운 킬 카운트 기반 로직으로 직접 게임 클리어 처리
+        // 레벨 매니저의 웨이브 완료 체크와 충돌을 피하기 위해 우회
+        CheckBossStageOrGameClear();
+    }
+    else
+    {
+        // 아직 모든 적을 처치하지 못한 경우
+        UE_LOG(LogTemp, Warning, TEXT("Enemies remaining: %d/%d"), TotalEnemiesToSpawn - MatrixGameState->KillCount, TotalEnemiesToSpawn);
+    }
+}
+
 void AMatrixGameMode::CheckBossStageOrGameClear()
 {
     // 보스 스테이지가 있는지 확인
     if (bHasBossStage)
     {
         UE_LOG(LogTemp, Warning, TEXT("All waves cleared! Proceeding to Boss Stage!"));
-        // TODO: 보스 스테이지로 전환
-        // UGameplayStatics::OpenLevel(this, BossStageLevelName);
-        // 또는 보스 스테이지 시작 로직
         StartBossStage();
     }
     else
@@ -308,65 +349,4 @@ void AMatrixGameMode::ForceStartWave()
     StartWave();
 }
 
-void AMatrixGameMode::InitializeLevelStreaming()
-{
-    UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>();
-    if (!LevelManager)
-    {
-        UE_LOG(LogTemp, Error, TEXT("LevelManager not found for level streaming initialization"));
-        return;
-    }
-    
-    // 모든 서브레벨(1층, 2층, Environment)이 이미 로드되어 있음
-    UE_LOG(LogTemp, Log, TEXT("All sublevels (Floor 1, Floor 2, Environment) are already loaded"));
-    UE_LOG(LogTemp, Log, TEXT("Floor 2 blocking volumes will be disabled when waves are completed"));
-}
 
-void AMatrixGameMode::HandleFloorWaveCompletion()
-{
-    // 레벨 매니저 가져오기
-    UMatrixLevelManager* LevelManager = GetGameInstance()->GetSubsystem<UMatrixLevelManager>();
-    if (!LevelManager)
-    {
-        UE_LOG(LogTemp, Error, TEXT("LevelManager not found!"));
-        return;
-    }
-    
-    int32 CurrentFloor = LevelManager->GetCurrentFloor();
-    UE_LOG(LogTemp, Log, TEXT("Floor %d waves completed!"), CurrentFloor);
-    
-    // 현재 층의 웨이브 완료 상태 설정
-    LevelManager->SetFloorWaveCompleted(CurrentFloor, true);
-    
-    // 2층이면 1층으로 진행
-    if (CurrentFloor == 2)
-    {
-        // 2층 웨이브 완료 - 1층으로 자동 진행
-        UE_LOG(LogTemp, Log, TEXT("Floor 2 (2층) waves completed. Automatically proceeding to Floor 1 (1층)."));
-        
-        // 2층 Blocking Volume 비활성화
-        LevelManager->DisableFloorBlockingVolumes(2);
-        UE_LOG(LogTemp, Log, TEXT("Disabled Floor 2 (2층) blocking volumes"));
-        
-        LevelManager->ProceedToNextFloor();
-        
-        // 1층 웨이브 시작
-        if (LevelManager->GetCurrentFloor() == 1)
-        {
-            UE_LOG(LogTemp, Log, TEXT("Starting Floor 1 (1층) waves..."));
-            // 웨이브 카운터 리셋
-            MatrixGameState->CurrentWave = 0;
-            StartWave(); // 1층 첫 웨이브 시작
-        }
-    }
-    // 1층(Floor 1)이면 게임 클리어
-    else if (CurrentFloor == 1)
-    {
-        // 1층 웨이브 완료 - 게임 클리어 조건 체크
-        if (LevelManager->CheckGameClearConditions())
-        {
-            UE_LOG(LogTemp, Log, TEXT("Game Clear conditions met!"));
-            CheckBossStageOrGameClear();
-        }
-    }
-}

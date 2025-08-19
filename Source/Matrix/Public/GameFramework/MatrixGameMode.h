@@ -40,8 +40,7 @@ protected:
 	virtual void BeginPlay() override;
 	void StartWave();
 	void EndWave();
-	void HandleFloorWaveCompletion();
-	void InitializeLevelStreaming();
+	void CheckGameClearConditions();
 	void CheckBossStageOrGameClear();
 	void StartBossStage();
 
