@@ -130,12 +130,12 @@ void AMatrixGameMode::StartWave()
         }
     }
 
-    // 만약 웨이브에 스폰할 적이 하나도 없었다면, 즉시 웨이브 종료 처리
-    if (MatrixGameState->EnemiesRemaining == 0)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Wave %d has no enemies to spawn. Ending wave immediately."), MatrixGameState->CurrentWave);
-        EndWave();
-    }
+    // 자동 웨이브 종료 로직 제거 - 트리거 박스를 통해 수동으로 웨이브 제어
+    // if (MatrixGameState->EnemiesRemaining == 0)
+    // {
+    //     UE_LOG(LogTemp, Warning, TEXT("Wave %d has no enemies to spawn. Ending wave immediately."), MatrixGameState->CurrentWave);
+    //     EndWave();
+    // }
 }
 
 void AMatrixGameMode::EnemyKilled()
@@ -155,10 +155,11 @@ void AMatrixGameMode::EnemyKilled()
 
     UE_LOG(LogTemp, Warning, TEXT("Enemy killed! %d enemies remaining."), MatrixGameState->EnemiesRemaining);
 
-    if (MatrixGameState->EnemiesRemaining <= 0)
-    {
-        EndWave();
-    }
+    // 자동 웨이브 시작 로직 제거 - 트리거 박스를 통해 수동으로 웨이브 시작
+    // if (MatrixGameState->EnemiesRemaining <= 0)
+    // {
+    //     EndWave();
+    // }
 }
 
 void AMatrixGameMode::EndWave()
@@ -167,15 +168,16 @@ void AMatrixGameMode::EndWave()
 
     UE_LOG(LogTemp, Warning, TEXT("Wave %d Cleared!"), MatrixGameState->CurrentWave);
 
-    if (MatrixGameState->CurrentWave >= CurrentWaveDataTable->GetRowNames().Num())
-    {
-        // 모든 웨이브 클리어 - 층별 웨이브 완료 처리
-        HandleFloorWaveCompletion();
-    }
-    else
-    {
-        GetWorldTimerManager().SetTimer(TimerHandle_NextWaveStart, this, &AMatrixGameMode::StartWave, TimeBetweenWaves);
-    }
+    // 자동 다음 웨이브 시작 로직 제거 - 트리거 박스를 통해 수동으로 웨이브 시작
+    // if (MatrixGameState->CurrentWave >= CurrentWaveDataTable->GetRowNames().Num())
+    // {
+    //     // 모든 웨이브 클리어 - 층별 웨이브 완료 처리
+    //     HandleFloorWaveCompletion();
+    // }
+    // else
+    // {
+    //     GetWorldTimerManager().SetTimer(TimerHandle_NextWaveStart, this, &AMatrixGameMode::StartWave, TimeBetweenWaves);
+    // }
 }
 
 void AMatrixGameMode::CheckBossStageOrGameClear()

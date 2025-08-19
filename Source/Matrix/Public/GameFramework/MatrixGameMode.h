@@ -33,9 +33,9 @@ public:
 	UDataTable* GetWaveDataTable() const { return CurrentWaveDataTable; }
 
 protected:
-	// 웨이브 사이의 대기 시간 
-	UPROPERTY(EditDefaultsOnly, Category="Game Rule")
-	float TimeBetweenWaves = 10.0f;
+	// 웨이브 사이의 대기 시간 (트리거 박스 방식으로 변경되어 사용하지 않음)
+	// UPROPERTY(EditDefaultsOnly, Category="Game Rule")
+	// float TimeBetweenWaves = 10.0f;
     
 	virtual void BeginPlay() override;
 	void StartWave();
@@ -46,7 +46,8 @@ protected:
 	void StartBossStage();
 
 private:
-	FTimerHandle TimerHandle_NextWaveStart;
+	// 자동 웨이브 시작 타이머 (트리거 박스 방식으로 변경되어 사용하지 않음)
+	// FTimerHandle TimerHandle_NextWaveStart;
     
 	UPROPERTY()
 	AMatrixGameState* MatrixGameState;

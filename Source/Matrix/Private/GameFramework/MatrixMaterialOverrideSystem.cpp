@@ -76,7 +76,8 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 						if (MaterialName.Contains(TEXT("Glass"), ESearchCase::IgnoreCase) ||
 							MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase) ||
 							MaterialName.Contains(TEXT("M_Light"), ESearchCase::IgnoreCase) ||
-							MaterialName.Contains(TEXT("MI_Light"), ESearchCase::IgnoreCase))
+							MaterialName.Contains(TEXT("MI_Light"), ESearchCase::IgnoreCase) ||
+							MaterialName.Contains(TEXT("KeyGuide"), ESearchCase::IgnoreCase))
 						{
 							GlassProtectedCount++;
 							continue;
@@ -124,7 +125,8 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 							
 							if (MaterialName.Contains(TEXT("Glass"), ESearchCase::IgnoreCase) ||
 								MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase) ||
-								MaterialName.Contains(TEXT("M_Light"), ESearchCase::IgnoreCase))
+								MaterialName.Contains(TEXT("M_Light"), ESearchCase::IgnoreCase) ||
+								MaterialName.Contains(TEXT("KeyGuide"), ESearchCase::IgnoreCase))
 							{
 								GlassProtectedCount++;
 								continue;
