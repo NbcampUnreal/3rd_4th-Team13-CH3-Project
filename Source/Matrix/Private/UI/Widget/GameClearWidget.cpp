@@ -32,10 +32,18 @@ void UGameClearWidget::NativeConstruct()
 	if (AMatrixGameState* GS = GetWorld()->GetGameState<AMatrixGameState>())
 	{
 		int32 CurrentWave = GS->CurrentWave;
+		int32 TotalKillCount = GS->KillCount;
 		FString WaveText = FString::Printf(TEXT("Wave %d"), CurrentWave);
+		FString KillCount = FString::Printf(TEXT("%d"), TotalKillCount);
 		if (Text_Wave)
 		{
 			Text_Wave->SetText(FText::FromString(WaveText));
+		}
+		if(Text_TotalCount)
+		{
+			Text_TotalCount->SetText(FText::FromString(KillCount));
+			Text_TotalCount->SetColorAndOpacity(FSlateColor(FLinearColor(0.f, 1.f, 0.f, 1.f)));
+			PlayAnimation(PunchCount, 0.f, 0);
 		}
 	}
 

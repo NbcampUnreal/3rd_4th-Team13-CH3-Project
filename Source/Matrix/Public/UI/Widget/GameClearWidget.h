@@ -25,6 +25,8 @@ protected:
 	UTextBlock* Text_Result;
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Text_Reason;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* Text_TotalCount;
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* Button_Title;
@@ -38,6 +40,8 @@ protected:
 
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	UWidgetAnimation* LogoAnim;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* PunchCount;
 
 	UFUNCTION()
 	void OnTitleClicked();
