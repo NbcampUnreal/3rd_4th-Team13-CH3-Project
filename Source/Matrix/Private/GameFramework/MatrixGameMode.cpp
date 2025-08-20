@@ -255,21 +255,44 @@ void AMatrixGameMode::PlayerDied()
 
 void AMatrixGameMode::RequestTogglePause()
 {
-    if (MatrixGameState)
+    // GameInstance를 통한 일시정지 처리
+    if (UMatrixGameInstance* GameInstance = Cast<UMatrixGameInstance>(GetGameInstance()))
     {
-        EGameState CurrentState = MatrixGameState->CurrentGameState;
+        EGameState CurrentState = GameInstance->GetPersistentGameState();
+        
         // 오직 '플레이 중'일 때만 '일시정지'로 OR '일시정지' 상태일 때만 '플레이 중'으로 변경 가능
         if (CurrentState == EGameState::Playing)
         {
-            MatrixGameState->SetGameState(EGameState::Paused);
+            UE_LOG(LogTemp, Warning, TEXT("MatrixGameMode: Pausing game via GameInstance"));
+            GameInstance->SetPersistentGameState(EGameState::Paused);
             UGameplayStatics::SetGamePaused(GetWorld(), true); // 게임 월드 시간 정지
         }
         else if (CurrentState == EGameState::Paused)
         {
-            MatrixGameState->SetGameState(EGameState::Playing);
+            UE_LOG(LogTemp, Warning, TEXT("MatrixGameMode: Resuming game via GameInstance"));
+            GameInstance->SetPersistentGameState(EGameState::Playing);
             UGameplayStatics::SetGamePaused(GetWorld(), false); // 게임 월드 시간 재개
         }
         // GameOver나 GameClear 상태에서는 일시정지 불가!!
+    }
+    else
+    {
+        // 백업: 기존 방식 사용
+        UE_LOG(LogTemp, Warning, TEXT("MatrixGameMode: GameInstance not found, using fallback method"));
+        if (MatrixGameState)
+        {
+            EGameState CurrentState = MatrixGameState->CurrentGameState;
+            if (CurrentState == EGameState::Playing)
+            {
+                MatrixGameState->SetGameState(EGameState::Paused);
+                UGameplayStatics::SetGamePaused(GetWorld(), true);
+            }
+            else if (CurrentState == EGameState::Paused)
+            {
+                MatrixGameState->SetGameState(EGameState::Playing);
+                UGameplayStatics::SetGamePaused(GetWorld(), false);
+            }
+        }
     }
 }
 
