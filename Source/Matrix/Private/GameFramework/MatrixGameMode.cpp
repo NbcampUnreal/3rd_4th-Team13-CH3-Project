@@ -112,15 +112,32 @@ void AMatrixGameMode::StartWave()
         return;
     }
 
+    // 웨이브 전체에서 사용할 모든 스폰 포인트를 수집하고 셔플
+    TSet<AActor*> WaveSpawnPoints;
+    
+    // 모든 SpawnInfo에서 사용할 스폰 포인트들을 수집 (중복 제거)
     for (const FEnemySpawnInfo& SpawnInfo : CurrentWaveData->SpawnInfos)
     {
         TArray<AActor*> AvailableSpawnPoints = SpawnManager->GetSpawnPointsForTag(SpawnInfo.SpawnPointTag);
-
-        if (AvailableSpawnPoints.IsEmpty())
+        for (AActor* Point : AvailableSpawnPoints)
         {
-            continue;
+            WaveSpawnPoints.Add(Point);
         }
+    }
+    
+    // 웨이브 스폰 포인트를 배열로 변환하고 셔플
+    TArray<AActor*> ShuffledSpawnPoints = WaveSpawnPoints.Array();
+    for (int32 i = ShuffledSpawnPoints.Num() - 1; i > 0; --i)
+    {
+        int32 RandomIndex = FMath::RandRange(0, i);
+        ShuffledSpawnPoints.Swap(i, RandomIndex);
+    }
+    
+    // 웨이브 전체에서 순차적으로 사용할 인덱스
+    int32 GlobalSpawnPointIndex = 0;
 
+    for (const FEnemySpawnInfo& SpawnInfo : CurrentWaveData->SpawnInfos)
+    {
         if (!SpawnInfo.EnemyClass)
         {
             continue;
@@ -130,7 +147,30 @@ void AMatrixGameMode::StartWave()
 
         for (int32 i = 0; i < SpawnInfo.SpawnCount; ++i)
         {
-            AActor* SpawnPoint = AvailableSpawnPoints[i % AvailableSpawnPoints.Num()];
+            AActor* SpawnPoint = nullptr;
+            
+            // 셔플된 스폰 포인트 배열에서 순차적으로 선택
+            if (GlobalSpawnPointIndex < ShuffledSpawnPoints.Num())
+            {
+                SpawnPoint = ShuffledSpawnPoints[GlobalSpawnPointIndex];
+                GlobalSpawnPointIndex++;
+            }
+            else
+            {
+                // 모든 스폰 포인트를 사용했으면 처음부터 다시 시작
+                GlobalSpawnPointIndex = 0;
+                if (ShuffledSpawnPoints.Num() > 0)
+                {
+                    SpawnPoint = ShuffledSpawnPoints[GlobalSpawnPointIndex];
+                    GlobalSpawnPointIndex++;
+                }
+            }
+
+            if (!SpawnPoint)
+            {
+                UE_LOG(LogTemp, Error, TEXT("No spawn point available!"));
+                continue;
+            }
 
             FActorSpawnParameters SpawnParams;
             SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
@@ -322,16 +362,33 @@ void AMatrixGameMode::StartSpecificWave(int32 WaveNumber)
         return;
     }
     
-    // 웨이브 데이터에 따라 적 스폰
+    // 웨이브 전체에서 사용할 모든 스폰 포인트를 수집하고 셔플
+    TSet<AActor*> WaveSpawnPoints;
+    
+    // 모든 SpawnInfo에서 사용할 스폰 포인트들을 수집 (중복 제거)
     for (const FEnemySpawnInfo& SpawnInfo : CurrentWaveData->SpawnInfos)
     {
         TArray<AActor*> AvailableSpawnPoints = SpawnManager->GetSpawnPointsForTag(SpawnInfo.SpawnPointTag);
-        
-        if (AvailableSpawnPoints.IsEmpty())
+        for (AActor* Point : AvailableSpawnPoints)
         {
-            continue;
+            WaveSpawnPoints.Add(Point);
         }
-        
+    }
+    
+    // 웨이브 스폰 포인트를 배열로 변환하고 셔플
+    TArray<AActor*> ShuffledSpawnPoints = WaveSpawnPoints.Array();
+    for (int32 i = ShuffledSpawnPoints.Num() - 1; i > 0; --i)
+    {
+        int32 RandomIndex = FMath::RandRange(0, i);
+        ShuffledSpawnPoints.Swap(i, RandomIndex);
+    }
+    
+    // 웨이브 전체에서 순차적으로 사용할 인덱스
+    int32 GlobalSpawnPointIndex = 0;
+    
+    // 웨이브 데이터에 따라 적 스폰
+    for (const FEnemySpawnInfo& SpawnInfo : CurrentWaveData->SpawnInfos)
+    {
         if (!SpawnInfo.EnemyClass)
         {
             continue;
@@ -341,7 +398,30 @@ void AMatrixGameMode::StartSpecificWave(int32 WaveNumber)
         
         for (int32 i = 0; i < SpawnInfo.SpawnCount; ++i)
         {
-            AActor* SpawnPoint = AvailableSpawnPoints[i % AvailableSpawnPoints.Num()];
+            AActor* SpawnPoint = nullptr;
+            
+            // 셔플된 스폰 포인트 배열에서 순차적으로 선택
+            if (GlobalSpawnPointIndex < ShuffledSpawnPoints.Num())
+            {
+                SpawnPoint = ShuffledSpawnPoints[GlobalSpawnPointIndex];
+                GlobalSpawnPointIndex++;
+            }
+            else
+            {
+                // 모든 스폰 포인트를 사용했으면 처음부터 다시 시작
+                GlobalSpawnPointIndex = 0;
+                if (ShuffledSpawnPoints.Num() > 0)
+                {
+                    SpawnPoint = ShuffledSpawnPoints[GlobalSpawnPointIndex];
+                    GlobalSpawnPointIndex++;
+                }
+            }
+            
+            if (!SpawnPoint)
+            {
+                UE_LOG(LogTemp, Error, TEXT("No spawn point available!"));
+                continue;
+            }
             
             FActorSpawnParameters SpawnParams;
             SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
@@ -361,8 +441,6 @@ void AMatrixGameMode::StartSpecificWave(int32 WaveNumber)
             }
         }
     }
-    
-
 }
 
 void AMatrixGameMode::ForceStartWave()
