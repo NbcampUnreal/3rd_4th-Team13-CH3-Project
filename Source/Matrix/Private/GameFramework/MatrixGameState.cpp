@@ -31,5 +31,4 @@ void AMatrixGameState::SetGameState(EGameState NewState)
 void AMatrixGameState::OnRep_GameState()
 {
 	OnGameStateChanged.Broadcast(CurrentGameState);
-	UE_LOG(LogTemp, Warning, TEXT("Game State Changed to: %s"), *UEnum::GetValueAsString(CurrentGameState));
 }

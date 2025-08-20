@@ -22,7 +22,6 @@ void UInventoryComponent::AddItem(ABaseItem* NewItem)
 		{
 			CurrentItem->SetItemCount(CurrentItem->GetItemCount() + 1);
 			NewItem->Destroy();
-			UE_LOG(LogTemp, Warning, TEXT("Inventory is Added"));
 			OnInventoryUpdated.Broadcast();
 			return;
 		}
@@ -35,7 +34,6 @@ void UInventoryComponent::AddItem(ABaseItem* NewItem)
 		{
 			Items[i] = NewItem;
 			NewItem->PickedUpItem();
-			UE_LOG(LogTemp, Warning, TEXT("Inventory is Added"));
 			OnInventoryUpdated.Broadcast();
 			return;
 		}

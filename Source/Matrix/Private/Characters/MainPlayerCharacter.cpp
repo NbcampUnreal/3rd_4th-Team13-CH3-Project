@@ -73,7 +73,7 @@ void AMainPlayerCharacter::BeginPlay()
 		
 		if (!AbilityHandle.IsValid())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%s: Failed to give Death Ability! Handle is invalid."), *GetName());
+	
 		}
 	}
 }

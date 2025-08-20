@@ -23,7 +23,6 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 	UWorld* World = GetWorld();
 	if (!World || !IsValid(World))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("World is not available!"));
 		return;
 	}
 
@@ -77,7 +76,8 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 							MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase) ||
 							MaterialName.Contains(TEXT("M_Light"), ESearchCase::IgnoreCase) ||
 							MaterialName.Contains(TEXT("MI_Light"), ESearchCase::IgnoreCase) ||
-							MaterialName.Contains(TEXT("KeyGuide"), ESearchCase::IgnoreCase))
+							MaterialName.Contains(TEXT("KeyGuide"), ESearchCase::IgnoreCase) ||
+							MaterialName.Contains(TEXT("M_Black"), ESearchCase::IgnoreCase))
 						{
 							GlassProtectedCount++;
 							continue;
@@ -126,7 +126,8 @@ void UMatrixMaterialOverrideSystem::ApplyWhiteMaterialToAllMeshes()
 							if (MaterialName.Contains(TEXT("Glass"), ESearchCase::IgnoreCase) ||
 								MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase) ||
 								MaterialName.Contains(TEXT("M_Light"), ESearchCase::IgnoreCase) ||
-								MaterialName.Contains(TEXT("KeyGuide"), ESearchCase::IgnoreCase))
+								MaterialName.Contains(TEXT("KeyGuide"), ESearchCase::IgnoreCase) ||
+								MaterialName.Contains(TEXT("M_Black"), ESearchCase::IgnoreCase))
 							{
 								GlassProtectedCount++;
 								continue;
@@ -477,7 +478,8 @@ void UMatrixMaterialOverrideSystem::ApplyMaterialToActorsByNamePattern(const FSt
 							if (MaterialName.Contains(TEXT("Glass"), ESearchCase::IgnoreCase) ||
 								MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase) ||
 								MaterialName.Contains(TEXT("M_Light"), ESearchCase::IgnoreCase) ||
-								MaterialName.Contains(TEXT("MI_Light"), ESearchCase::IgnoreCase))
+								MaterialName.Contains(TEXT("MI_Light"), ESearchCase::IgnoreCase) ||
+								MaterialName.Contains(TEXT("M_Black"), ESearchCase::IgnoreCase))
 							{
 								continue;
 							}
@@ -518,7 +520,8 @@ void UMatrixMaterialOverrideSystem::ApplyMaterialToActorsByNamePattern(const FSt
 								if (MaterialName.Contains(TEXT("Glass"), ESearchCase::IgnoreCase) ||
 									MaterialName.Contains(TEXT("glass"), ESearchCase::IgnoreCase) ||
 									MaterialName.Contains(TEXT("M_Light"), ESearchCase::IgnoreCase) ||
-									MaterialName.Contains(TEXT("MI_Light"), ESearchCase::IgnoreCase))
+									MaterialName.Contains(TEXT("MI_Light"), ESearchCase::IgnoreCase) ||
+									MaterialName.Contains(TEXT("M_Black"), ESearchCase::IgnoreCase))
 								{
 									continue;
 								}

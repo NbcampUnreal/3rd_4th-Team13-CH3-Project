@@ -28,19 +28,15 @@ void UMatrixLevelManager::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
     
-    UE_LOG(LogTemp, Log, TEXT("MatrixLevelManager initialized"));
-    
     // 현재 레벨 설정
     if (UWorld* World = GetWorld())
     {
         CurrentLevel = FName(*World->GetMapName());
-        UE_LOG(LogTemp, Log, TEXT("Current level: %s"), *CurrentLevel.ToString());
     }
 }
 
 void UMatrixLevelManager::Deinitialize()
 {
-    UE_LOG(LogTemp, Log, TEXT("MatrixLevelManager deinitialized"));
     Super::Deinitialize();
 }
 
@@ -50,11 +46,8 @@ void UMatrixLevelManager::StartGame()
 {
     if (bIsInGame)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Game is already started"));
         return;
     }
-    
-    UE_LOG(LogTemp, Log, TEXT("Starting game..."));
     
     // 게임 상태 초기화
     InitializeGameState();
@@ -72,11 +65,8 @@ void UMatrixLevelManager::EndGame(const FString& EndReason)
 {
     if (!bIsInGame)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Game is not started"));
         return;
     }
-    
-    UE_LOG(LogTemp, Log, TEXT("Ending game. Reason: %s"), *EndReason);
     
     // 게임 종료 이벤트 브로드캐스트
     OnGameEnded.Broadcast(EndReason);
@@ -90,14 +80,11 @@ void UMatrixLevelManager::EndGame(const FString& EndReason)
 
 void UMatrixLevelManager::GoToMainMenu()
 {
-    UE_LOG(LogTemp, Log, TEXT("Going to main menu"));
     RequestLevelTransition(MainMenuLevel, ELevelTransitionType::MainMenu);
 }
 
 void UMatrixLevelManager::RestartGame()
 {
-    UE_LOG(LogTemp, Log, TEXT("Restarting game"));
-    
     // 게임 상태 정리
     CleanupGameState();
     
@@ -121,8 +108,7 @@ void UMatrixLevelManager::RequestLevelTransition(const FName& TargetLevel, ELeve
         return;
     }
     
-    UE_LOG(LogTemp, Log, TEXT("Requesting level transition to: %s (Type: %d)"), 
-           *TargetLevel.ToString(), (int32)TransitionType);
+
     
     // 레벨 전환 시작 이벤트 브로드캐스트
     OnLevelTransitionStarted.Broadcast(TargetLevel);
@@ -187,7 +173,6 @@ void UMatrixLevelManager::ExecuteLevelTransition(const FName& TargetLevel, ELeve
 void UMatrixLevelManager::OnLevelTransitionFinished()
 {
     bIsTransitioning = false;
-    UE_LOG(LogTemp, Log, TEXT("Level transition finished"));
 }
 
 // === 서브레벨 스트리밍 함수들 ===
@@ -196,17 +181,13 @@ void UMatrixLevelManager::LoadSubLevel(const FName& SubLevelName, bool bMakeVisi
 {
     if (SubLevelName.IsNone())
     {
-        UE_LOG(LogTemp, Warning, TEXT("SubLevel name is None"));
         return;
     }
     
     if (IsSubLevelLoaded(SubLevelName))
     {
-        UE_LOG(LogTemp, Warning, TEXT("SubLevel %s is already loaded"), *SubLevelName.ToString());
         return;
     }
-    
-    UE_LOG(LogTemp, Log, TEXT("Loading sublevel: %s"), *SubLevelName.ToString());
     
     // 서브레벨 로드
     UGameplayStatics::LoadStreamLevel(GetWorld(), SubLevelName, true, bMakeVisibleAfterLoad, 

@@ -27,7 +27,7 @@ ABulletBase* ABulletPoolManager::GetBullet(TSubclassOf<ABulletBase> BulletClass)
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("%s Pool is Empty"), *BulletClass->GetName());
+	
 	return nullptr;
 }
 
@@ -50,7 +50,7 @@ void ABulletPoolManager::CreateBulletPool()
 				}
 			}
 
-			UE_LOG(LogTemp, Warning, TEXT("Bullet Pool Created : %s"), *BulletClass->GetName());
+		
 		}
 	}
 }

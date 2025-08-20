@@ -20,7 +20,7 @@ void AGrenadeItem::UseItem()
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	if (!PlayerPawn)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[GrenadeItem/UseItem] PlayerPawn Get Failed."));
+
 		return;
 	}
 	
@@ -40,7 +40,7 @@ void AGrenadeItem::PlayThrowMontage()
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	if (!PlayerPawn)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[GrenadeItem/PlayMontage] PlayerPawn Get Failed."));
+
 		return;
 	}
 
@@ -60,7 +60,7 @@ void AGrenadeItem::PlayThrowMontage()
 			});
 			AnimInstance->Montage_Play(ThrowMontage, 1.3);
 			AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, ThrowMontage);
-			UE_LOG(LogTemp, Warning, TEXT("[GrenadeItem/PlayMontage] Play Montage."));
+		
 		}
 	}
 }

@@ -25,7 +25,7 @@ void UGEC_BulletDamage::Execute_Implementation(const FGameplayEffectCustomExecut
 	{
 		if (AActor* TargetActor = TargetASC->GetAvatarActor())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%s Damaged : %f"), *TargetActor->GetName(), Damage);
+		
 		}
 		
 		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(

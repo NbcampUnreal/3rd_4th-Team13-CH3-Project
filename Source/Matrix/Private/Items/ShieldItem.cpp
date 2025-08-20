@@ -47,7 +47,7 @@ void AShieldItem::UseItem()
 		if (SpecHandle.IsValid())
 		{
 			ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-			UE_LOG(LogTemp, Warning, TEXT("[ShieldItem] Shield Effect Applied."));
+		
 		}
 	}
 }

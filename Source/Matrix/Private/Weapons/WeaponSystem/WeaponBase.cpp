@@ -69,7 +69,7 @@ void AWeaponBase::Shoot()
 	
 	if (CurrentBulletCount <= 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("There's No Bullet In Weapon"));
+
 		return;
 	}
 	
@@ -85,7 +85,7 @@ void AWeaponBase::Shoot()
 	if (OwnerPawn->IsA(AMainPlayerCharacter::StaticClass()))
 	{
 		CurrentBulletCount--;
-		UE_LOG(LogTemp, Warning, TEXT("Weapon's Bullet Count : %d / %d"), CurrentBulletCount, MaxBulletCount);
+	
 		
 		if (OwnerPC)
 		{

@@ -23,6 +23,7 @@ class MATRIX_API AMainPlayerController : public APlayerController
 public:
 	AMainPlayerController();
 	
+	// === Input Properties ===
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	UInputMappingContext* InputMappingContext;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -45,115 +46,90 @@ public:
 	UInputAction* SlowTimeAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Options|Input")
-	float MouseSensitivity = 1.0f; // 마우스 감도
+	float MouseSensitivity = 1.0f;
 
+	// === UI Widget Classes ===
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UMainMenuWidget> MainMenuWidgetClass;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	UMainMenuWidget* MainMenuWidgetInstance;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UOptionsMenuWidget> OptionsMenuWidgetClass;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	UOptionsMenuWidget* OptionsMenuWidgetInstance;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
-	TSubclassOf<UMainHUDWidget> MainHUDWidgetClass;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD")
-	UMainHUDWidget* MainHUDWidgetInstance;
-	
-
-
-
-	virtual void SetupInputComponent() override;
-	virtual void AddYawInput(float Val) override;	 // Yaw 입력 처리: 기본 값에 민감도를 곱해서 부모에 전달
-	virtual void AddPitchInput(float Val) override;	 // Pitch 입력 처리: 기본 값에 민감도를 곱해서 부모에 전달
-
-	// 일시정지 UI On/Off 함수
-	void HandlePauseMenu();
-
-	UFUNCTION(BlueprintCallable, Category = "HUD")
-	void NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo);
-	UFUNCTION(BlueprintCallable, Category = "HUD")
-	void NotifyKillCountChanged(int32 KillCount);
-
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void HandleInventoryUpdated();
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UPauseMenuWidget> PauseMenuWidgetClass;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	UPauseMenuWidget* PauseMenuWidgetInstance;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UGameOverWidget> GameOverWidgetClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UGameClearWidget> GameClearWidgetClass;
-	
-	// === 게임 흐름 관리 함수들 (간소화) ===
-	
-	// 게임 시작/끝 관리
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
+	TSubclassOf<UMainHUDWidget> MainHUDWidgetClass;
+
+	// === UI Widget Instances ===
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UMainMenuWidget* MainMenuWidgetInstance;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UOptionsMenuWidget* OptionsMenuWidgetInstance;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UPauseMenuWidget* PauseMenuWidgetInstance;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD")
+	UMainHUDWidget* MainHUDWidgetInstance;
+
+	// === Core Functions ===
+	virtual void SetupInputComponent() override;
+	virtual void AddYawInput(float Val) override;
+	virtual void AddPitchInput(float Val) override;
+
+	// === Game State Management ===
+	UFUNCTION()
+	void OnGameStateChanged(EGameState NewState);
+
+	// === Input Handling ===
+	void HandlePauseMenu();
+
+	// === HUD Updates ===
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void NotifyAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo);
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void NotifyKillCountChanged(int32 KillCount);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void HandleInventoryUpdated();
+
+	// === Game Flow Management ===
 	UFUNCTION(BlueprintCallable, Category = "Game Flow")
 	void StartGame();
-	
 	UFUNCTION(BlueprintCallable, Category = "Game Flow")
 	void EndGame(const FString& EndReason = "Normal");
-	
 	UFUNCTION(BlueprintCallable, Category = "Game Flow")
 	void GoToMainMenu();
-	
 	UFUNCTION(BlueprintCallable, Category = "Game Flow")
 	void RestartGame();
-
 	UFUNCTION(BlueprintCallable, Category = "Game Flow")
 	void OnMenuExit();
-	
-	// 레벨 전환 관리
 	UFUNCTION(BlueprintCallable, Category = "Game Flow")
 	void RequestLevelTransition(const FName& TargetLevel);
-	
-	// 현재 게임 상태 확인
 	UFUNCTION(BlueprintCallable, Category = "Game Flow")
 	bool IsInGame() const;
-	
-	// === 테스트용 함수들 ===
-	
-	// 게임 오버 테스트
-	UFUNCTION(BlueprintCallable, Category = "Test")
-	void TestGameOver();
-	
-	// 게임 클리어 테스트
-	UFUNCTION(BlueprintCallable, Category = "Test")
-	void TestGameClear();
-	
-	// 다음 레벨 테스트
-	UFUNCTION(BlueprintCallable, Category = "Test")
-	void TestNextLevel();
 
+	// === Options Menu ===
 	UFUNCTION(BlueprintCallable, Category = "Options")
 	void OpenOptions(EGameState FromState);
 	UFUNCTION(BlueprintCallable, Category = "Options")
 	void CloseOptions();
-	
+
+#if WITH_EDITOR || UE_BUILD_DEVELOPMENT
+	// === Test Functions (Development Only) ===
+	UFUNCTION(BlueprintCallable, Category = "Test")
+	void TestGameOver();
+	UFUNCTION(BlueprintCallable, Category = "Test")
+	void TestGameClear();
+	UFUNCTION(BlueprintCallable, Category = "Test")
+	void TestNextLevel();
+#endif
+
 protected:
 	virtual void BeginPlay() override;
 
-public:
-	UFUNCTION()
-	void OnGameStateChanged(EGameState NewState);
-
 private:
-	// 일시정지 상태를 Pause 확인하는 변수
-	bool bIsPaused = false;
-
-/*	UPROPERTY(EditAnywhere, Category = "Menu")
-	TSubclassOf<UUserWidget> PauseMenuClass;
-
 	UPROPERTY()
-	UUserWidget* PauseMenuInstance;
-*/
-
+	UUserWidget* CurrentScreenWidget;
 	UPROPERTY()
-	UUserWidget* CurrentScreenWidget; // Pause, GameOver, GameClear 등 기존 화면에 덮는 위젯 변수입니다!
-	UPROPERTY()
-	EGameState PreviousState; // 이전 상태를 저장하는 변수(설정에서 뒤로가기 용도)
-
+	EGameState PreviousState;
 };
